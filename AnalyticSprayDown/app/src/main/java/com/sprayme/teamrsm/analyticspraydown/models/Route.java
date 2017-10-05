@@ -1,5 +1,12 @@
 package com.sprayme.teamrsm.analyticspraydown.models;
 
+import com.sprayme.teamrsm.analyticspraydown.utilities.MPResponseParser;
+
+import org.json.JSONException;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by cournaydo on 10/4/17.
  */
