@@ -1,6 +1,19 @@
 package com.sprayme.teamrsm.analyticspraydown.models;
 
+import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryTask;
+import com.sprayme.teamrsm.analyticspraydown.utilities.MPResponseParser;
+import com.sprayme.teamrsm.analyticspraydown.utilities.NetworkUtils;
+
+import org.json.JSONException;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+import static com.sprayme.teamrsm.analyticspraydown.utilities.MPResponseParser.readRouteJson;
 
 /**
  * Created by cournaydo on 10/4/17.
@@ -10,12 +23,12 @@ public class Tick {
 
     private String routeId;
     private Date date;
-    private int pitches;
+    private String pitches;
     private String notes;
     private Route route;
     private TickType type;
 
-    public Tick(String routeId, Date date, int numPitches, String notes){
+    public Tick(String routeId, Date date, String numPitches, String notes){
         this.routeId = routeId;
         this.date = date;
         this.pitches = numPitches;
@@ -45,7 +58,7 @@ public class Tick {
         return date;
     }
 
-    public int getPitches() {
+    public String getPitches() {
         return pitches;
     }
 
