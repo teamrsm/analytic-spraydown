@@ -1,4 +1,4 @@
-package com.sprayme.teamrsm.analyticspraydown;
+package com.sprayme.teamrsm.analyticspraydown.models;
 
 public enum TickType{
     Toprope,
