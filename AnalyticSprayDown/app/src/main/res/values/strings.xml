@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Analytic Spray Down</string>
+    <string name="build_string">Build Pyramid</string>
 </resources>
