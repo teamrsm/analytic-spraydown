@@ -43,7 +43,10 @@ public class MPModel{
                 ticks = parseTicks(output);
                 listener.onTicksLoaded();
                 String[] routeIds = getRouteIdArray(ticks);
-                requestRoutes(routeIds);
+                String[] sub = new String[99];
+                for (int i=0; i<99; i++)
+                    sub[i] = routeIds[i];
+                requestRoutes(sub);
             }
         }).execute(url);
     }
@@ -79,7 +82,7 @@ public class MPModel{
         for (Tick tick : ticks) {
             routeIds.add(tick.getRouteId());
         }
-        return (String[]) routeIds.toArray();
+        return routeIds.toArray(new String[routeIds.size()]);
     }
 
     private List<Tick> parseTicks(String json){
