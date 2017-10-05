@@ -1,10 +1,10 @@
-package com.sprayme.teamrsm.analyticspraydown;
+package com.sprayme.teamrsm.analyticspraydown.models;
 
 /**
  * Created by cournaydo on 10/4/17.
  */
 
-enum RouteType {
+public enum RouteType {
     Sport,
     Trad,
     Boulder,

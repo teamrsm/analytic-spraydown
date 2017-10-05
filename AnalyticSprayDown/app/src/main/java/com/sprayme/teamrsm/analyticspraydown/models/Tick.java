@@ -1,4 +1,4 @@
-package com.sprayme.teamrsm.analyticspraydown;
+package com.sprayme.teamrsm.analyticspraydown.models;
 
 import java.util.Date;
 
