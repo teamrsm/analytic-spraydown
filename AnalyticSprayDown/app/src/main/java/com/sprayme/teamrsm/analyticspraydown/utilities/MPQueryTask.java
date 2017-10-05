@@ -14,9 +14,6 @@ import java.net.URL;
 @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
 public class MPQueryTask extends AsyncTask<URL, Void, String> {
 
-    /* Hardcoded for now. Later we will create a static class to scrape
-    * mp for the users' key. */
-    final static String KEY = "106308715-6decf82832c803ba56c7bd6058316b47";
     private NetworkUtils networkUtils = null;
 
     public interface AsyncResponse {
@@ -27,7 +24,7 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
 
     public MPQueryTask(AsyncResponse delegate) {
         this.delegate = delegate;
-        networkUtils = new NetworkUtils(KEY);
+        networkUtils = new NetworkUtils();
     }
 
     @Override

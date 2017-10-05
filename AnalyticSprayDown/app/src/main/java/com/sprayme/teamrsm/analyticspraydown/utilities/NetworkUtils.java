@@ -27,8 +27,12 @@ public class NetworkUtils {
 
     private String _key;
 
-    public NetworkUtils(String key) {
-        _key = key;
+    /* Hardcoded for now. Later we will create a static class to scrape
+    * mp for the users' key. */
+    final static String KEY = "106308715-6decf82832c803ba56c7bd6058316b47";
+
+    public NetworkUtils() {
+        _key = KEY;
     }
 
     /*
