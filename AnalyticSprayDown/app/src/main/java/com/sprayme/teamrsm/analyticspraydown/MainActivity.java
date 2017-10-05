@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemThatWasClickedId = item.getItemId();
         if (itemThatWasClickedId == R.id.build_pyramid) {
-
+            mpModel.requestTicks("thebigrokh@gmail.com");
             return true;
         }
         return super.onOptionsItemSelected(item);
