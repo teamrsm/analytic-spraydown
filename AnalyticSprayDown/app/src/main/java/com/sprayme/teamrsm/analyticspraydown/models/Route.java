@@ -1,21 +1,15 @@
 package com.sprayme.teamrsm.analyticspraydown.models;
 
-import com.sprayme.teamrsm.analyticspraydown.utilities.MPResponseParser;
-
-import org.json.JSONException;
-
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Created by cournaydo on 10/4/17.
+ * Created by climbak on 10/4/17.
  */
 
 public class Route {
     private String id;
     private String name;
     private RouteType type;
-    private String difficulty;
+    private String gradeStr;
+    private Grade grade;
     private String rating;
     private String pitches;
     private String url;
@@ -39,7 +33,8 @@ public class Route {
         else
             this.type = RouteType.Unknown;
 
-        this.difficulty = difficulty;
+        // todo map the grade string to the grade value
+        this.gradeStr = difficulty;
         this.rating = rating;
         this.pitches = pitches;
         this.url = url;
@@ -57,10 +52,6 @@ public class Route {
         return type;
     }
 
-    public String getDifficulty() {
-        return difficulty;
-    }
-
     public String getRating() {
         return rating;
     }
@@ -71,5 +62,9 @@ public class Route {
 
     public String getUrl() {
         return url;
+    }
+
+    public Grade getGrade() {
+        return grade;
     }
 }

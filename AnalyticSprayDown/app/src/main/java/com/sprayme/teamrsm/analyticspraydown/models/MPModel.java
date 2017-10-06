@@ -10,9 +10,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Created by cournaydo on 10/4/17.
+ * Created by climbak on 10/4/17.
  */
 
 public class MPModel{
@@ -104,5 +105,21 @@ public class MPModel{
         }
 
         return routes;
+    }
+
+    public Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier){
+        List<Route> filteredRoutes = routes.stream()
+                .filter((route) -> route.getType() == type)
+                .collect(Collectors.toList());
+
+        return new Pyramid(routes, height, stepChangeSize, stepModifier);
+    }
+
+    public Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier, Grade goal){
+        List<Route> filteredRoutes = routes.stream()
+                .filter((route) -> route.getType() == type)
+                .collect(Collectors.toList());
+
+        return new Pyramid(routes, height, stepChangeSize, stepModifier, goal);
     }
 }

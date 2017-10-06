@@ -1,22 +1,9 @@
 package com.sprayme.teamrsm.analyticspraydown.models;
 
-import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryTask;
-import com.sprayme.teamrsm.analyticspraydown.utilities.MPResponseParser;
-import com.sprayme.teamrsm.analyticspraydown.utilities.NetworkUtils;
-
-import org.json.JSONException;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-
-import static com.sprayme.teamrsm.analyticspraydown.utilities.MPResponseParser.readRouteJson;
 
 /**
- * Created by cournaydo on 10/4/17.
+ * Created by climbak on 10/4/17.
  */
 
 public class Tick {
