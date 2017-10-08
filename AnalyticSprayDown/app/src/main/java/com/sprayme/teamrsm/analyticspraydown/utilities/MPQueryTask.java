@@ -56,6 +56,7 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
 
     public MPQueryTask(AsyncResponse delegate) {
         this.delegate = delegate;
+        _key = KEY;
     }
 
     @Override
