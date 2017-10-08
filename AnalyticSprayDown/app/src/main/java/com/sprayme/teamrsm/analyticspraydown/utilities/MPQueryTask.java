@@ -1,30 +1,62 @@
 package com.sprayme.teamrsm.analyticspraydown.utilities;
 
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 
+import com.sprayme.teamrsm.analyticspraydown.models.Route;
+import com.sprayme.teamrsm.analyticspraydown.models.Tick;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
 
 /**
  * Created by Said on 10/4/2017.
  */
-
+//
 @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
 public class MPQueryTask extends AsyncTask<URL, Void, String> {
-
-    private NetworkUtils networkUtils = null;
 
     public interface AsyncResponse {
         void processFinish(String output);
     }
 
+    final String MP_BASE_URL = "https://www.mountainproject.com/data/";
+
+    final String ROUTES = "get-routes";
+    final String TICKS = "get-ticks";
+
+    final String PARAM_EMAIL = "email";
+    final String PARAM_KEY = "key";
+    final String PARAM_ROUTEIDS = "routeIds";
+
+    private String _key;
+
+    /* Hardcoded for now. Later we will create a static class to scrape
+    * mp for the users' key. */
+    final static String KEY = "106308715-6decf82832c803ba56c7bd6058316b47";
+
     public AsyncResponse delegate = null;
 
     public MPQueryTask(AsyncResponse delegate) {
         this.delegate = delegate;
-        networkUtils = new NetworkUtils();
+        _key = KEY;
     }
 
     @Override
@@ -33,7 +65,7 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
         String mpQueryResults = null;
 
         try {
-            mpQueryResults = networkUtils.getResponseFromHttpUrl(executeUrl);
+            mpQueryResults = getResponseFromHttpUrl(executeUrl);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -44,5 +76,79 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
     @Override
     protected void onPostExecute(String result) {
         delegate.processFinish(result);
+    }
+    /*
+    * Builds the URL used to query mountain project
+    * for users ticks
+    * */
+    public URL buildTicksUrl(String userEmail) {
+        Uri ticksUri = Uri.parse(MP_BASE_URL).buildUpon()
+                .appendPath(TICKS)
+                .appendQueryParameter(PARAM_EMAIL, userEmail)
+                .appendQueryParameter(PARAM_KEY, _key)
+                .build();
+
+        URL url = null;
+        try {
+            url = new URL(ticksUri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        return url;
+    }
+
+    /*
+    * Builds the URL used to query mountain project
+    * for routes given an array of routeIds.
+    * */
+    public URL buildRoutesUrl(String[] routeIds) {
+        String idString = null;
+
+        for (String id : routeIds) {
+            idString += id + ",";
+        }
+        if (idString != null && idString.length() > 0) {
+            idString = idString.substring(0, idString.length() - 1);
+        }
+
+        Uri routesUri = Uri.parse(MP_BASE_URL).buildUpon()
+                .appendPath(ROUTES)
+                .appendQueryParameter(PARAM_ROUTEIDS, idString)
+                .appendQueryParameter(PARAM_KEY, _key)
+                .build();
+
+        URL routesUrl = null;
+        try {
+            routesUrl = new URL(routesUri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        return routesUrl;
+    }
+
+    /*
+    * Returns the entire result from the HTTP response.
+    * */
+    private String getResponseFromHttpUrl(URL url) throws IOException {
+        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+
+        try {
+            InputStream in = urlConnection.getInputStream();
+
+            Scanner scanner = new Scanner(in);
+            scanner.useDelimiter("\\A");
+
+            boolean hasInput = scanner.hasNext();
+            if (hasInput) {
+                return scanner.next();
+            }
+            else {
+                return null;
+            }
+        } finally {
+            urlConnection.disconnect();
+        }
     }
 }

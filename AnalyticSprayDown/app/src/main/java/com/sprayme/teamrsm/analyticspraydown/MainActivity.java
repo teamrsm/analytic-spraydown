@@ -12,13 +12,11 @@ import com.facebook.litho.LithoView;
 import com.facebook.litho.widget.Text;
 import com.facebook.soloader.SoLoader;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
-import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryTask;
 
 @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
 public class MainActivity extends AppCompatActivity
-    implements MPQueryTask.AsyncResponse, MPModel.MPModelListener {
+    implements MPModel.MPModelListener {
 
-    MPQueryTask mpQueryTask = new MPQueryTask(this);
     MPModel mpModel = new MPModel(this);
 
     @Override
@@ -38,11 +36,11 @@ public class MainActivity extends AppCompatActivity
         setContentView(lithoView);
     }
 
-    @Override
-    public void processFinish(String output) {
-        /* Here we will receive the result fired from the mpQueryTask
-        * onPostExecute(result) method. */
-    }
+//    @Override
+//    public void processFinish(String output) {
+//        /* Here we will receive the result fired from the mpQueryTask
+//        * onPostExecute(result) method. */
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
