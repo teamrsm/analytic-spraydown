@@ -13,12 +13,12 @@ public class BetaSpewDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "BetaSpew.db";
 
     /*-********************* TICKS TABLE SCHEMA ***************************/
-    private static final String TICKS_TABLE_NAME =  "TICKS";
-    private static final String USER_ID = "USER_ID";
-    private static final String ROUTE_ID = "ROUTE_ID";
-    private static final String DATE = "TICK_DATE";
-    private static final String NOTES = "NOTES";
-    private static final String TICK_TYPE = "TICK_TYPE";
+    static final String TICKS_TABLE_NAME =  "TICKS";
+    static final String USER_ID = "USER_ID";
+    static final String ROUTE_ID = "ROUTE_ID";
+    static final String TICK_DATE = "TICK_DATE";
+    static final String NOTES = "NOTES";
+    static final String TICK_TYPE = "TICK_TYPE";
 
     private static final String TICKS_TABLE_CREATE =
             new StringBuilder()
@@ -26,7 +26,7 @@ public class BetaSpewDbHelper extends SQLiteOpenHelper {
                 .append(TICKS_TABLE_NAME).append(" (")
                 .append(USER_ID).append(" INT, ")
                 .append(ROUTE_ID).append(" INT, ")
-                .append(DATE).append(" TEXT, ")
+                .append(TICK_DATE).append(" TEXT, ")
                 .append(NOTES).append(" TEXT, ")
                 .append(TICK_TYPE).append(" TEXT")
                 .append(")").toString();
@@ -37,13 +37,13 @@ public class BetaSpewDbHelper extends SQLiteOpenHelper {
     /*-*********************************************************************/
 
     /*-********************* ROUTES TABLE SCHEMA ***************************/
-    private static final String ROUTES_TABLE_NAME = "ROUTES";
-    private static final String ROUTE_NAME = "ROUTE_NAME";
-    private static final String ROUTE_TYPE = "ROUTE_TYPE";
-    private static final String RATING = "RATING";
-    private static final String STARS = "STARS";
-    private static final String PITCHES = "PITCHES";
-    private static final String ROUTE_URL = "ROUTE_URL";
+    static final String ROUTES_TABLE_NAME = "ROUTES";
+    static final String ROUTE_NAME = "ROUTE_NAME";
+    static final String ROUTE_TYPE = "ROUTE_TYPE";
+    static final String RATING = "RATING";
+    static final String STARS = "STARS";
+    static final String PITCHES = "PITCHES";
+    static final String ROUTE_URL = "ROUTE_URL";
 
     private static final String ROUTES_TABLE_CREATE =
             new StringBuilder()
@@ -64,9 +64,10 @@ public class BetaSpewDbHelper extends SQLiteOpenHelper {
     /*-********************************************************************/
 
     /*-********************* USERS TABLE SCHEMA ***************************/
-    private static final String USERS_TABLE_NAME = "USERS";
-    private static final String USER_NAME = "USER_NAME";
-    private static final String DATA_KEY = "DATA_KEY";
+    static final String USERS_TABLE_NAME = "USERS";
+    static final String USER_NAME = "USER_NAME";
+    static final String EMAIL_ADDR = "EMAIL_ADDRESS";
+    static final String API_KEY = "DATA_KEY";
 
     private static final String USERS_TABLE_CREATE =
             new StringBuilder()
@@ -74,7 +75,8 @@ public class BetaSpewDbHelper extends SQLiteOpenHelper {
                 .append(USERS_TABLE_NAME).append(" (")
                 .append(USER_ID).append(" INT, ")
                 .append(USER_NAME).append(" TEXT, ")
-                .append(DATA_KEY).append(" TEXT ")
+                .append(EMAIL_ADDR).append(" TEXT, ")
+                .append(API_KEY).append(" TEXT ")
                 .append(")").toString();
 
     private static final String USERS_TABLE_DROP =
