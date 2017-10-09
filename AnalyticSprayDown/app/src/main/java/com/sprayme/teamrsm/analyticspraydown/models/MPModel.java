@@ -115,7 +115,7 @@ public class MPModel {
             // todo handle error wisely
         }
 
-        return routes;
+        return routes.stream().filter((route) -> Objects.nonNull(route)).collect(Collectors.toList());
     }
 
     public List<Tick> readTickJson(String jsonText) throws JSONException {
