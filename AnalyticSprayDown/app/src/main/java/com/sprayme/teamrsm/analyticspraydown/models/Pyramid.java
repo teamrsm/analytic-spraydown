@@ -27,7 +27,7 @@ public class Pyramid {
         Grade hardestGrade = hardestRoute.getGrade();
 
         // limit our height to the easiest grade of this type
-        height = height >= hardestGrade.getGradeValue() ? height : hardestGrade.getGradeValue();
+//        height = height >= hardestGrade.getGradeValue() ? height : hardestGrade.getGradeValue();
 
         steps = buildPyramidSteps(routes, height, stepChangeSize, stepType, hardestGrade);
     }
@@ -63,6 +63,18 @@ public class Pyramid {
             steps[i] = new PyramidStep(size, currentGrade, stepRoutes);
         }
 
+        return steps;
+    }
+
+    public int getWidth(){
+        return steps[steps.length-1].getSize();
+    }
+
+    public int getHeight(){
+        return height;
+    }
+
+    public PyramidStep[] getSteps(){
         return steps;
     }
 }

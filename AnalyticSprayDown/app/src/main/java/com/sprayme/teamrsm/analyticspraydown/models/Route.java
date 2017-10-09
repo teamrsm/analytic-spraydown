@@ -35,6 +35,7 @@ public class Route {
 
         // todo map the grade string to the grade value
         this.gradeStr = difficulty;
+        this.grade = new Grade(gradeStr);
         this.rating = rating;
         this.pitches = pitches;
         this.url = url;

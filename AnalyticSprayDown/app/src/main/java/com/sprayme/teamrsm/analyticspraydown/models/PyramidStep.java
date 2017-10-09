@@ -18,4 +18,8 @@ public class PyramidStep {
         // todo what do we do if we get a list of routes that aren't of the same grade?
         // todo what to do if the route list is empty?
     }
+
+    public int getSize(){
+        return size;
+    }
 }
