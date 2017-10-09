@@ -66,7 +66,8 @@ public class BetaSpewDbHelper extends SQLiteOpenHelper {
     /*-********************* USERS TABLE SCHEMA ***************************/
     static final String USERS_TABLE_NAME = "USERS";
     static final String USER_NAME = "USER_NAME";
-    static final String DATA_KEY = "DATA_KEY";
+    static final String EMAIL_ADDR = "EMAIL_ADDRESS";
+    static final String API_KEY = "DATA_KEY";
 
     private static final String USERS_TABLE_CREATE =
             new StringBuilder()
@@ -74,7 +75,8 @@ public class BetaSpewDbHelper extends SQLiteOpenHelper {
                 .append(USERS_TABLE_NAME).append(" (")
                 .append(USER_ID).append(" INT, ")
                 .append(USER_NAME).append(" TEXT, ")
-                .append(DATA_KEY).append(" TEXT ")
+                .append(EMAIL_ADDR).append(" TEXT, ")
+                .append(API_KEY).append(" TEXT ")
                 .append(")").toString();
 
     private static final String USERS_TABLE_DROP =
