@@ -12,7 +12,6 @@ import android.database.sqlite.SQLiteStatement;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 
 import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.API_KEY;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.DATA_KEY;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.EMAIL_ADDR;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.USERS_TABLE_NAME;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.USER_ID;
