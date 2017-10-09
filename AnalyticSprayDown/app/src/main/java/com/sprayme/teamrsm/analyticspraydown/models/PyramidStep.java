@@ -22,4 +22,12 @@ public class PyramidStep {
     public int getSize(){
         return size;
     }
+
+    public Route getAt(int i){
+        return routes.size() <= i ? null : routes.get(i);
+    }
+
+    public Grade getGrade() {
+        return grade;
+    }
 }

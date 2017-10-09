@@ -5,6 +5,7 @@ import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * Created by climbak on 10/5/17.
@@ -59,6 +60,15 @@ public class GradeManager {
             return 0;
     }
 
+    public static String getGradeString(int gradeValue /* add grade type*/){
+        Set<String> keys = grades.keySet();
+        for (String key : keys) {
+            if (grades.get(key) == gradeValue)
+                return key;
+        }
+        return null;
+    }
+
     private static HashMap<String, Integer> grades = createMap();
     private static HashMap<String, Integer> createMap(){
         HashMap<String, Integer> grades = new HashMap<String, Integer>();
@@ -74,31 +84,31 @@ public class GradeManager {
         grades.put("5.9",10);
         grades.put("5.9+", 11);
         grades.put("5.10a",12);
-        grades.put("5.10-",13);
-        grades.put("5.10b",14);
-        grades.put("5.10",15);
-        grades.put("5.10c",16);
-        grades.put("5.10+",17);
-        grades.put("5.10d",18);
-        grades.put("5.11a",19);
-        grades.put("5.11-",20);
-        grades.put("5.11b",21);
-        grades.put("5.11",22);
-        grades.put("5.11c",23);
-        grades.put("5.11+",24);
-        grades.put("5.11d",25);
-        grades.put("5.12a",26);
-        grades.put("5.12-",27);
-        grades.put("5.12b",28);
-        grades.put("5.12",29);
-        grades.put("5.12c",30);
-        grades.put("5.12+",31);
-        grades.put("5.12d",32);
-        grades.put("5.13a",33);
-        grades.put("5.13-",34);
-        grades.put("5.13b",35);
-        grades.put("5.13",36);
-        grades.put("5.13c", 37);
+        grades.put("5.10-",12);
+        grades.put("5.10b",13);
+        grades.put("5.10",14);
+        grades.put("5.10c",14);
+        grades.put("5.10+",15);
+        grades.put("5.10d",15);
+        grades.put("5.11a",16);
+        grades.put("5.11-",16);
+        grades.put("5.11b",17);
+        grades.put("5.11",18);
+        grades.put("5.11c",18);
+        grades.put("5.11+",19);
+        grades.put("5.11d",19);
+        grades.put("5.12a",20);
+        grades.put("5.12-",20); // map the grades better for - and +
+        grades.put("5.12b",21);
+        grades.put("5.12",22);
+        grades.put("5.12c",22);
+        grades.put("5.12+",23);
+        grades.put("5.12d",23);
+        grades.put("5.13a",24);
+        grades.put("5.13-",24);
+        grades.put("5.13b",25);
+        grades.put("5.13",26);
+        grades.put("5.13c", 26);
         return grades;
     }
 }

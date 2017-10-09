@@ -20,6 +20,7 @@ public class Grade {
     public Grade(int gradeValue){
         this.gradeValue = gradeValue;
         // todo do lookup to get string and route type
+        gradeString = GradeManager.getGradeString(gradeValue);
     }
 
     public int compareTo(Grade otherGrade) throws IllegalArgumentException{
@@ -51,4 +52,9 @@ public class Grade {
         // todo protect from min values
         return new Grade(gradeValue - 1);
     }
+
+    @Override
+    public String toString(){ return gradeString; }
+
+    public String toShortString() { return gradeString.replace("5.", ""); }
 }

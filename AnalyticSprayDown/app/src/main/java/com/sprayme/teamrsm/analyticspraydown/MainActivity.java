@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
@@ -11,6 +12,7 @@ import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
+import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryTask;
 import com.sprayme.teamrsm.analyticspraydown.views.SprayamidView;
 
 import java.util.ArrayList;
@@ -37,7 +39,11 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemThatWasClickedId = item.getItemId();
         if (itemThatWasClickedId == R.id.build_pyramid) {
-            mpModel.requestTicks("thebigrokh@gmail.com");
+            EditText email = (EditText)findViewById(R.id.emailEntry);
+            EditText apiKey = (EditText)findViewById(R.id.apiKeyEntry);
+            if (apiKey.getText().toString() != null)
+                MPQueryTask.KEY = apiKey.getText().toString();
+            mpModel.requestTicks(email.getText().toString() != null ? email.getText().toString() : "thebigrokh@gmail.com");
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -67,7 +73,7 @@ public class MainActivity extends AppCompatActivity
         for (Tick tick : mpModel.getTicks()) {
             routes.add(tick.getRoute());
         }
-        Pyramid pyramid = mpModel.buildPyramid(routes, RouteType.Sport, 4, 2, PyramidStepType.Additive);
+        Pyramid pyramid = mpModel.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive);
         SprayamidView view = (SprayamidView)findViewById(R.id.pyramidView);
         view.setPyramid(pyramid);
         view.invalidate();

@@ -6,6 +6,9 @@ import android.graphics.Rect;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
 import android.graphics.drawable.shapes.RoundRectShape;
+import android.text.Layout;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -65,24 +68,39 @@ public class SprayamidView extends View {
         int hSteps = pyramid.getWidth();
 
         int vStepSize = canvasHeight / vSteps;
-        int hStepSize = canvasWidth / hSteps;
+        int hStepSize = canvasWidth / (hSteps + 3);
+        int gradeLabelSize = (int) (vStepSize * 0.5);
 
         // draw each level
         PyramidStep[] steps = pyramid.getSteps();
         for (int i=0; i<vSteps; i++){
             int rectCount = steps[i].getSize();
+            int y = i * vStepSize + 4;
             int startingX = centerX - (hStepSize * rectCount / 2);
-            int startingY = i * vStepSize;
             for (int j=0; j<rectCount; j++) {
-                int x = startingX + (j * hStepSize) + 1;
-                int y = startingY + (j * hStepSize) + 1;
-                int width = hStepSize - 1;
-                int height = vStepSize - 1;
+                int x = startingX + (j * hStepSize) + 4;
+                int width = hStepSize - 4;
+                int height = vStepSize - 4;
                 ShapeDrawable rect = new ShapeDrawable(new RectShape());
                 rect.setBounds(x, y, x+width, y+height);
-                rect.getPaint().setColor(0xff74AC23);
+                if (steps[i].getAt(j) != null)
+                    rect.getPaint().setColor(0xff74AC23);
                 rect.draw(canvas);
             }
+
+            // draw text labels
+            String label = steps[i].getGrade().toShortString();
+            TextPaint textPaint = new TextPaint();
+            textPaint.setAntiAlias(true);
+            textPaint.setTextSize(gradeLabelSize);
+            textPaint.setColor(0xFF000000);
+
+            int width = (int) textPaint.measureText(label);
+            //StaticLayout staticLayout = new StaticLayout(label, textPaint, (int) width, Layout.Alignment., 1.0f, 0, false);
+            //staticLayout.draw(canvas);
+            float labelX = centerX + (hStepSize * pyramid.getWidth() / 2) + (hStepSize / 2);
+            float labelY = (i+(float)0.7) * vStepSize;
+            canvas.drawText(label, labelX, labelY, textPaint);
         }
     }
 

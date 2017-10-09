@@ -47,20 +47,24 @@ public class Pyramid {
 
     private PyramidStep[] buildPyramidSteps(List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, Grade startingGrade) {
         PyramidStep[] steps = new PyramidStep[height];
-        Grade currentGrade = startingGrade;
-
+        Grade grade = startingGrade;
+        int size = 1;
         for (int i=0; i<height; i++) {
-            int size = i+1;
-            if (stepType == PyramidStepType.Multiplicative)
-                size *= stepChangeSize;
-            else
-                size += stepChangeSize;
+            Grade currentGrade = grade;
 
             List<Route> stepRoutes = routes.stream()
                     .filter((route) -> route.getGrade().compareTo(currentGrade) == 0)
                     .collect(Collectors.toList());
 
             steps[i] = new PyramidStep(size, currentGrade, stepRoutes);
+            grade = grade.nextEasiest();
+
+            if (size == 1)
+                size = 2;
+            else if (stepType == PyramidStepType.Multiplicative)
+                size *= stepChangeSize;
+            else
+                size += stepChangeSize;
         }
 
         return steps;
