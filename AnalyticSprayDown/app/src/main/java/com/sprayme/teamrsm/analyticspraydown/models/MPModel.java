@@ -79,7 +79,7 @@ public class MPModel {
     }
 
     private void mapRoutes() {
-        HashMap<String, Route> routeMap = new HashMap<>();
+        HashMap<Long, Route> routeMap = new HashMap<>();
         for (Route route : routes) {
             routeMap.put(route.getId(), route);
         }
@@ -147,12 +147,12 @@ public class MPModel {
         JSONObject obj = new JSONObject(jsonText);
         JSONArray arr = obj.getJSONArray("routes");
         for (int i = 0; i < arr.length(); i++) {
-            String routeId = arr.getJSONObject(i).getString("id");
+            Long routeId = Long.parseLong(arr.getJSONObject(i).getString("id"));
             String name = arr.getJSONObject(i).getString("name");
             String type = arr.getJSONObject(i).getString("type");
             String difficulty = arr.getJSONObject(i).getString("rating");
-            String stars = arr.getJSONObject(i).getString("stars");
-            String pitches = arr.getJSONObject(i).getString("pitches");
+            Float stars = Float.parseFloat(arr.getJSONObject(i).getString("stars"));
+            Integer pitches = Integer.parseInt(arr.getJSONObject(i).getString("pitches"));
             String url = arr.getJSONObject(i).getString("url");
 
             Route route = new Route(routeId, name, type, difficulty, stars, pitches, url);

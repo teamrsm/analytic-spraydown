@@ -54,7 +54,7 @@ public class BetaSpewDbHelper extends SQLiteOpenHelper {
                 .append(ROUTE_NAME).append(" TEXT, ")
                 .append(ROUTE_TYPE).append(" TEXT, ")
                 .append(RATING).append(" TEXT, ")
-                .append(STARS).append(" INT, ")
+                .append(STARS).append(" REAL, ")
                 .append(PITCHES).append(" INT, ")
                 .append(ROUTE_URL).append(" TEXT ")
                 .append(")").toString();

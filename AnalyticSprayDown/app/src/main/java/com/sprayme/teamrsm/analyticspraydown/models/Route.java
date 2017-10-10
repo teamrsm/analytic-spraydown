@@ -10,11 +10,11 @@ public class Route {
     private RouteType type;
     private String gradeStr;
     private Grade grade;
-    private String rating;
+    private Float stars;
     private Integer pitches;
     private String url;
 
-    public Route(Long id, String name, String type, String difficulty, String rating, Integer pitches, String url){
+    public Route(Long id, String name, String type, String difficulty, Float stars, Integer pitches, String url){
         this.id = id;
         this.name = name;
 
@@ -36,7 +36,7 @@ public class Route {
         // todo map the grade string to the grade value
         this.gradeStr = difficulty;
         this.grade = new Grade(gradeStr);
-        this.rating = rating;
+        this.stars = stars;
         this.pitches = pitches;
         this.url = url;
     }
@@ -53,8 +53,8 @@ public class Route {
         return type;
     }
 
-    public String getRating() {
-        return rating;
+    public Float getStars() {
+        return stars;
     }
 
     public Integer getPitches() {

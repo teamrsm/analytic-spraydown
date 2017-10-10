@@ -163,7 +163,7 @@ public class DbSprAyPI extends Application {
     }
 
     /* Returns the contextual user. */
-    public User GetUser() {
+    public User getUser() {
         return _user;
     }
 
@@ -213,12 +213,11 @@ public class DbSprAyPI extends Application {
             String routeName = cursor.getString(cursor.getColumnIndex(ROUTE_NAME));
             String routeType = cursor.getString(cursor.getColumnIndex(ROUTE_TYPE));
             String rating = cursor.getString(cursor.getColumnIndex(RATING));
-            Integer stars = cursor.getInt(cursor.getColumnIndex(STARS));
+            Float stars = cursor.getFloat(cursor.getColumnIndex(STARS));
             Integer pitches = cursor.getInt(cursor.getColumnIndex(PITCHES));
             String routeUrl = cursor.getString(cursor.getColumnIndex(ROUTE_URL));
 
-            // todo: pull changes and merge with route
-            //routes.add(new Route(routeId, routeName, routeType, rating, stars, pitches, routeUrl));
+            routes.add(new Route(routeId, routeName, routeType, rating, stars, pitches, routeUrl));
         }
 
         return routes;
@@ -234,6 +233,7 @@ public class DbSprAyPI extends Application {
         int lastIndex = inList.lastIndexOf(",");
         return inList.substring(0, lastIndex - 1).toString();
     }
+}
 
 class InvalidUserException extends Exception
 {
