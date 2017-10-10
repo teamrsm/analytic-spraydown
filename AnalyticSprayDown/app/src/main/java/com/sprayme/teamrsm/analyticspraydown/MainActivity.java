@@ -1,5 +1,6 @@
 package com.sprayme.teamrsm.analyticspraydown;
 
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -15,7 +16,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
-import com.sprayme.teamrsm.analyticspraydown.data_access.DbSprAyPI;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
@@ -110,6 +110,8 @@ public class MainActivity extends AppCompatActivity
             currentUser = dataCache.getLastUser();
         } catch (InvalidUserException e) {
             // todo: launch login, we have no known user
+            Intent intent = new Intent(this, UserLoginActivity.class);
+            startActivity(intent);
         }
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
