@@ -180,6 +180,6 @@ public class MPModel {
                 .filter((route) -> route.getType() == type)
                 .collect(Collectors.toList());
 
-        return new Pyramid(routes, height, stepChangeSize, stepModifier, goal);
+        return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, goal);
     }
 }

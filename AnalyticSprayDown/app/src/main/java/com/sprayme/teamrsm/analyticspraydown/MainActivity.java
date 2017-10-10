@@ -74,16 +74,16 @@ public class MainActivity extends AppCompatActivity
             if (tick.getRoute() != null)
             routes.add(tick.getRoute());
         }
-//        Route hardestRoute = routes.stream().max(
-//                (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
-//        long hardestCount = routes.stream().filter((route) -> route.getGrade().compareTo(hardestRoute.getGrade()) == 0).count();
-//
-//        Pyramid pyramid;
-//        if (hardestCount > 1){
-//            pyramid =  mpModel.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive, hardestRoute.getGrade().nextHardest());
-//        }
-//        else
-        Pyramid  pyramid = mpModel.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive);
+        Route hardestRoute = routes.stream().max(
+                (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
+        long hardestCount = routes.stream().filter((route) -> route.getGrade().compareTo(hardestRoute.getGrade()) == 0).count();
+
+        Pyramid pyramid;
+        if (hardestCount > 1){
+            pyramid =  mpModel.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive, hardestRoute.getGrade().nextHardest());
+        }
+        else
+            pyramid = mpModel.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive);
         SprayamidView view = (SprayamidView)findViewById(R.id.pyramidView);
         view.setPyramid(pyramid);
         view.invalidate();

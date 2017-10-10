@@ -40,7 +40,7 @@ public class Pyramid {
         Grade currentGrade = goal;
 
         // limit our height to the easiest grade of this type
-        height = height >= currentGrade.getGradeValue() ? height : currentGrade.getGradeValue();
+//        height = height >= currentGrade.getGradeValue() ? height : currentGrade.getGradeValue();
 
         steps = buildPyramidSteps(routes, height, stepChangeSize, stepType, goal);
     }
