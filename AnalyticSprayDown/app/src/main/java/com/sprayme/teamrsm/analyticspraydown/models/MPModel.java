@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -114,7 +115,7 @@ public class MPModel {
             // todo handle error wisely
         }
 
-        return routes;
+        return routes.stream().filter((route) -> Objects.nonNull(route)).collect(Collectors.toList());
     }
 
     public List<Tick> readTickJson(String jsonText) throws JSONException {
@@ -161,12 +162,17 @@ public class MPModel {
         return routes;
     }
 
+    public List<Tick> getTicks(){
+        return ticks;
+    }
+
     public Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier) {
         List<Route> filteredRoutes = routes.stream()
+                .filter((route) -> Objects.nonNull(route))
                 .filter((route) -> route.getType() == type)
                 .collect(Collectors.toList());
 
-        return new Pyramid(routes, height, stepChangeSize, stepModifier);
+        return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier);
     }
 
     public Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier, Grade goal) {
@@ -174,6 +180,6 @@ public class MPModel {
                 .filter((route) -> route.getType() == type)
                 .collect(Collectors.toList());
 
-        return new Pyramid(routes, height, stepChangeSize, stepModifier, goal);
+        return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, goal);
     }
 }

@@ -1,11 +1,11 @@
 package com.sprayme.teamrsm.analyticspraydown.models;
 
 public enum TickType{
-    Toprope,
-    Onsite,
-    Flash,
-    Redpoint,
-    Pinkpoint,
+    Unknown,
     Fell,
-    Unknown
+    Toprope,
+    Pinkpoint,
+    Redpoint,
+    Flash,
+    Onsite
 }

@@ -27,7 +27,7 @@ public class Pyramid {
         Grade hardestGrade = hardestRoute.getGrade();
 
         // limit our height to the easiest grade of this type
-        height = height >= hardestGrade.getGradeValue() ? height : hardestGrade.getGradeValue();
+//        height = height >= hardestGrade.getGradeValue() ? height : hardestGrade.getGradeValue();
 
         steps = buildPyramidSteps(routes, height, stepChangeSize, stepType, hardestGrade);
     }
@@ -40,29 +40,45 @@ public class Pyramid {
         Grade currentGrade = goal;
 
         // limit our height to the easiest grade of this type
-        height = height >= currentGrade.getGradeValue() ? height : currentGrade.getGradeValue();
+//        height = height >= currentGrade.getGradeValue() ? height : currentGrade.getGradeValue();
 
         steps = buildPyramidSteps(routes, height, stepChangeSize, stepType, goal);
     }
 
     private PyramidStep[] buildPyramidSteps(List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, Grade startingGrade) {
         PyramidStep[] steps = new PyramidStep[height];
-        Grade currentGrade = startingGrade;
-
+        Grade grade = startingGrade;
+        int size = 1;
         for (int i=0; i<height; i++) {
-            int size = i+1;
-            if (stepType == PyramidStepType.Multiplicative)
-                size *= stepChangeSize;
-            else
-                size += stepChangeSize;
+            Grade currentGrade = grade;
 
             List<Route> stepRoutes = routes.stream()
                     .filter((route) -> route.getGrade().compareTo(currentGrade) == 0)
                     .collect(Collectors.toList());
 
             steps[i] = new PyramidStep(size, currentGrade, stepRoutes);
+            grade = grade.nextEasiest();
+
+            if (size == 1)
+                size = 2;
+            else if (stepType == PyramidStepType.Multiplicative)
+                size *= stepChangeSize;
+            else
+                size += stepChangeSize;
         }
 
+        return steps;
+    }
+
+    public int getWidth(){
+        return steps[steps.length-1].getSize();
+    }
+
+    public int getHeight(){
+        return height;
+    }
+
+    public PyramidStep[] getSteps(){
         return steps;
     }
 }

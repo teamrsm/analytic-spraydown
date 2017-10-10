@@ -1,19 +1,23 @@
 package com.sprayme.teamrsm.analyticspraydown;
 
-import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 
-import com.facebook.litho.ComponentContext;
-import com.facebook.litho.LithoView;
-import com.facebook.litho.widget.Text;
-import com.facebook.soloader.SoLoader;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
+import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
+import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
+import com.sprayme.teamrsm.analyticspraydown.models.Route;
+import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
+import com.sprayme.teamrsm.analyticspraydown.models.Tick;
+import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryTask;
+import com.sprayme.teamrsm.analyticspraydown.views.SprayamidView;
 
-@RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity
     implements MPModel.MPModelListener {
 
@@ -22,25 +26,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_main);
-        SoLoader.init(this, false);
-        final ComponentContext c = new ComponentContext(this);
-
-        final LithoView lithoView = LithoView.create(
-                this /* context */,
-                Text.create(c)
-                        .text("Hello, World!")
-                        .textSizeDip(50)
-                        .build());
-
-        setContentView(lithoView);
+        setContentView(R.layout.activity_main);
     }
-
-//    @Override
-//    public void processFinish(String output) {
-//        /* Here we will receive the result fired from the mpQueryTask
-//        * onPostExecute(result) method. */
-//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -52,7 +39,11 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemThatWasClickedId = item.getItemId();
         if (itemThatWasClickedId == R.id.build_pyramid) {
-            mpModel.requestTicks("thebigrokh@gmail.com");
+            EditText email = (EditText)findViewById(R.id.emailEntry);
+            EditText apiKey = (EditText)findViewById(R.id.apiKeyEntry);
+            if (apiKey.getText().toString() != null)
+                MPQueryTask.KEY = apiKey.getText().toString();
+            mpModel.requestTicks(email.getText().toString() != null ? email.getText().toString() : "thebigrokh@gmail.com");
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -78,6 +69,23 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onFinished() {
+        List<Route> routes = new ArrayList<Route>();
+        for (Tick tick : mpModel.getTicks()) {
+            if (tick.getRoute() != null)
+            routes.add(tick.getRoute());
+        }
+        Route hardestRoute = routes.stream().max(
+                (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
+        long hardestCount = routes.stream().filter((route) -> route.getGrade().compareTo(hardestRoute.getGrade()) == 0).count();
 
+        Pyramid pyramid;
+        if (hardestCount > 1){
+            pyramid =  mpModel.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive, hardestRoute.getGrade().nextHardest());
+        }
+        else
+            pyramid = mpModel.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive);
+        SprayamidView view = (SprayamidView)findViewById(R.id.pyramidView);
+        view.setPyramid(pyramid);
+        view.invalidate();
     }
 }
