@@ -1,13 +1,9 @@
 package com.sprayme.teamrsm.analyticspraydown.data_access;
 
 import android.app.Application;
-import android.content.Context;
 import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDoneException;
 import android.database.sqlite.SQLiteException;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.database.sqlite.SQLiteStatement;
 
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
@@ -18,19 +14,20 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.API_KEY;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.EMAIL_ADDR;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.PITCHES;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.RATING;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.ROUTES_TABLE_NAME;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.ROUTE_ID;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.ROUTE_NAME;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.ROUTE_TYPE;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.ROUTE_URL;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.STARS;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.USERS_TABLE_NAME;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.USER_ID;
-import static com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDbHelper.USER_NAME;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.API_KEY;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.EMAIL_ADDR;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.PITCHES;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.RATING;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTES_TABLE_NAME;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_ID;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_NAME;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_TYPE;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_URL;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.STARS;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.USERS_TABLE_NAME;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.USER_ID;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.USER_NAME;
+
 
 /**
  * Created by Said on 10/8/2017.
@@ -40,6 +37,7 @@ public class DbSprAyPI extends Application {
     /**
      * DbSprAyPI(userId) x
      * GetUser x
+     * GetLastUser
      * GetTicks(fromMoment, toMoment)
      * InsertTicks(List<Ticks> ticks)
      * GetRoutes(List<int> routeIds)
@@ -50,8 +48,7 @@ public class DbSprAyPI extends Application {
      * GetMaxRedpoint()
      */
 
-    private static DbSprAyPI _instance;
-    private BetaSpewDbHelper _dbHelper = null;
+    private BetaSpewDb _dbHelper = null;
     private User _user;
 
     /*
@@ -59,8 +56,7 @@ public class DbSprAyPI extends Application {
     * of a user. If no user exists in the db, we will create a new entry
     * */
     public DbSprAyPI(User user) throws InvalidUserException {
-        _instance = this;
-        _dbHelper = new BetaSpewDbHelper(_instance);
+        _dbHelper = BetaSpewDb.getInstance(this);
 
         if(!doesUserExist(user)) {
             createNewUser(user);
@@ -86,12 +82,13 @@ public class DbSprAyPI extends Application {
         else
             throw new InvalidUserException("Not enough user information to query db!");
 
+        SQLiteDatabase sqlDb = _dbHelper.getReadableDatabase();
+
         String sqlString = sql.toString();
         long userCount = -1;
         Cursor cursor = null;
 
         try {
-            SQLiteDatabase sqlDb = _dbHelper.getReadableDatabase();
             cursor = sqlDb.rawQuery(sqlString,
                     new String[]{USER_ID, USER_NAME, EMAIL_ADDR, API_KEY});
 
@@ -235,13 +232,3 @@ public class DbSprAyPI extends Application {
     }
 }
 
-class InvalidUserException extends Exception
-{
-    public InvalidUserException() {}
-
-    // Constructor that accepts a message
-    public InvalidUserException(String message)
-    {
-        super(message);
-    }
-}

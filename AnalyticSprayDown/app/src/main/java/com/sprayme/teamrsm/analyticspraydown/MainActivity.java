@@ -6,12 +6,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 
+import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
+import com.sprayme.teamrsm.analyticspraydown.data_access.DbSprAyPI;
+import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
+import com.sprayme.teamrsm.analyticspraydown.models.User;
+import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryTask;
 import com.sprayme.teamrsm.analyticspraydown.views.SprayamidView;
 
@@ -21,12 +26,32 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity
     implements MPModel.MPModelListener {
 
-    MPModel mpModel = new MPModel(this);
+    MPModel mpModel = null;
+    DataCache dataCache = null;
+    BetaSpewDb db = null;
+    User currentUser = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mpModel = new MPModel(this);
+        dataCache = DataCache.getInstance();
+        //this.deleteDatabase("BetaSpew.db");
+        db = BetaSpewDb.getInstance(this);
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+
+        try {
+            dataCache.setDb(db);
+            currentUser = dataCache.getLastUser();
+        } catch (InvalidUserException e) {
+            // todo: launch login, we have no known user
+        }
     }
 
     @Override
