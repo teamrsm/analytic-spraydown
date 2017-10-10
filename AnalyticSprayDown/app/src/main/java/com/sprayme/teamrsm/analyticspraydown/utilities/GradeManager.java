@@ -69,8 +69,8 @@ public class GradeManager {
         return null;
     }
 
-    private static HashMap<String, Integer> grades = createMap();
-    private static HashMap<String, Integer> createMap(){
+    private static HashMap<String, Integer> grades = createYosemiteMap();
+    private static HashMap<String, Integer> createYosemiteMap(){
         HashMap<String, Integer> grades = new HashMap<String, Integer>();
         grades.put("5.1", 1);
         grades.put("5.2", 2);
@@ -84,31 +84,47 @@ public class GradeManager {
         grades.put("5.9",10);
         grades.put("5.9+", 11);
         grades.put("5.10a",12);
-        grades.put("5.10-",12);
         grades.put("5.10b",13);
-        grades.put("5.10",14);
         grades.put("5.10c",14);
-        grades.put("5.10+",15);
         grades.put("5.10d",15);
         grades.put("5.11a",16);
-        grades.put("5.11-",16);
         grades.put("5.11b",17);
-        grades.put("5.11",18);
         grades.put("5.11c",18);
-        grades.put("5.11+",19);
         grades.put("5.11d",19);
         grades.put("5.12a",20);
-        grades.put("5.12-",20); // map the grades better for - and +
         grades.put("5.12b",21);
-        grades.put("5.12",22);
         grades.put("5.12c",22);
-        grades.put("5.12+",23);
         grades.put("5.12d",23);
         grades.put("5.13a",24);
-        grades.put("5.13-",24);
         grades.put("5.13b",25);
+        grades.put("5.13c",26);
+        grades.put("5.13d",27);
+        grades.put("5.14a",28);
+        grades.put("5.14b",29);
+        grades.put("5.14c",30);
+        grades.put("5.14d",31);
+        grades.put("5.15a",32);
+        grades.put("5.15b",33);
+        grades.put("5.15c",34);
+        grades.put("5.15d",35);
+        grades.put("5.10-",12);
+        grades.put("5.10",14);
+        grades.put("5.10+",15);
+        grades.put("5.11-",16);
+        grades.put("5.11",18);
+        grades.put("5.11+",19);
+        grades.put("5.12-",20);
+        grades.put("5.12",22);
+        grades.put("5.12+",23);
+        grades.put("5.13-",24);
         grades.put("5.13",26);
-        grades.put("5.13c", 26);
+        grades.put("5.13+",27);
+        grades.put("5.14-",28);
+        grades.put("5.14",30);
+        grades.put("5.14+",31);
+        grades.put("5.15-",32);
+        grades.put("5.15",34);
+        grades.put("5.15+",35);
         return grades;
     }
 }

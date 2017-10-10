@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void addDrawerItems() {
-        String[] osArray = { "Android", "iOS", "Windows", "OS X", "Linux" };
+        String[] osArray = { /*"Stats", "Training",*/ "Settings" };
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
 
