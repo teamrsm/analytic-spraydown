@@ -41,6 +41,7 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
 
     final String ROUTES = "get-routes";
     final String TICKS = "get-ticks";
+    final String USER = "get-user";
 
     final String PARAM_EMAIL = "email";
     final String PARAM_KEY = "key";
@@ -126,6 +127,27 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
         }
 
         return routesUrl;
+    }
+
+    /*
+    * Build URL to query mountain project data api to query
+    * for the user with the given email address
+    * */
+    public URL buildUserUrl(String emailAddress) {
+        Uri userUri = Uri.parse(MP_BASE_URL).buildUpon()
+                .appendPath(USER)
+                .appendQueryParameter(PARAM_EMAIL, emailAddress)
+                .appendQueryParameter(PARAM_KEY, _key)
+                .build();
+
+        URL userUrl = null;
+        try {
+            userUrl = new URL(userUri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        return userUrl;
     }
 
     /*

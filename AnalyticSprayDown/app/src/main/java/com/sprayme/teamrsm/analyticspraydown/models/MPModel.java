@@ -40,6 +40,8 @@ public class MPModel {
 
         public void onTicksLoaded();
 
+        public void onUserLoaded();
+
         public void onFinished();
     }
 
@@ -47,9 +49,19 @@ public class MPModel {
 
     private List<Tick> ticks;
     private List<Route> routes;
+    private User user;
 
     public MPModel(MPModelListener listener) {
         this.listener = listener;
+    }
+
+    public void requestUser(String emailAddress) {
+        MPQueryTask mpQuery = new MPQueryTask(output -> {
+            user = parseUser(output);
+            listener.onUserLoaded();
+        });
+        URL url = mpQuery.buildUserUrl(emailAddress);
+        mpQuery.execute(url);
     }
 
     public void requestTicks(String user) {
@@ -97,6 +109,16 @@ public class MPModel {
         return routeIds.toArray(new Long[routeIds.size()]);
     }
 
+    private User parseUser(String json) {
+        try {
+            user = readUserJson(json);
+        } catch (JSONException e) {
+            // todo handle error wisely
+        }
+
+        return user;
+    }
+
     private List<Tick> parseTicks(String json) {
         List<Tick> ticks = new ArrayList<>();
         try {
@@ -116,6 +138,16 @@ public class MPModel {
         }
 
         return routes.stream().filter((route) -> Objects.nonNull(route)).collect(Collectors.toList());
+    }
+
+    public User readUserJson(String jsonText) throws JSONException {
+        User mpUser = new User();
+        JSONObject obj = new JSONObject(jsonText);
+
+        mpUser.setUserId(obj.getLong("id"));
+        mpUser.setUserName(obj.getString("name"));
+
+        return mpUser;
     }
 
     public List<Tick> readTickJson(String jsonText) throws JSONException {
@@ -165,6 +197,8 @@ public class MPModel {
 
         return routes;
     }
+
+    public User getUser() { return user; }
 
     public List<Tick> getTicks(){
         return ticks;
