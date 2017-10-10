@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity
 
         try {
             dataCache.setDb(db);
+            dataCache.setMp(mpModel);
             currentUser = dataCache.getLastUser();
         } catch (InvalidUserException e) {
             // todo: launch login, we have no known user
@@ -174,6 +175,11 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onTicksLoaded() {
+
+    }
+
+    @Override
+    public void onUserLoaded() {
 
     }
 

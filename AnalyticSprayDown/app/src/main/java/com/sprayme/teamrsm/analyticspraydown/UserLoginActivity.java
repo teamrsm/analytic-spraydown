@@ -19,21 +19,21 @@ public class UserLoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_user_login);
         dataCache = DataCache.getInstance();
         // Get the Intent that started this activity and extract the string
-        Intent intent = getIntent();
-        String message = intent.getBundleExtra("")..getStringExtra(MainActivity.EXTRA_MESSAGE);
-
-        // Capture the layout's TextView and set the string as its text
-        TextView textView = (TextView) findViewById(R.id.textView);
-        textView.setText(message);
+//        Intent intent = getIntent();
+//        String message = intent.getBundleExtra("").getStringExtra(MainActivity.EXTRA_MESSAGE);
+//
+//        // Capture the layout's TextView and set the string as its text
+//        TextView textView = (TextView) findViewById(R.id.textView);
+//        textView.setText(message);
     }
 
     public void onLogin(View view){
         EditText email = (EditText)findViewById(R.id.emailEntry);
         EditText apiKey = (EditText)findViewById(R.id.apiKeyEntry);
 
-        if (dataCache.createNewUser(email, apiKey) != null)
-            // kill activity
-            ;
+//        if (dataCache.createNewUser(email.getText().toString(), apiKey.getText().toString()) != null)
+//            // kill activity
+//            ;
 
     }
 }
