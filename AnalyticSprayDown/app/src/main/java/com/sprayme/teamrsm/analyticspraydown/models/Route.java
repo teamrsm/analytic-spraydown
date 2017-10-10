@@ -5,16 +5,16 @@ package com.sprayme.teamrsm.analyticspraydown.models;
  */
 
 public class Route {
-    private String id;
+    private Long id;
     private String name;
     private RouteType type;
     private String gradeStr;
     private Grade grade;
     private String rating;
-    private String pitches;
+    private Integer pitches;
     private String url;
 
-    public Route(String id, String name, String type, String difficulty, String rating, String pitches, String url){
+    public Route(Long id, String name, String type, String difficulty, String rating, Integer pitches, String url){
         this.id = id;
         this.name = name;
 
@@ -40,7 +40,7 @@ public class Route {
         this.url = url;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
@@ -56,7 +56,7 @@ public class Route {
         return rating;
     }
 
-    public String getPitches() {
+    public Integer getPitches() {
         return pitches;
     }
 

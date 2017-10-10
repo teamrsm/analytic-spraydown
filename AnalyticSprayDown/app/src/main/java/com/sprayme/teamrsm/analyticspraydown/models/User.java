@@ -6,13 +6,13 @@ package com.sprayme.teamrsm.analyticspraydown.models;
 
 public class User {
 
-    private long _userId;
+    private Long _userId;
 
-    public long getUserId() {
+    public Long getUserId() {
         return _userId;
     }
 
-    public void setUserId(long userId) {
+    public void setUserId(Long userId) {
         _userId = userId;
     }
 

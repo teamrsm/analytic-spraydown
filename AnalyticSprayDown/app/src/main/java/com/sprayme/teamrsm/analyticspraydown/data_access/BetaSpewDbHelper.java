@@ -45,6 +45,7 @@ public class BetaSpewDbHelper extends SQLiteOpenHelper {
     static final String PITCHES = "PITCHES";
     static final String ROUTE_URL = "ROUTE_URL";
 
+    // todo: stars is float. add unique constraint to users table
     private static final String ROUTES_TABLE_CREATE =
             new StringBuilder()
                 .append("CREATE TABLE ")
