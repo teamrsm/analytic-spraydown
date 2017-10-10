@@ -14,12 +14,17 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
+import com.sprayme.teamrsm.analyticspraydown.data_access.DbSprAyPI;
+import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
+import com.sprayme.teamrsm.analyticspraydown.models.User;
+import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryTask;
 import com.sprayme.teamrsm.analyticspraydown.views.SprayamidView;
 
@@ -29,18 +34,26 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity
     implements MPModel.MPModelListener {
 
+    private MPModel mpModel = null;
+    private DataCache dataCache = null;
+    private BetaSpewDb db = null;
+    private User currentUser = null;
+
     private ListView mDrawerList;
     private ArrayAdapter<String> mAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
 
-    MPModel mpModel = new MPModel(this);
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mpModel = new MPModel(this);
+        dataCache = DataCache.getInstance();
+        //this.deleteDatabase("BetaSpew.db");
+        db = BetaSpewDb.getInstance(this);
 
         mDrawerList = (ListView)findViewById(R.id.navList);
         mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
@@ -91,6 +104,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+
+        try {
+            dataCache.setDb(db);
+            currentUser = dataCache.getLastUser();
+        } catch (InvalidUserException e) {
+            // todo: launch login, we have no known user
+        }
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
     }
