@@ -8,14 +8,14 @@ import java.util.Date;
 
 public class Tick {
 
-    private String routeId;
+    private Long routeId;
     private Date date;
-    private String pitches;
+    private Integer pitches;
     private String notes;
     private Route route;
     private TickType type;
 
-    public Tick(String routeId, Date date, String numPitches, String notes){
+    public Tick(Long routeId, Date date, Integer numPitches, String notes){
         this.routeId = routeId;
         this.date = date;
         this.pitches = numPitches;
@@ -37,7 +37,7 @@ public class Tick {
             type = TickType.Unknown;
     }
 
-    public String getRouteId() {
+    public Long getRouteId() {
         return routeId;
     }
 
@@ -45,7 +45,7 @@ public class Tick {
         return date;
     }
 
-    public String getPitches() {
+    public Integer getPitches() {
         return pitches;
     }
 

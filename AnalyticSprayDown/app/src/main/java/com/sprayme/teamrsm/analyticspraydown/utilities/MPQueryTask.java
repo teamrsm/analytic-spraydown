@@ -102,10 +102,10 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
     * Builds the URL used to query mountain project
     * for routes given an array of routeIds.
     * */
-    public URL buildRoutesUrl(String[] routeIds) {
+    public URL buildRoutesUrl(Long[] routeIds) {
         String idString = null;
 
-        for (String id : routeIds) {
+        for (Long id : routeIds) {
             idString += id + ",";
         }
         if (idString != null && idString.length() > 0) {

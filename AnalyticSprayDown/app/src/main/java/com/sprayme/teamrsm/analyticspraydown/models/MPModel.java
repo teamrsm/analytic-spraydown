@@ -56,8 +56,8 @@ public class MPModel {
         MPQueryTask mpQuery = new MPQueryTask(output -> {
             ticks = parseTicks(output);
             listener.onTicksLoaded();
-            String[] routeIds = getRouteIdArray(ticks);
-            String[] sub = new String[99];
+            Long[] routeIds = getRouteIdArray(ticks);
+            Long[] sub = new Long[99];
             for (int i = 0; i < 99; i++)
                 sub[i] = routeIds[i];
             requestRoutes(sub);
@@ -66,7 +66,7 @@ public class MPModel {
         mpQuery.execute(url);
     }
 
-    public void requestRoutes(String[] routeIds) {
+    public void requestRoutes(Long[] routeIds) {
         //todo make this send in 100 count batches
         MPQueryTask mpQuery = new MPQueryTask(output -> {
             routes = parseRoutes(output);
@@ -89,12 +89,12 @@ public class MPModel {
         }
     }
 
-    private String[] getRouteIdArray(List<Tick> ticks) {
-        List<String> routeIds = new ArrayList<>();
+    private Long[] getRouteIdArray(List<Tick> ticks) {
+        List<Long> routeIds = new ArrayList<>();
         for (Tick tick : ticks) {
             routeIds.add(tick.getRouteId());
         }
-        return routeIds.toArray(new String[routeIds.size()]);
+        return routeIds.toArray(new Long[routeIds.size()]);
     }
 
     private List<Tick> parseTicks(String json) {
@@ -123,7 +123,9 @@ public class MPModel {
         JSONObject obj = new JSONObject(jsonText);
         JSONArray arr = obj.getJSONArray("ticks");
         for (int i = 0; i < arr.length(); i++) {
-            String routeId = arr.getJSONObject(i).getString("routeId");
+            Long routeId = arr.getJSONObject(i).optLong("routeId", 0);
+            if (routeId == 0)
+                continue;
             String dateStr = arr.getJSONObject(i).getString("date");
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
             Date date;
@@ -132,7 +134,7 @@ public class MPModel {
             } catch (ParseException e) {
                 date = null;
             }
-            String pitches = arr.getJSONObject(i).getString("pitches");
+            Integer pitches = (int) arr.getJSONObject(i).optLong("pitches", 0);
             String notes = arr.getJSONObject(i).getString("notes");
 
             Tick tick = new Tick(routeId, date, pitches, notes);
@@ -147,12 +149,14 @@ public class MPModel {
         JSONObject obj = new JSONObject(jsonText);
         JSONArray arr = obj.getJSONArray("routes");
         for (int i = 0; i < arr.length(); i++) {
-            Long routeId = Long.parseLong(arr.getJSONObject(i).getString("id"));
+            Long routeId = arr.getJSONObject(i).optLong("id", 0);
+            if (routeId == 0)
+                continue;
             String name = arr.getJSONObject(i).getString("name");
             String type = arr.getJSONObject(i).getString("type");
             String difficulty = arr.getJSONObject(i).getString("rating");
-            Float stars = Float.parseFloat(arr.getJSONObject(i).getString("stars"));
-            Integer pitches = Integer.parseInt(arr.getJSONObject(i).getString("pitches"));
+            Float stars = (float)arr.getJSONObject(i).optDouble("stars", 0);
+            Integer pitches = (int) arr.getJSONObject(i).optLong("pitches", 0);
             String url = arr.getJSONObject(i).getString("url");
 
             Route route = new Route(routeId, name, type, difficulty, stars, pitches, url);
