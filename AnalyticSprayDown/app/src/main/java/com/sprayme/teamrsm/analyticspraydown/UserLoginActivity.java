@@ -31,6 +31,9 @@ public class UserLoginActivity extends AppCompatActivity {
         EditText email = (EditText)findViewById(R.id.emailEntry);
         EditText apiKey = (EditText)findViewById(R.id.apiKeyEntry);
 
+        dataCache.createNewUser(email.getText().toString(), apiKey.getText().toString());
+
+        // todo: listen to datacache for success / failure
 //        if (dataCache.createNewUser(email.getText().toString(), apiKey.getText().toString()) != null)
 //            // kill activity
 //            ;

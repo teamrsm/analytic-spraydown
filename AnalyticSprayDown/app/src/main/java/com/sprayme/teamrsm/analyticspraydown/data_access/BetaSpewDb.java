@@ -1,23 +1,28 @@
 package com.sprayme.teamrsm.analyticspraydown.data_access;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.icu.util.Calendar;
 
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.API_KEY;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.EMAIL_ADDR;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.LAST_ACCESS;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.USERS_TABLE_NAME;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.USER_ID;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.USER_NAME;
 
 /**
  * Created by Said on 10/8/2017.
+ * Singleton class as a data access layer to the local SQLiteDatabase
  */
 
 public class BetaSpewDb extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "BetaSpew.db";
     private static BetaSpewDb instance;
 
@@ -58,6 +63,7 @@ public class BetaSpewDb extends SQLiteOpenHelper {
         }
     }
 
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // todo: make this smarter
@@ -77,6 +83,9 @@ public class BetaSpewDb extends SQLiteOpenHelper {
         }
     }
 
+    /*
+    * Retrieves the last known user
+    * */
     public User getLastUser() {
         User lastUser = new User();
 
@@ -97,4 +106,28 @@ public class BetaSpewDb extends SQLiteOpenHelper {
 
         return lastUser;
     }
+
+    public void insertUser(User user) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        db.beginTransaction();
+        try {
+            String dateString = Calendar.getInstance().getTime().toString();
+
+            ContentValues insertValues = new ContentValues();
+            insertValues.put(USER_ID, user.getUserId());
+            insertValues.put(USER_NAME, user.getUserName());
+            insertValues.put(EMAIL_ADDR, user.getEmailAddr());
+            insertValues.put(API_KEY, user.getApiKey());
+            insertValues.put(LAST_ACCESS, dateString);
+
+            db.insertOrThrow(USERS_TABLE_NAME, null, insertValues);
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
 }

@@ -34,8 +34,9 @@ public class DataCache extends Application
         db = database;
     }
 
+    // todo: we need a better way of teasing out the MPModel from Main Activity
     public void setMp(MPModel mountainProject) {
-        mp = mountainProject;
+        mp = new MPModel(this);
     }
 
     private User _currentUser;
@@ -56,6 +57,11 @@ public class DataCache extends Application
 
     public void createNewUser(String emailAddress, String apiKey) {
         mp.requestUser(emailAddress);
+
+        // todo: think about the case in which _current user already has some context
+        if (_currentUser == null)
+            _currentUser = new User();
+
         _currentUser.setEmailAddr(emailAddress);
         _currentUser.setApiKey(apiKey);
     }
@@ -73,11 +79,11 @@ public class DataCache extends Application
 
     @Override
     public void onUserLoaded() {
-        // todo: persist to db
         User tmpUser = mp.getUser();
         _currentUser.setUserName(tmpUser.getUserName());
         _currentUser.setUserId(tmpUser.getUserId());
-        
+
+        db.insertUser(_currentUser);
     }
 
     @Override

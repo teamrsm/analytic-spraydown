@@ -73,10 +73,10 @@ class SqlGen {
         return new StringBuilder()
                 .append("CREATE TABLE ")
                 .append(USERS_TABLE_NAME).append(" (")
-                .append(USER_ID).append(" INT, ")
-                .append(USER_NAME).append(" TEXT, ")
-                .append(EMAIL_ADDR).append(" TEXT, ")
-                .append(API_KEY).append(" TEXT, ")
+                .append(USER_ID).append(" INT ").append("NOT NULL ").append("PRIMARY KEY, ")
+                .append(USER_NAME).append(" TEXT ").append("NOT NULL, ")
+                .append(EMAIL_ADDR).append(" TEXT ").append("NOT NULL, ")
+                .append(API_KEY).append(" TEXT ").append("NOT NULL, ")
                 .append(LAST_ACCESS).append(" DATE")
                 .append(")").toString();
     }
