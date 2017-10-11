@@ -18,24 +18,39 @@ public class Route {
         this.id = id;
         this.name = name;
 
-        if (type.equalsIgnoreCase("Sport"))
+        GradeType gradetype = GradeType.RouteYosemite;
+        if (type.equalsIgnoreCase("Sport")) {
             this.type = RouteType.Sport;
-        else if (type.equalsIgnoreCase("Trad"))
+            gradetype = GradeType.RouteYosemite;
+        }
+        else if (type.equalsIgnoreCase("Trad")) {
             this.type = RouteType.Trad;
-        else if (type.equalsIgnoreCase("Boulder"))
+            gradetype = GradeType.RouteYosemite;
+        }
+        else if (type.equalsIgnoreCase("Boulder")) {
             this.type = RouteType.Boulder;
-        else if (type.equalsIgnoreCase("Ice"))
+            gradetype = GradeType.BoulderHueco;
+        }
+        else if (type.equalsIgnoreCase("Ice")) {
             this.type = RouteType.Ice;
-        else if (type.equalsIgnoreCase("Aid"))
+            gradetype = GradeType.Ice;
+        }
+        else if (type.equalsIgnoreCase("Aid")) {
             this.type = RouteType.Aid;
-        else if (type.equalsIgnoreCase("Mixed"))
+            gradetype = GradeType.Aid;
+        }
+        else if (type.equalsIgnoreCase("Mixed")) {
             this.type = RouteType.Mixed;
-        else
+            gradetype = GradeType.Other;
+        }
+        else {
             this.type = RouteType.Unknown;
+            gradetype = GradeType.Other;
+        }
 
         // todo map the grade string to the grade value
         this.gradeStr = difficulty;
-        this.grade = new Grade(gradeStr);
+        this.grade = new Grade(gradeStr, gradetype);
         this.stars = stars;
         this.pitches = pitches;
         this.url = url;

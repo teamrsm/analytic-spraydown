@@ -34,6 +34,8 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity
     implements MPModel.MPModelListener {
 
+    static final int LOGIN_REQUEST = 1;
+
     private MPModel mpModel = null;
     private DataCache dataCache = null;
     private BetaSpewDb db = null;
@@ -111,11 +113,22 @@ public class MainActivity extends AppCompatActivity
             currentUser = dataCache.getLastUser();
         } catch (InvalidUserException e) {
             // todo: launch login, we have no known user
-            Intent intent = new Intent(this, UserLoginActivity.class);
-            startActivity(intent);
+            Intent loginIntent = new Intent(this, UserLoginActivity.class);
+            startActivityForResult(loginIntent, LOGIN_REQUEST);;
         }
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check which request we're responding to
+        if (requestCode == LOGIN_REQUEST) {
+            // Make sure the request was successful
+            if (resultCode == RESULT_OK) {
+                
+            }
+        }
     }
 
     @Override

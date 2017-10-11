@@ -8,23 +8,24 @@ import com.sprayme.teamrsm.analyticspraydown.utilities.GradeManager;
 
 public class Grade {
     private String gradeString;
-    private RouteType type;
+    private GradeType type;
+    private RouteType routeType;
     private int gradeValue; // todo do we want this to be an int?
 
-    public Grade(String gradeString){ // todo do we want these to automatically get the type or store the grade values in separate lookups?
+    public Grade(String gradeString, GradeType type){ // todo do we want these to automatically get the type or store the grade values in separate lookups?
         this.gradeString = gradeString;
         // todo do lookup to get value and route type
-        gradeValue = GradeManager.getGradeValue(gradeString);
+        gradeValue = GradeManager.getGradeValue(gradeString, type);
     }
 
-    public Grade(int gradeValue){
+    public Grade(int gradeValue, GradeType type){
         this.gradeValue = gradeValue;
         // todo do lookup to get string and route type
-        gradeString = GradeManager.getGradeString(gradeValue);
+        gradeString = GradeManager.getGradeString(gradeValue, type);
     }
 
     public int compareTo(Grade otherGrade) throws IllegalArgumentException{
-        if (type != otherGrade.getRouteType())
+        if (routeType != otherGrade.getRouteType())
             throw new IllegalArgumentException("Can't compare different grade types");
         int otherGradeValue = otherGrade.getGradeValue();
         if (gradeValue == otherGradeValue)
@@ -39,18 +40,22 @@ public class Grade {
         return gradeValue;
     }
 
-    public RouteType getRouteType() {
+    public GradeType getGradeType() {
         return type;
+    }
+
+    public RouteType getRouteType() {
+        return routeType;
     }
 
     public Grade nextHardest(){
         // todo protect from max values
-        return new Grade(gradeValue + 1);
+        return new Grade(gradeValue + 1, type);
     }
 
     public Grade nextEasiest(){
         // todo protect from min values
-        return new Grade(gradeValue - 1);
+        return new Grade(gradeValue - 1, type);
     }
 
     @Override
