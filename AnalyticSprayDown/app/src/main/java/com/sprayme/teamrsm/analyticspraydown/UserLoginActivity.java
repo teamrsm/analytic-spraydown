@@ -1,5 +1,6 @@
 package com.sprayme.teamrsm.analyticspraydown;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -37,6 +38,10 @@ public class UserLoginActivity extends AppCompatActivity {
 //        if (dataCache.createNewUser(email.getText().toString(), apiKey.getText().toString()) != null)
 //            // kill activity
 //            ;
+        Intent _result = new Intent();
+//        _result.putExtra("USER",
+        setResult(Activity.RESULT_OK, _result);
+        finish();
 
     }
 }

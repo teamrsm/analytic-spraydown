@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity
 
         mpModel = new MPModel(this);
         dataCache = DataCache.getInstance();
-        //this.deleteDatabase("BetaSpew.db");
+//        this.deleteDatabase("BetaSpew.db");
         db = BetaSpewDb.getInstance(this);
 
         mDrawerList = (ListView)findViewById(R.id.navList);
@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity
         } catch (InvalidUserException e) {
             // todo: launch login, we have no known user
             Intent loginIntent = new Intent(this, UserLoginActivity.class);
-            startActivityForResult(loginIntent, LOGIN_REQUEST);;
+            startActivityForResult(loginIntent, LOGIN_REQUEST);
         }
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity
         if (requestCode == LOGIN_REQUEST) {
             // Make sure the request was successful
             if (resultCode == RESULT_OK) {
-                
+                currentUser = dataCache.getCurrentUser();
             }
         }
     }
@@ -148,11 +148,8 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemThatWasClickedId = item.getItemId();
         if (itemThatWasClickedId == R.id.build_pyramid) {
-            EditText email = (EditText)findViewById(R.id.emailEntry);
-            EditText apiKey = (EditText)findViewById(R.id.apiKeyEntry);
-            if (apiKey.getText().toString() != null)
-                MPQueryTask.KEY = apiKey.getText().toString();
-            mpModel.requestTicks(email.getText().toString() != null ? email.getText().toString() : "thebigrokh@gmail.com");
+            MPQueryTask.KEY = dataCache.getCurrentUser().getApiKey();
+            mpModel.requestTicks(dataCache.getCurrentUser().getEmailAddr());
             return true;
         }
 
