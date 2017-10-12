@@ -144,6 +144,7 @@ public class DataCache extends Application
         else {
             // todo: trigger the finished listener
             m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
+            broadcastTicksCompleted();
         }
     }
 
@@ -161,6 +162,7 @@ public class DataCache extends Application
         /* persist to database, then retrieve latest set. */
         m_Db.upsertTicks(m_MpModel.getTicks(), m_CurrentUser.getUserId());
         m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
+        broadcastTicksCompleted();
     }
 
     @Override
@@ -211,7 +213,15 @@ public class DataCache extends Application
     }
 
     private void broadcastTicksCompleted() {
+        ticksHandlers.forEach((k,v) -> v.onTicksCached((m_Ticks)));
+    }
 
+//    private void broadcastRoutesCompleted() {
+//        routeHandlers.forEach((k,v) -> v.onRoutesCached((m_Routes)));
+//    }
+
+    private void broadcastUserCompleted() {
+        userHandlers.forEach((k,v) -> v.onUserCached((m_CurrentUser)));
     }
 
     /* temporary home for these sprayrific structures */
