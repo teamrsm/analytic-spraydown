@@ -8,7 +8,7 @@ import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 
-import java.sql.Time;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -20,7 +20,7 @@ import java.util.List;
 public class DataCache extends Application
         implements MPModel.MPModelListener {
 
-    private static final long invalidCacheHours = 24;
+    private static final int invalidCacheHours = 24;
 
     /* member variables */
     private static DataCache instance = new DataCache();
@@ -47,7 +47,21 @@ public class DataCache extends Application
     * Cache Methods
     * */
     private boolean isCacheInvalid() {
-        return false;
+
+        /* instantiating java.util.date defaults to current time. */
+
+        Date lastAccessDate = m_Db.getLastAccessTime(m_CurrentUser.getUserId());
+
+        Date cacheInvalidationDate = new Date();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(cacheInvalidationDate);
+        cal.add(Calendar.HOUR_OF_DAY, -1 * invalidCacheHours);
+        cacheInvalidationDate = cal.getTime();
+
+        if (cacheInvalidationDate.getTime() <= lastAccessDate.getTime())
+            return false;
+        else
+            return true;
     }
 
     /*
@@ -69,7 +83,7 @@ public class DataCache extends Application
     }
 
     public void createNewUser(String emailAddress, String apiKey) {
-        m_MpModel.requestUser(emailAddress);
+        //m_MpModel.requestUser(emailAddress);
 
         if (m_CurrentUser == null)
             m_CurrentUser = new User();
@@ -78,6 +92,10 @@ public class DataCache extends Application
 
         m_CurrentUser.setEmailAddr(emailAddress);
         m_CurrentUser.setApiKey(apiKey);
+//
+//        m_CurrentUser.setUserId((long)106308715);
+//        m_CurrentUser.setUserName("Said Parirokh");
+//        onUserLoaded();
     }
 
     private void clearCurrentUser() {
@@ -90,16 +108,19 @@ public class DataCache extends Application
     /*
     * Ticks Methods
     * */
-    public List<Tick> getUserTicks() {
+    public void getUserTicks() {
         if (m_Ticks == null)
             fetchTicks();
 
-        return m_Ticks;
+
     }
 
     private void fetchTicks() {
+        if (isCacheInvalid()) {
+            m_MpModel.requestTicks(m_CurrentUser.getEmailAddr());
+        }
 
-
+        // get data from the db and then trigger the finished listener
     }
 
 
@@ -113,14 +134,14 @@ public class DataCache extends Application
 
     @Override
     public void onTicksLoaded() {
-
+        // once ticks are loaded persist new ones to the db. db layer will take care of this.
     }
 
     @Override
     public void onUserLoaded() {
-        User tmpUser = m_MpModel.getUser();
-        m_CurrentUser.setUserName(tmpUser.getUserName());
-        m_CurrentUser.setUserId(tmpUser.getUserId());
+//        User tmpUser = m_MpModel.getUser();
+//        m_CurrentUser.setUserName(tmpUser.getUserName());
+//        m_CurrentUser.setUserId(tmpUser.getUserId());
 
         m_Db.insertUser(m_CurrentUser);
     }

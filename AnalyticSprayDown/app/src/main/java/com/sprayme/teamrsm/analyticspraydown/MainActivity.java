@@ -52,9 +52,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mpModel = new MPModel(this);
-
-//        this.deleteDatabase("BetaSpew.db");
+        //this.deleteDatabase("BetaSpew.db");
         db = BetaSpewDb.getInstance(this);
 
         mDrawerList = (ListView)findViewById(R.id.navList);
@@ -155,8 +153,8 @@ public class MainActivity extends AppCompatActivity
         int itemThatWasClickedId = item.getItemId();
         if (itemThatWasClickedId == R.id.build_pyramid) {
             MPQueryTask._key = dataCache.getCurrentUser().getApiKey();
+            dataCache.getUserTicks();
 
-            mpModel.requestTicks(dataCache.getCurrentUser().getEmailAddr());
             return true;
         }
 

@@ -113,7 +113,7 @@ public class BetaSpewDb extends SQLiteOpenHelper {
         long lastAccessLong = 0;
 
         SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.rawQuery("", null);
+        Cursor cursor = db.rawQuery(SqlGen.makeLastUserAccess(userId), null);
 
         try {
             if (cursor.moveToFirst()) {
@@ -123,7 +123,7 @@ public class BetaSpewDb extends SQLiteOpenHelper {
             e.printStackTrace();
         }
 
-        return new Date(lastAccessLong * 1000);
+        return new Date(lastAccessLong);
     }
 
     public void insertUser(User user) {
@@ -132,7 +132,6 @@ public class BetaSpewDb extends SQLiteOpenHelper {
         db.beginTransaction();
         try {
             long unixDate = new Date().getTime();
-
 
             ContentValues insertValues = new ContentValues();
             insertValues.put(USER_ID, user.getUserId());

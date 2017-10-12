@@ -42,7 +42,6 @@ class SqlGen {
     static final String PITCHES = "PITCHES";
     static final String ROUTE_URL = "ROUTE_URL";
 
-    // todo: add unique constraint to users table
     public static String makeRoutesTableCreate() {
         return new StringBuilder()
                 .append("CREATE TABLE ")
@@ -94,5 +93,13 @@ class SqlGen {
                 .append(" ORDER BY ")
                 .append(LAST_ACCESS).append(" DESC ")
                 .append("LIMIT 1").toString();
+    }
+
+    public static String makeLastUserAccess(long userId) {
+        return new StringBuilder()
+                .append("SELECT ").append(LAST_ACCESS)
+                .append(" FROM ").append(USERS_TABLE_NAME)
+                .append(" WHERE ")
+                .append(USER_ID).append(" = ").append(userId).toString();
     }
 }
