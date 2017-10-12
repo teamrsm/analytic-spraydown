@@ -30,13 +30,12 @@ import com.sprayme.teamrsm.analyticspraydown.views.SprayamidView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity
-    implements MPModel.MPModelListener {
+public class MainActivity extends AppCompatActivity {
 
     static final int LOGIN_REQUEST = 1;
 
-    private MPModel mpModel = null;
     private DataCache dataCache = null;
     private BetaSpewDb db = null;
     private User currentUser = null;
@@ -46,6 +45,7 @@ public class MainActivity extends AppCompatActivity
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
+    private UUID userCallbackUuid, ticksCallbackUuid, routesCallbackUuid;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -152,6 +152,15 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemThatWasClickedId = item.getItemId();
         if (itemThatWasClickedId == R.id.build_pyramid) {
+            ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+                @Override
+                public void onTicksCached(List<Tick> ticks) {
+                    if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+                            ticksCallbackUuid = null;
+
+
+                }
+            });
             dataCache.getUserTicks();
             return true;
         }
@@ -173,33 +182,9 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    public void onSomeAction(){
-        mpModel.requestTicks("someUser");
-    }
-
-    public void onSomeActionComplete(){
-        //do stuff
-    }
-
-    @Override
-    public void onRoutesLoaded() {
-
-    }
-
-    @Override
-    public void onTicksLoaded() {
-
-    }
-
-    @Override
-    public void onUserLoaded() {
-
-    }
-
-    @Override
-    public void onFinished() {
+    public void onFinished(List<Tick> ticks) {
         List<Route> routes = new ArrayList<Route>();
-        for (Tick tick : mpModel.getTicks()) {
+        for (Tick tick : ticks) {
             if (tick.getRoute() != null)
             routes.add(tick.getRoute());
         }
@@ -209,10 +194,10 @@ public class MainActivity extends AppCompatActivity
 
         Pyramid pyramid;
         if (hardestCount > 1){
-            pyramid =  mpModel.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive, hardestRoute.getGrade().nextHardest());
+            pyramid =  dataCache.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive, hardestRoute.getGrade().nextHardest());
         }
         else
-            pyramid = mpModel.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive);
+            pyramid = dataCache.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive);
         SprayamidView view = (SprayamidView)findViewById(R.id.pyramidView);
         view.setPyramid(pyramid);
         view.invalidate();

@@ -204,21 +204,4 @@ public class MPModel {
     public List<Tick> getTicks(){
         return ticks;
     }
-
-    public Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier) {
-        List<Route> filteredRoutes = routes.stream()
-                .filter((route) -> Objects.nonNull(route))
-                .filter((route) -> route.getType() == type)
-                .collect(Collectors.toList());
-
-        return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier);
-    }
-
-    public Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier, Grade goal) {
-        List<Route> filteredRoutes = routes.stream()
-                .filter((route) -> route.getType() == type)
-                .collect(Collectors.toList());
-
-        return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, goal);
-    }
 }
