@@ -115,10 +115,6 @@ public class DataCache extends Application
 
         m_CurrentUser.setEmailAddr(emailAddress);
         m_CurrentUser.setApiKey(apiKey);
-//
-//        m_CurrentUser.setUserId((long)106308715);
-//        m_CurrentUser.setUserName("Said Parirokh");
-//        onUserLoaded();
     }
 
     private void clearCurrentUser() {
@@ -134,8 +130,11 @@ public class DataCache extends Application
     public void getUserTicks() {
         if (m_Ticks == null)
             fetchTicks();
+        else if (isCacheInvalid())
+            fetchTicks();
+        else {
 
-
+        }
     }
 
     private void fetchTicks() {
@@ -174,6 +173,9 @@ public class DataCache extends Application
 
     }
 
+    /*
+    * Publisher / Subscriber Methods
+    * */
     public UUID subscribe(DataCacheUserHandler handler){
         UUID uuid = UUID.randomUUID();
         userHandlers.put(uuid, handler);
@@ -204,6 +206,11 @@ public class DataCache extends Application
         return routeHandlers.remove(uuid) != null;
     }
 
+    private void broadcastTicksCompleted() {
+
+    }
+
+    /* temporary home for these sprayrific structures */
     public Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier) {
         List<Route> filteredRoutes = routes.stream()
                 .filter((route) -> Objects.nonNull(route))
