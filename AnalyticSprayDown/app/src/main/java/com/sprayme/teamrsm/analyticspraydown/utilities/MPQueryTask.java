@@ -47,7 +47,7 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
     final String PARAM_KEY = "key";
     final String PARAM_ROUTEIDS = "routeIds";
 
-    private String _key;
+    public static String _key;
 
     public AsyncResponse delegate = null;
 
