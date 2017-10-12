@@ -152,7 +152,13 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemThatWasClickedId = item.getItemId();
         if (itemThatWasClickedId == R.id.build_pyramid) {
+<<<<<<< HEAD
             dataCache.getUserTicks();
+=======
+            MPQueryTask._key = dataCache.getCurrentUser().getApiKey();
+            dataCache.getUserTicks();
+
+>>>>>>> 9bd35ba9fedfaea150bb4bf94ecdd28cc4ca262e
             return true;
         }
 
