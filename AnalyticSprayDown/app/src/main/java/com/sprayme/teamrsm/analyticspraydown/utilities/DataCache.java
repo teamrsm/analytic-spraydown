@@ -141,8 +141,10 @@ public class DataCache extends Application
         if (isCacheInvalid()) {
             m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
         }
-
-        // get data from the db and then trigger the finished listener
+        else {
+            // todo: trigger the finished listener
+            m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
+        }
     }
 
 
@@ -156,7 +158,9 @@ public class DataCache extends Application
 
     @Override
     public void onTicksLoaded() {
-        // once ticks are loaded persist new ones to the db. db layer will take care of this.
+        /* persist to database, then retrieve latest set. */
+        m_Db.upsertTicks(m_MpModel.getTicks(), m_CurrentUser.getUserId());
+        m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
     }
 
     @Override

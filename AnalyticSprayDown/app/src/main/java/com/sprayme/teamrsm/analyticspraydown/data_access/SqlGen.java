@@ -105,5 +105,12 @@ class SqlGen {
                 .append(USER_ID).append(" = ").append(userId).toString();
     }
 
+    public static String makeGetUserTicks(long userId) {
+        return new StringBuilder()
+                .append("SELECT * ")
+                .append(" FROM ").append(TICKS_TABLE_NAME)
+                .append(" WHERE ")
+                .append(USER_ID).append(" = ").append(userId).toString();
+    }
 
 }

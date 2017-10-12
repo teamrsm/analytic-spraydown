@@ -7,15 +7,22 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
+import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.API_KEY;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.EMAIL_ADDR;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.LAST_ACCESS;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.NOTES;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_ID;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICKS_TABLE_NAME;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICK_DATE;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICK_TYPE;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.USERS_TABLE_NAME;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.USER_ID;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.USER_NAME;
@@ -149,7 +156,55 @@ public class BetaSpewDb extends SQLiteOpenHelper {
         }
     }
 
+    /*
+    * insert new ticks. Replace old ones with new values.
+    * The table uses a unique constraint on USER_ID, ROUTE_ID with
+    * a ON CONFLICT REPLACE clause replacing any rows which violate this condition.
+    * */
     public void upsertTicks(List<Tick> userTicks, long userId) {
+        SQLiteDatabase db = getWritableDatabase();
 
+        db.beginTransaction();
+        try {
+            for ( Tick tick: userTicks ) {
+                ContentValues insertValues = new ContentValues();
+                insertValues.put(USER_ID, userId);
+                insertValues.put(ROUTE_ID, tick.getRouteId());
+                insertValues.put(TICK_DATE, tick.getDate().getTime());
+                insertValues.put(NOTES, tick.getNotes());
+                insertValues.put(TICK_TYPE, tick.getType().toString());
+
+                db.insert(TICKS_TABLE_NAME, null, insertValues);
+            }
+
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public List<Tick> getTicks(long userId) {
+        List<Tick> userTicks = new ArrayList<>();
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(SqlGen.makeGetUserTicks(userId), null);
+
+        try {
+            while (cursor.moveToNext()) {
+                long routeId = cursor.getLong(cursor.getColumnIndex(ROUTE_ID));
+                Date tickDate = new Date(cursor.getLong(cursor.getColumnIndex(TICK_DATE)));
+                String notes = cursor.getString(cursor.getColumnIndex(NOTES));
+                String tickType = cursor.getString(cursor.getColumnIndex(TICK_TYPE));
+
+                // todo: join with routes to get num pitches
+                userTicks.add(new Tick(routeId, tickDate, null, notes));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return userTicks;
     }
 }
