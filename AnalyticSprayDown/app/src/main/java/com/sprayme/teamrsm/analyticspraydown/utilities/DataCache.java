@@ -19,6 +19,11 @@ import java.util.List;
 
 public class DataCache extends Application
         implements MPModel.MPModelListener {
+    public interface DataCacheCallback {
+        // These methods are the different events and
+        // need to pass relevant arguments related to the event triggered
+        public void onCallbackFinished(Object result);
+    }
 
     private static final long invalidCacheHours = 24;
 
@@ -69,7 +74,7 @@ public class DataCache extends Application
     }
 
     public void createNewUser(String emailAddress, String apiKey) {
-        m_MpModel.requestUser(emailAddress);
+        m_MpModel.requestUser(emailAddress, apiKey);
 
         if (m_CurrentUser == null)
             m_CurrentUser = new User();
@@ -90,7 +95,7 @@ public class DataCache extends Application
     /*
     * Ticks Methods
     * */
-    public List<Tick> getUserTicks() {
+    public void getUserTicks(DataCacheCallback callback) {
         if (m_Ticks == null)
             fetchTicks();
 

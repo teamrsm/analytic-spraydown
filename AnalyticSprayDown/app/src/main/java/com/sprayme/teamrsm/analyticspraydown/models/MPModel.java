@@ -55,32 +55,33 @@ public class MPModel {
         this.listener = listener;
     }
 
-    public void requestUser(String emailAddress) {
-        MPQueryTask mpQuery = new MPQueryTask(output -> {
+    public void requestUser(String emailAddress, String apiKey) {
+        MPQueryTask mpQuery = new MPQueryTask(emailAddress, apiKey,
+                output -> {
             user = parseUser(output);
             listener.onUserLoaded();
         });
-        URL url = mpQuery.buildUserUrl(emailAddress);
+        URL url = mpQuery.buildUserUrl();
         mpQuery.execute(url);
     }
 
-    public void requestTicks(String user) {
-        MPQueryTask mpQuery = new MPQueryTask(output -> {
+    public void requestTicks(long userId, String apiKey) {
+        MPQueryTask mpQuery = new MPQueryTask(userId, apiKey, output -> {
             ticks = parseTicks(output);
             listener.onTicksLoaded();
             Long[] routeIds = getRouteIdArray(ticks);
             Long[] sub = new Long[99];
             for (int i = 0; i < 99; i++)
                 sub[i] = routeIds[i];
-            requestRoutes(sub);
+            requestRoutes(userId, apiKey, sub);
         });
-        URL url = mpQuery.buildTicksUrl(user);
+        URL url = mpQuery.buildTicksUrl();
         mpQuery.execute(url);
     }
 
-    public void requestRoutes(Long[] routeIds) {
+    public void requestRoutes(long userId, String apiKey, Long[] routeIds) {
         //todo make this send in 100 count batches
-        MPQueryTask mpQuery = new MPQueryTask(output -> {
+        MPQueryTask mpQuery = new MPQueryTask(userId, apiKey, output -> {
             routes = parseRoutes(output);
             listener.onRoutesLoaded();
             mapRoutes();
