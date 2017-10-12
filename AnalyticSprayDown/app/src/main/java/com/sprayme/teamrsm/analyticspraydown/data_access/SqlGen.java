@@ -19,11 +19,13 @@ class SqlGen {
         return new StringBuilder()
                 .append("CREATE TABLE ")
                 .append(TICKS_TABLE_NAME).append(" (")
-                .append(USER_ID).append(" INT, ")
-                .append(ROUTE_ID).append(" INT, ")
-                .append(TICK_DATE).append(" TEXT, ")
+                .append(USER_ID).append(" INT ").append("NOT NULL, ")
+                .append(ROUTE_ID).append(" INT ").append("NOT NULL, ")
+                .append(TICK_DATE).append(" DATE ").append("NOT NULL, ")
                 .append(NOTES).append(" TEXT, ")
-                .append(TICK_TYPE).append(" TEXT ")
+                .append(TICK_TYPE).append(" TEXT, ")
+                .append("UNIQUE (").append(USER_ID).append(",").append(ROUTE_ID).append(")")
+                .append(" ON CONFLICT REPLACE")
                 .append(")").toString();
     }
 
@@ -102,4 +104,6 @@ class SqlGen {
                 .append(" WHERE ")
                 .append(USER_ID).append(" = ").append(userId).toString();
     }
+
+
 }

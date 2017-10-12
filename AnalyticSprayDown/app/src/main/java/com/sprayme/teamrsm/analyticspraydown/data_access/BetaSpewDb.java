@@ -6,10 +6,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 
 
 import java.util.Date;
+import java.util.List;
 
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.API_KEY;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.EMAIL_ADDR;
@@ -24,7 +26,7 @@ import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.USER_NAME
  */
 
 public class BetaSpewDb extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "BetaSpew.db";
     private static BetaSpewDb instance;
 
@@ -68,16 +70,14 @@ public class BetaSpewDb extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // todo: make this smarter
         db.beginTransaction();
         try {
-            db.execSQL(SqlGen.makeRoutesTableDrop());
-            db.execSQL(SqlGen.makeTicksTableDrop());
-            db.execSQL(SqlGen.makeUsersTableDrop());
-            db.execSQL(SqlGen.makeUsersTableCreate());
-            db.execSQL(SqlGen.makeTicksTableCreate());
-            db.execSQL(SqlGen.makeRoutesTableCreate());
-            db.setTransactionSuccessful();
+            if (oldVersion < 2 && newVersion >= 2) {
+                //todo: get ticks
+                db.execSQL(SqlGen.makeTicksTableDrop());
+                db.execSQL(SqlGen.makeTicksTableCreate());
+                // todo: reload ticks
+            }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -149,4 +149,7 @@ public class BetaSpewDb extends SQLiteOpenHelper {
         }
     }
 
+    public void upsertTicks(List<Tick> userTicks, long userId) {
+
+    }
 }
