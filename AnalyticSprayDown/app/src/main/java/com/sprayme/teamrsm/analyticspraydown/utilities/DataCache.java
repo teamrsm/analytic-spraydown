@@ -4,13 +4,23 @@ import android.app.Application;
 
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
+import com.sprayme.teamrsm.analyticspraydown.models.Grade;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
+import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
+import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
+import com.sprayme.teamrsm.analyticspraydown.models.Route;
+import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Created by Said on 10/9/2017.
@@ -19,11 +29,19 @@ import java.util.List;
 
 public class DataCache extends Application
         implements MPModel.MPModelListener {
-    public interface DataCacheCallback {
-        // These methods are the different events and
-        // need to pass relevant arguments related to the event triggered
-        public void onCallbackFinished(Object result);
+    public interface DataCacheTicksHandler {
+        void onTicksCached(List<Tick> ticks);
     }
+    public interface DataCacheRoutesHandler {
+        void onRoutesCached(List<Route> routes);
+    }
+    public interface DataCacheUserHandler {
+        void onUserCached(User user);
+    }
+
+    private HashMap<UUID,DataCacheUserHandler> userHandlers = new HashMap<>();
+    private HashMap<UUID,DataCacheTicksHandler> ticksHandlers = new HashMap<>();
+    private HashMap<UUID,DataCacheRoutesHandler> routeHandlers = new HashMap<>();
 
     private static final int invalidCacheHours = 24;
 
@@ -113,7 +131,7 @@ public class DataCache extends Application
     /*
     * Ticks Methods
     * */
-    public void getUserTicks(DataCacheCallback callback) {
+    public void getUserTicks() {
         if (m_Ticks == null)
             fetchTicks();
 
@@ -122,7 +140,7 @@ public class DataCache extends Application
 
     private void fetchTicks() {
         if (isCacheInvalid()) {
-            m_MpModel.requestTicks(m_CurrentUser.getEmailAddr());
+            m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
         }
 
         // get data from the db and then trigger the finished listener
@@ -144,9 +162,9 @@ public class DataCache extends Application
 
     @Override
     public void onUserLoaded() {
-//        User tmpUser = m_MpModel.getUser();
-//        m_CurrentUser.setUserName(tmpUser.getUserName());
-//        m_CurrentUser.setUserId(tmpUser.getUserId());
+        User tmpUser = m_MpModel.getUser();
+        m_CurrentUser.setUserName(tmpUser.getUserName());
+        m_CurrentUser.setUserId(tmpUser.getUserId());
 
         m_Db.insertUser(m_CurrentUser);
     }
@@ -154,5 +172,52 @@ public class DataCache extends Application
     @Override
     public void onFinished() {
 
+    }
+
+    public UUID subscribe(DataCacheUserHandler handler){
+        UUID uuid = UUID.randomUUID();
+        userHandlers.put(uuid, handler);
+        return uuid;
+    }
+
+    public UUID subscribe(DataCacheTicksHandler handler){
+        UUID uuid = UUID.randomUUID();
+        ticksHandlers.put(uuid, handler);
+        return uuid;
+    }
+
+    public UUID subscribe(DataCacheRoutesHandler handler) {
+        UUID uuid = UUID.randomUUID();
+        routeHandlers.put(uuid, handler);
+        return uuid;
+    }
+
+    public boolean unsubscribeUserHandler(UUID uuid){
+        return userHandlers.remove(uuid) != null;
+    }
+
+    public boolean unsubscribeTicksHandler(UUID uuid){
+        return ticksHandlers.remove(uuid) != null;
+    }
+
+    public boolean unsubscribeRoutesHandler(UUID uuid){
+        return routeHandlers.remove(uuid) != null;
+    }
+
+    public Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier) {
+        List<Route> filteredRoutes = routes.stream()
+                .filter((route) -> Objects.nonNull(route))
+                .filter((route) -> route.getType() == type)
+                .collect(Collectors.toList());
+
+        return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier);
+    }
+
+    public Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier, Grade goal) {
+        List<Route> filteredRoutes = routes.stream()
+                .filter((route) -> route.getType() == type)
+                .collect(Collectors.toList());
+
+        return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, goal);
     }
 }
