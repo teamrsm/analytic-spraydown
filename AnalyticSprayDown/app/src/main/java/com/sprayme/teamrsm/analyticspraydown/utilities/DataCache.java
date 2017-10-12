@@ -43,7 +43,7 @@ public class DataCache extends Application
     private HashMap<UUID,DataCacheTicksHandler> ticksHandlers = new HashMap<>();
     private HashMap<UUID,DataCacheRoutesHandler> routeHandlers = new HashMap<>();
 
-    private static final int invalidCacheHours = 24;
+    private static final int invalidCacheHours = 0;
 
     /* member variables */
     private static DataCache instance = new DataCache();
@@ -51,7 +51,9 @@ public class DataCache extends Application
     private MPModel m_MpModel = null;
     private User m_CurrentUser;
     private List<Tick> m_Ticks = null;
+    private List<Route> m_Routes = null;
 
+    /* Singleton Constructor */
     private DataCache(){ m_MpModel = new MPModel(this); }
 
     public static synchronized DataCache getInstance(){
@@ -132,22 +134,39 @@ public class DataCache extends Application
             fetchTicks();
         else if (isCacheInvalid())
             fetchTicks();
-        else {
-
-        }
+        else
+            broadcastTicksCompleted();
     }
 
     private void fetchTicks() {
-        if (isCacheInvalid()) {
+        if (isCacheInvalid())
             m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
-        }
         else {
-            // todo: trigger the finished listener
             m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
             broadcastTicksCompleted();
         }
     }
 
+    /*
+    * Routes Methods
+    * */
+    public void getRoutes(Long[] routeIds) {
+        if (m_Ticks == null)
+            fetchRoutes(routeIds);
+        else if (isCacheInvalid())
+            fetchRoutes(routeIds);
+        else
+            broadcastRoutesCompleted();
+    }
+
+    private void fetchRoutes(Long[] routeIds) {
+        if (isCacheInvalid())
+            m_MpModel.requestRoutes(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey(), routeIds);
+        else {
+            m_Routes = m_Db.getRoutes(routeIds);
+            broadcastRoutesCompleted();
+        }
+    }
 
     /*
     * MPModel Subscription Methods
@@ -161,6 +180,8 @@ public class DataCache extends Application
     public void onTicksLoaded() {
         /* persist to database, then retrieve latest set. */
         m_Db.upsertTicks(m_MpModel.getTicks(), m_CurrentUser.getUserId());
+        m_Db.updateAccessMoment(m_CurrentUser.getUserId());
+
         m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
         broadcastTicksCompleted();
     }
@@ -216,9 +237,9 @@ public class DataCache extends Application
         ticksHandlers.forEach((k,v) -> v.onTicksCached((m_Ticks)));
     }
 
-//    private void broadcastRoutesCompleted() {
-//        routeHandlers.forEach((k,v) -> v.onRoutesCached((m_Routes)));
-//    }
+    private void broadcastRoutesCompleted() {
+        routeHandlers.forEach((k,v) -> v.onRoutesCached((m_Routes)));
+    }
 
     private void broadcastUserCompleted() {
         userHandlers.forEach((k,v) -> v.onUserCached((m_CurrentUser)));
