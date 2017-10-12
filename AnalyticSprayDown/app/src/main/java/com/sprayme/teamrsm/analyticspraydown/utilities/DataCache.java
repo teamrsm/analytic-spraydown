@@ -1,13 +1,16 @@
 package com.sprayme.teamrsm.analyticspraydown.utilities;
 
 import android.app.Application;
-import android.content.Context;
 
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
-import com.sprayme.teamrsm.analyticspraydown.data_access.DbSprAyPI;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
+import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
+
+import java.sql.Time;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by Said on 10/9/2017.
@@ -17,11 +20,16 @@ import com.sprayme.teamrsm.analyticspraydown.models.User;
 public class DataCache extends Application
         implements MPModel.MPModelListener {
 
-    private static DataCache instance = new DataCache();
-    private BetaSpewDb db = null;
-    private MPModel mp = null;
+    private static final long invalidCacheHours = 24;
 
-    private DataCache(){}
+    /* member variables */
+    private static DataCache instance = new DataCache();
+    private BetaSpewDb m_Db = null;
+    private MPModel m_MpModel = null;
+    private User m_CurrentUser;
+    private List<Tick> m_Ticks = null;
+
+    private DataCache(){ m_MpModel = new MPModel(this); }
 
     public static synchronized DataCache getInstance(){
         if (instance == null)
@@ -30,43 +38,74 @@ public class DataCache extends Application
         return instance;
     }
 
+    /* Database Methods */
     public void setDb(BetaSpewDb database) {
-        db = database;
+        m_Db = database;
     }
 
-    // todo: we need a better way of teasing out the MPModel from Main Activity
-    public void setMp(MPModel mountainProject) {
-        mp = new MPModel(this);
+    /*
+    * Cache Methods
+    * */
+    private boolean isCacheInvalid() {
+        return false;
     }
 
-    private User _currentUser;
-    public User getCurrentUser() { return _currentUser; }
+    /*
+     * User Methods
+     * */
+    public User getCurrentUser() { return m_CurrentUser; }
     public void setCurrentUser(User user) {
-        _currentUser = user;
+        m_CurrentUser = user;
         //todo: update ticks
     }
 
     public User getLastUser() throws InvalidUserException {
-        User lastUser = db.getLastUser();
+        User lastUser = m_Db.getLastUser();
         if (lastUser.getUserId() == null)
             throw new InvalidUserException("No Known last user");
 
-        _currentUser = lastUser;
+        m_CurrentUser = lastUser;
         return lastUser;
     }
 
     public void createNewUser(String emailAddress, String apiKey) {
-        mp.requestUser(emailAddress);
+        m_MpModel.requestUser(emailAddress);
 
-        // todo: think about the case in which _current user already has some context
-        if (_currentUser == null)
-            _currentUser = new User();
+        if (m_CurrentUser == null)
+            m_CurrentUser = new User();
+        else
+            clearCurrentUser();
 
-        _currentUser.setEmailAddr(emailAddress);
-        _currentUser.setApiKey(apiKey);
+        m_CurrentUser.setEmailAddr(emailAddress);
+        m_CurrentUser.setApiKey(apiKey);
+    }
+
+    private void clearCurrentUser() {
+        m_CurrentUser.setEmailAddr("");
+        m_CurrentUser.setApiKey("");
+        m_CurrentUser.setUserName("");
+        m_CurrentUser.setUserId(null);
+    }
+
+    /*
+    * Ticks Methods
+    * */
+    public List<Tick> getUserTicks() {
+        if (m_Ticks == null)
+            fetchTicks();
+
+        return m_Ticks;
+    }
+
+    private void fetchTicks() {
+
+
     }
 
 
+    /*
+    * MPModel Subscription Methods
+    * */
     @Override
     public void onRoutesLoaded() {
 
@@ -79,11 +118,11 @@ public class DataCache extends Application
 
     @Override
     public void onUserLoaded() {
-        User tmpUser = mp.getUser();
-        _currentUser.setUserName(tmpUser.getUserName());
-        _currentUser.setUserId(tmpUser.getUserId());
+        User tmpUser = m_MpModel.getUser();
+        m_CurrentUser.setUserName(tmpUser.getUserName());
+        m_CurrentUser.setUserId(tmpUser.getUserId());
 
-        db.insertUser(_currentUser);
+        m_Db.insertUser(m_CurrentUser);
     }
 
     @Override

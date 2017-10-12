@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         mpModel = new MPModel(this);
-        dataCache = DataCache.getInstance();
+
 //        this.deleteDatabase("BetaSpew.db");
         db = BetaSpewDb.getInstance(this);
 
@@ -106,16 +106,22 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+        boolean canLaunchLogin = false;
 
         try {
+            dataCache = DataCache.getInstance();
             dataCache.setDb(db);
-            dataCache.setMp(mpModel);
             currentUser = dataCache.getLastUser();
         } catch (InvalidUserException e) {
-            // todo: launch login, we have no known user
+            /* launch login, we have no known user */
+            canLaunchLogin = true;
+        }
+
+        if (canLaunchLogin) {
             Intent loginIntent = new Intent(this, UserLoginActivity.class);
             startActivityForResult(loginIntent, LOGIN_REQUEST);
         }
+
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
     }
@@ -149,7 +155,8 @@ public class MainActivity extends AppCompatActivity
         int itemThatWasClickedId = item.getItemId();
         if (itemThatWasClickedId == R.id.build_pyramid) {
             MPQueryTask.KEY = dataCache.getCurrentUser().getApiKey();
-            mpModel.requestTicks(dataCache.getCurrentUser().getEmailAddr());
+
+            //mpModel.requestTicks(dataCache.getCurrentUser().getEmailAddr());
             return true;
         }
 

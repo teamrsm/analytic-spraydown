@@ -5,9 +5,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.icu.util.Calendar;
 
 import com.sprayme.teamrsm.analyticspraydown.models.User;
+
+
+import java.util.Date;
 
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.API_KEY;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.EMAIL_ADDR;
@@ -107,19 +109,37 @@ public class BetaSpewDb extends SQLiteOpenHelper {
         return lastUser;
     }
 
+    public Date getLastAccessTime(long userId) {
+        long lastAccessLong = 0;
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("", null);
+
+        try {
+            if (cursor.moveToFirst()) {
+                lastAccessLong = cursor.getLong(cursor.getColumnIndex(LAST_ACCESS));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return new Date(lastAccessLong * 1000);
+    }
+
     public void insertUser(User user) {
         SQLiteDatabase db = getWritableDatabase();
 
         db.beginTransaction();
         try {
-            String dateString = Calendar.getInstance().getTime().toString();
+            long unixDate = new Date().getTime();
+
 
             ContentValues insertValues = new ContentValues();
             insertValues.put(USER_ID, user.getUserId());
             insertValues.put(USER_NAME, user.getUserName());
             insertValues.put(EMAIL_ADDR, user.getEmailAddr());
             insertValues.put(API_KEY, user.getApiKey());
-            insertValues.put(LAST_ACCESS, dateString);
+            insertValues.put(LAST_ACCESS, unixDate);
 
             db.insertOrThrow(USERS_TABLE_NAME, null, insertValues);
             db.setTransactionSuccessful();

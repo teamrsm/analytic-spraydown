@@ -49,15 +49,10 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
 
     private String _key;
 
-    /* Hardcoded for now. Later we will create a static class to scrape
-    * mp for the users' key. */
-    public static String KEY = "106308715-6decf82832c803ba56c7bd6058316b47";
-
     public AsyncResponse delegate = null;
 
     public MPQueryTask(AsyncResponse delegate) {
         this.delegate = delegate;
-        _key = KEY;
     }
 
     @Override
