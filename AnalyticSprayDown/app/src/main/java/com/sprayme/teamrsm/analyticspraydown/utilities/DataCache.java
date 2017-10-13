@@ -44,6 +44,7 @@ public class DataCache extends Application
     private HashMap<UUID,DataCacheRoutesHandler> routeHandlers = new HashMap<>();
 
     private static final int invalidCacheHours = 24;
+    private static final int mountainProjectRoutesRequestSizeLimit = 200;
 
     /* member variables */
     private static DataCache instance = new DataCache();
@@ -51,6 +52,10 @@ public class DataCache extends Application
     private MPModel m_MpModel = null;
     private User m_CurrentUser;
     private List<Tick> m_Ticks = null;
+    private List<Route> m_Routes = null;
+
+    private boolean routesQueryIsBatched = false;
+    private Long[] routesBatchedRunCache = null;
 
     private DataCache(){ m_MpModel = new MPModel(this); }
 
@@ -148,35 +153,103 @@ public class DataCache extends Application
         }
     }
 
+    /*
+    * Routes Methods
+    * */
+    public void getRoutes() {
+        if (m_Ticks == null)
+            fetchTicks();
+        else if (isCacheInvalid())
+            fetchTicks();
+        else {
+
+        }
+    }
+
+    private void fetchRoutes(Long[] routeIds) {
+        if (isCacheInvalid() || routesQueryIsBatched) {
+            Long[] routes;
+            if (routeIds.length > mountainProjectRoutesRequestSizeLimit)
+            {
+                routes = new Long[mountainProjectRoutesRequestSizeLimit];
+                for (int i=0; i<mountainProjectRoutesRequestSizeLimit; i++) {
+                    routes[i] = routeIds[i];
+                }
+
+                Long[] routesToCache = new Long[routeIds.length - 200];
+                for (int i=200; i< routeIds.length; i++){
+                    routesToCache[i-200] = routeIds[i];
+                }
+                routesQueryIsBatched = true;
+                routesBatchedRunCache = routesToCache;
+            }
+            else
+            {
+                routes = routeIds;
+                routesQueryIsBatched = false;
+                routesBatchedRunCache = null;
+            }
+            // todo routeIDs need to be sent in batches of 200 at a time
+            m_MpModel.requestRoutes(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey(), routes);
+        }
+        else {
+            // todo: trigger the finished listener
+            m_Routes = m_Db.getRoutes();
+            broadcastRoutesCompleted();
+        }
+    }
+
 
     /*
     * MPModel Subscription Methods
     * */
     @Override
-    public void onRoutesLoaded() {
-
+    public void onRoutesLoaded(List<Route> routes) {
+        m_Db.upsertRoutes(routes);
+        if (routesQueryIsBatched){
+            fetchRoutes(routesBatchedRunCache);
+        }
+        else {
+            m_Routes = m_Db.getRoutes();
+            broadcastRoutesCompleted();
+        }
     }
 
     @Override
-    public void onTicksLoaded() {
+    public void onTicksLoaded(List<Tick> ticks) {
         /* persist to database, then retrieve latest set. */
-        m_Db.upsertTicks(m_MpModel.getTicks(), m_CurrentUser.getUserId());
+        m_Db.upsertTicks(ticks, m_CurrentUser.getUserId());
         m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
         broadcastTicksCompleted();
     }
 
     @Override
-    public void onUserLoaded() {
-        User tmpUser = m_MpModel.getUser();
-        m_CurrentUser.setUserName(tmpUser.getUserName());
-        m_CurrentUser.setUserId(tmpUser.getUserId());
+    public void onUserLoaded(User user) {
+        m_CurrentUser.setUserName(user.getUserName());
+        m_CurrentUser.setUserId(user.getUserId());
 
         m_Db.insertUser(m_CurrentUser);
+
+        broadcastUserCompleted();
     }
 
-    @Override
-    public void onFinished() {
+    private Long[] getRouteIdArray(List<Tick> ticks) {
+        List<Long> routeIds = new ArrayList<>();
+        for (Tick tick : ticks) {
+            routeIds.add(tick.getRouteId());
+        }
+        return routeIds.toArray(new Long[routeIds.size()]);
+    }
 
+    private void mapRoutes(List<Tick> ticks, List<Route> routes) {
+        HashMap<Long, Route> routeMap = new HashMap<>();
+        for (Route route : routes) {
+            routeMap.put(route.getId(), route);
+        }
+
+        for (Tick tick : ticks) {
+            tick.setRoute(routeMap.get(tick.getRouteId()));
+        }
     }
 
     /*
@@ -216,9 +289,9 @@ public class DataCache extends Application
         ticksHandlers.forEach((k,v) -> v.onTicksCached((m_Ticks)));
     }
 
-//    private void broadcastRoutesCompleted() {
-//        routeHandlers.forEach((k,v) -> v.onRoutesCached((m_Routes)));
-//    }
+    private void broadcastRoutesCompleted() {
+        routeHandlers.forEach((k,v) -> v.onRoutesCached((m_Routes)));
+    }
 
     private void broadcastUserCompleted() {
         userHandlers.forEach((k,v) -> v.onUserCached((m_CurrentUser)));

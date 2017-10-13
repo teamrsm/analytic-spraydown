@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
@@ -19,7 +20,11 @@ import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.API_KEY;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.EMAIL_ADDR;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.LAST_ACCESS;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.NOTES;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTES_TABLE_NAME;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_ID;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_NAME;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_TYPE;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_URL;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICKS_TABLE_NAME;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICK_DATE;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICK_TYPE;
@@ -200,6 +205,61 @@ public class BetaSpewDb extends SQLiteOpenHelper {
 
                 // todo: join with routes to get num pitches
                 userTicks.add(new Tick(routeId, tickDate, null, notes));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return userTicks;
+    }
+
+    /*
+    * insert new routes. Replace old ones with new values.
+    * The table uses a unique constraint on ROUTE_ID with
+    * a ON CONFLICT REPLACE clause replacing any rows which violate this condition.
+    * */
+    public void upsertRoutes(List<Route> routes) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        db.beginTransaction();
+        try {
+            for ( Route route: routes ) {
+                ContentValues insertValues = new ContentValues();
+                insertValues.put(ROUTE_ID, route.getId());
+                insertValues.put(ROUTE_NAME, route.getName());
+                insertValues.put(ROUTE_PITCHES, route.getPitches());
+                insertValues.put(ROUTE_STARS, route.getStars());
+                insertValues.put(ROUTE_URL, route.getUrl().toString());
+                insertValues.put(ROUTE_DIFFICULTY, route.getGrade().toString());
+                insertValues.put(ROUTE_TYPE, route.getType().toString());
+
+                db.insert(ROUTES_TABLE_NAME, null, insertValues);
+            }
+
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public List<Route> getRoutes() {
+        List<Route> routes = new ArrayList<>();
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(SqlGen.makeGetRoutes(), null);
+
+        try {
+            while (cursor.moveToNext()) {
+                long routeId = cursor.getLong(cursor.getColumnIndex(ROUTE_ID));
+                String name = cursor.getString(cursor.getColumnIndex(ROUTE_NAME));
+                String routeType = cursor.getString(cursor.getColumnIndex(ROUTE_TYPE));
+                // todo map the route type to a RouteType
+                String difficulty = cursor.getString(cursor.getColumnIndex(ROUTE_DIFFICULTY));
+
+                // todo: join with routes to get num pitches
+                routes.add(new Route(routeId, name, type, difficulty, stars, pitches, url));
             }
         } catch (Exception e) {
             e.printStackTrace();
