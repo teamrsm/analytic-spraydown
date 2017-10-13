@@ -1,5 +1,7 @@
 package com.sprayme.teamrsm.analyticspraydown.data_access;
 
+import java.util.List;
+
 /**
  * Created by Said on 10/9/2017.
  */
@@ -48,13 +50,15 @@ class SqlGen {
         return new StringBuilder()
                 .append("CREATE TABLE ")
                 .append(ROUTES_TABLE_NAME).append(" (")
-                .append(ROUTE_ID).append(" INT, ")
+                .append(ROUTE_ID).append(" INT ").append("NOT NULL, ")
                 .append(ROUTE_NAME).append(" TEXT, ")
                 .append(ROUTE_TYPE).append(" TEXT, ")
                 .append(RATING).append(" TEXT, ")
                 .append(STARS).append(" REAL, ")
                 .append(PITCHES).append(" INT, ")
-                .append(ROUTE_URL).append(" TEXT ")
+                .append(ROUTE_URL).append(" TEXT, ")
+                .append("UNIQUE (").append(ROUTE_ID).append(")")
+                .append(" ON CONFLICT REPLACE")
                 .append(")").toString();
     }
 
@@ -111,6 +115,33 @@ class SqlGen {
                 .append(" FROM ").append(TICKS_TABLE_NAME)
                 .append(" WHERE ")
                 .append(USER_ID).append(" = ").append(userId).toString();
+    }
+
+    public static String makeUserIdWhereClause(long userId) {
+        return new StringBuilder()
+                .append("WHERE ").append(USER_ID)
+                .append(" = ").append(userId).toString();
+    }
+
+    public static String makeGetRoutes(Long[] routeIds) {
+        return new StringBuilder()
+                .append("SELECT *")
+                .append(" FROM ").append(ROUTES_TABLE_NAME)
+                .append(" WHERE ")
+                .append(ROUTE_ID).append(" IN (")
+                .append(buildInList(routeIds))
+                .append(")").toString();
+    }
+
+    private static String buildInList(Long[] inLongs) {
+        StringBuilder inList = new StringBuilder();
+
+        for (Long i : inLongs) {
+            inList.append(i).append(",");
+        }
+
+        int lastIndex = inList.lastIndexOf(",");
+        return inList.substring(0, lastIndex - 1).toString();
     }
 
 }

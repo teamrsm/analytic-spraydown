@@ -43,7 +43,7 @@ public class DataCache extends Application
     private HashMap<UUID,DataCacheTicksHandler> ticksHandlers = new HashMap<>();
     private HashMap<UUID,DataCacheRoutesHandler> routeHandlers = new HashMap<>();
 
-    private static final int invalidCacheHours = 24;
+    private static final int invalidCacheHours = 0;
     private static final int mountainProjectRoutesRequestSizeLimit = 200;
 
     /* member variables */
@@ -57,6 +57,7 @@ public class DataCache extends Application
     private boolean routesQueryIsBatched = false;
     private Long[] routesBatchedRunCache = null;
 
+    /* Singleton Constructor */
     private DataCache(){ m_MpModel = new MPModel(this); }
 
     public static synchronized DataCache getInstance(){
@@ -137,17 +138,14 @@ public class DataCache extends Application
             fetchTicks();
         else if (isCacheInvalid())
             fetchTicks();
-        else {
-
-        }
+        else
+            broadcastTicksCompleted();
     }
 
     private void fetchTicks() {
-        if (isCacheInvalid()) {
+        if (isCacheInvalid())
             m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
-        }
         else {
-            // todo: trigger the finished listener
             m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
             broadcastTicksCompleted();
         }
@@ -199,7 +197,6 @@ public class DataCache extends Application
         }
     }
 
-
     /*
     * MPModel Subscription Methods
     * */
@@ -219,6 +216,8 @@ public class DataCache extends Application
     public void onTicksLoaded(List<Tick> ticks) {
         /* persist to database, then retrieve latest set. */
         m_Db.upsertTicks(ticks, m_CurrentUser.getUserId());
+        m_Db.updateAccessMoment(m_CurrentUser.getUserId());
+
         m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
         broadcastTicksCompleted();
     }
