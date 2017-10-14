@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -39,9 +40,9 @@ public class DataCache extends Application
         void onUserCached(User user);
     }
 
-    private HashMap<UUID,DataCacheUserHandler> userHandlers = new HashMap<>();
-    private HashMap<UUID,DataCacheTicksHandler> ticksHandlers = new HashMap<>();
-    private HashMap<UUID,DataCacheRoutesHandler> routeHandlers = new HashMap<>();
+    private ConcurrentHashMap<UUID,DataCacheUserHandler> userHandlers = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<UUID,DataCacheTicksHandler> ticksHandlers = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<UUID,DataCacheRoutesHandler> routeHandlers = new ConcurrentHashMap<>();
 
     private static final int invalidCacheHours = 0;
     private static final int mountainProjectRoutesRequestSizeLimit = 200;
@@ -298,7 +299,8 @@ public class DataCache extends Application
     }
 
     private void broadcastTicksCompleted() {
-        ticksHandlers.forEach((k,v) -> v.onTicksCached((m_Ticks)));
+        if (ticksHandlers != null && !ticksHandlers.isEmpty())
+            ticksHandlers.forEach((k,v) -> v.onTicksCached((m_Ticks)));
     }
 
     private void broadcastRoutesCompleted() {
