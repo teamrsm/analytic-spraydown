@@ -11,13 +11,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
-import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
@@ -25,7 +23,6 @@ import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
-import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryTask;
 import com.sprayme.teamrsm.analyticspraydown.views.SprayamidView;
 
 import java.util.ArrayList;
@@ -52,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //this.deleteDatabase("BetaSpew.db");
+//        this.deleteDatabase("BetaSpew.db");
         db = BetaSpewDb.getInstance(this);
 
         mDrawerList = (ListView)findViewById(R.id.navList);
@@ -156,12 +153,12 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onTicksCached(List<Tick> ticks) {
                     if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-                            ticksCallbackUuid = null;
+                        ticksCallbackUuid = null;
 
-
+                    onFinished(ticks);
                 }
             });
-            dataCache.getUserTicks();
+            dataCache.loadUserTicks();
             return true;
         }
 

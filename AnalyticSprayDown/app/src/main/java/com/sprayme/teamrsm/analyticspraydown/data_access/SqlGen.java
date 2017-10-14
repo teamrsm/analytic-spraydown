@@ -124,13 +124,16 @@ class SqlGen {
     }
 
     public static String makeGetRoutes(Long[] routeIds) {
-        return new StringBuilder()
+        StringBuilder builder =  new StringBuilder()
                 .append("SELECT *")
-                .append(" FROM ").append(ROUTES_TABLE_NAME)
-                .append(" WHERE ")
-                .append(ROUTE_ID).append(" IN (")
-                .append(buildInList(routeIds))
-                .append(")").toString();
+                .append(" FROM ").append(ROUTES_TABLE_NAME);
+        if (routeIds != null) {
+                builder.append(" WHERE ")
+                    .append(ROUTE_ID).append(" IN (")
+                    .append(buildInList(routeIds))
+                    .append(")");
+        }
+        return builder.toString();
     }
 
     private static String buildInList(Long[] inLongs) {

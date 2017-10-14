@@ -14,12 +14,14 @@ public class Grade {
 
     public Grade(String gradeString, GradeType type){ // todo do we want these to automatically get the type or store the grade values in separate lookups?
         this.gradeString = gradeString;
+        this.type = type;
         // todo do lookup to get value and route type
         gradeValue = GradeManager.getGradeValue(gradeString, type);
     }
 
     public Grade(int gradeValue, GradeType type){
         this.gradeValue = gradeValue;
+        this.type = type;
         // todo do lookup to get string and route type
         gradeString = GradeManager.getGradeString(gradeValue, type);
     }

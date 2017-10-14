@@ -54,6 +54,7 @@ public class DataCache extends Application
     private List<Tick> m_Ticks = null;
     private List<Route> m_Routes = null;
 
+    private boolean ticksWaitingOnRoutes = false;
     private boolean routesQueryIsBatched = false;
     private Long[] routesBatchedRunCache = null;
 
@@ -133,7 +134,11 @@ public class DataCache extends Application
     /*
     * Ticks Methods
     * */
-    public void getUserTicks() {
+    public List<Tick> getTicks() {
+        return m_Ticks;
+    }
+
+    public void loadUserTicks() {
         if (m_Ticks == null)
             fetchTicks();
         else if (isCacheInvalid())
@@ -154,11 +159,11 @@ public class DataCache extends Application
     /*
     * Routes Methods
     * */
-    public void getRoutes() {
-        if (m_Ticks == null)
-            fetchTicks();
+    public void loadRoutes(Long[] routeIds) {
+        if (m_Routes == null)
+            fetchRoutes(routeIds);
         else if (isCacheInvalid())
-            fetchTicks();
+            fetchRoutes(routeIds);
         else {
 
         }
@@ -192,7 +197,7 @@ public class DataCache extends Application
         }
         else {
             // todo: trigger the finished listener
-            m_Routes = m_Db.getRoutes();
+            m_Routes = m_Db.getRoutes(routeIds);
             broadcastRoutesCompleted();
         }
     }
@@ -207,8 +212,13 @@ public class DataCache extends Application
             fetchRoutes(routesBatchedRunCache);
         }
         else {
-            m_Routes = m_Db.getRoutes();
+            m_Routes = m_Db.getRoutes(null);
             broadcastRoutesCompleted();
+            if (ticksWaitingOnRoutes)
+            {
+                mapRoutes(m_Ticks, m_Routes);
+                broadcastTicksCompleted();
+            }
         }
     }
 
@@ -219,7 +229,10 @@ public class DataCache extends Application
         m_Db.updateAccessMoment(m_CurrentUser.getUserId());
 
         m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
-        broadcastTicksCompleted();
+        ticksWaitingOnRoutes = true;
+        Long[] routeIds = getRouteIdArray(m_Ticks);
+        loadRoutes(routeIds);
+        //broadcastTicksCompleted();
     }
 
     @Override
