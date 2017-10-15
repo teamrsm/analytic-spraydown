@@ -1,7 +1,9 @@
 package com.sprayme.teamrsm.analyticspraydown;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.support.v4.util.ArraySet;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -11,26 +13,30 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
-import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
+import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
-import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryTask;
+import com.sprayme.teamrsm.analyticspraydown.utilities.SprayarificStructures;
 import com.sprayme.teamrsm.analyticspraydown.views.SprayamidView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -52,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //this.deleteDatabase("BetaSpew.db");
+//        this.deleteDatabase("BetaSpew.db");
         db = BetaSpewDb.getInstance(this);
 
         mDrawerList = (ListView)findViewById(R.id.navList);
@@ -64,6 +70,18 @@ public class MainActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
+
+        Button button =(Button)findViewById(R.id.viewDbButton);
+
+        /** for debugging the db **/
+        Context context = this;
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+                Intent dbmanager = new Intent(context,AndroidDatabaseManager.class);
+                startActivity(dbmanager);
+            }
+        });
     }
 
     private void addDrawerItems() {
@@ -156,12 +174,12 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onTicksCached(List<Tick> ticks) {
                     if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-                            ticksCallbackUuid = null;
+                        ticksCallbackUuid = null;
 
-
+                    onFinished(ticks);
                 }
             });
-            dataCache.getUserTicks();
+            dataCache.loadUserTicks();
             return true;
         }
 
@@ -183,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onFinished(List<Tick> ticks) {
-        List<Route> routes = new ArrayList<Route>();
+        Set<Route> routes = new HashSet<Route>();
         for (Tick tick : ticks) {
             if (tick.getRoute() != null)
             routes.add(tick.getRoute());
@@ -194,10 +212,10 @@ public class MainActivity extends AppCompatActivity {
 
         Pyramid pyramid;
         if (hardestCount > 1){
-            pyramid =  dataCache.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive, hardestRoute.getGrade().nextHardest());
+            pyramid =  SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive, hardestRoute.getGrade().nextHardest());
         }
         else
-            pyramid = dataCache.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive);
+            pyramid = SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive);
         SprayamidView view = (SprayamidView)findViewById(R.id.pyramidView);
         view.setPyramid(pyramid);
         view.invalidate();
