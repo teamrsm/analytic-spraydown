@@ -2,6 +2,7 @@ package com.sprayme.teamrsm.analyticspraydown;
 
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.support.v4.util.ArraySet;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -26,8 +27,12 @@ import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 import com.sprayme.teamrsm.analyticspraydown.views.SprayamidView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -180,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onFinished(List<Tick> ticks) {
-        List<Route> routes = new ArrayList<Route>();
+        Set<Route> routes = new HashSet<Route>();
         for (Tick tick : ticks) {
             if (tick.getRoute() != null)
             routes.add(tick.getRoute());
@@ -191,10 +196,10 @@ public class MainActivity extends AppCompatActivity {
 
         Pyramid pyramid;
         if (hardestCount > 1){
-            pyramid =  dataCache.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive, hardestRoute.getGrade().nextHardest());
+            pyramid =  dataCache.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive, hardestRoute.getGrade().nextHardest());
         }
         else
-            pyramid = dataCache.buildPyramid(routes, RouteType.Sport, 5, 2, PyramidStepType.Additive);
+            pyramid = dataCache.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive);
         SprayamidView view = (SprayamidView)findViewById(R.id.pyramidView);
         view.setPyramid(pyramid);
         view.invalidate();
