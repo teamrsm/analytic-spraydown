@@ -38,7 +38,7 @@ public class DataCache extends Application
     private ConcurrentHashMap<UUID,DataCacheTicksHandler> ticksHandlers = new ConcurrentHashMap<>();
     private ConcurrentHashMap<UUID,DataCacheRoutesHandler> routeHandlers = new ConcurrentHashMap<>();
 
-    private static final int invalidCacheHours = 0;
+    private static final int invalidCacheHours = 24;
     private static final int mountainProjectRoutesRequestSizeLimit = 200;
 
     /* member variables */
@@ -147,6 +147,9 @@ public class DataCache extends Application
             m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
         else {
             m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
+
+            Long[] routeIds = getRouteIdArray(m_Ticks);
+            loadRoutes(routeIds);
             broadcastTicksCompleted();
         }
     }
@@ -194,6 +197,12 @@ public class DataCache extends Application
             // todo: trigger the finished listener
             m_Routes = m_Db.getRoutes(routeIds);
             broadcastRoutesCompleted();
+            if (ticksWaitingOnRoutes)
+            {
+                mapRoutes(m_Ticks, m_Routes);
+                ticksWaitingOnRoutes = false;
+                broadcastTicksCompleted();
+            }
         }
     }
 
@@ -212,6 +221,7 @@ public class DataCache extends Application
             if (ticksWaitingOnRoutes)
             {
                 mapRoutes(m_Ticks, m_Routes);
+                ticksWaitingOnRoutes = false;
                 broadcastTicksCompleted();
             }
         }

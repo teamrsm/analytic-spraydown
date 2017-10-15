@@ -1,5 +1,6 @@
 package com.sprayme.teamrsm.analyticspraydown;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.support.v4.util.ArraySet;
@@ -12,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -23,6 +25,7 @@ import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
+import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 import com.sprayme.teamrsm.analyticspraydown.utilities.SprayarificStructures;
 import com.sprayme.teamrsm.analyticspraydown.views.SprayamidView;
@@ -67,6 +70,18 @@ public class MainActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
+
+        Button button =(Button)findViewById(R.id.viewDbButton);
+
+        /** for debugging the db **/
+        Context context = this;
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+                Intent dbmanager = new Intent(context,AndroidDatabaseManager.class);
+                startActivity(dbmanager);
+            }
+        });
     }
 
     private void addDrawerItems() {
