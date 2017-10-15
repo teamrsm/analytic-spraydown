@@ -24,6 +24,7 @@ import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
+import com.sprayme.teamrsm.analyticspraydown.utilities.SprayarificStructures;
 import com.sprayme.teamrsm.analyticspraydown.views.SprayamidView;
 
 import java.util.ArrayList;
@@ -196,10 +197,10 @@ public class MainActivity extends AppCompatActivity {
 
         Pyramid pyramid;
         if (hardestCount > 1){
-            pyramid =  dataCache.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive, hardestRoute.getGrade().nextHardest());
+            pyramid =  SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive, hardestRoute.getGrade().nextHardest());
         }
         else
-            pyramid = dataCache.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive);
+            pyramid = SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive);
         SprayamidView view = (SprayamidView)findViewById(R.id.pyramidView);
         view.setPyramid(pyramid);
         view.invalidate();

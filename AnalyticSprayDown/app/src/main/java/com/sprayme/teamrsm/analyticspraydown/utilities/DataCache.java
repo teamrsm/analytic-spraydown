@@ -4,12 +4,8 @@ import android.app.Application;
 
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
-import com.sprayme.teamrsm.analyticspraydown.models.Grade;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
-import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
-import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
-import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 
@@ -18,10 +14,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Created by Said on 10/9/2017.
@@ -309,23 +303,5 @@ public class DataCache extends Application
 
     private void broadcastUserCompleted() {
         userHandlers.forEach((k,v) -> v.onUserCached((m_CurrentUser)));
-    }
-
-    /* temporary home for these sprayrific structures */
-    public Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier) {
-        List<Route> filteredRoutes = routes.stream()
-                .filter((route) -> Objects.nonNull(route))
-                .filter((route) -> route.getType() == type)
-                .collect(Collectors.toList());
-
-        return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier);
-    }
-
-    public Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier, Grade goal) {
-        List<Route> filteredRoutes = routes.stream()
-                .filter((route) -> route.getType() == type)
-                .collect(Collectors.toList());
-
-        return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, goal);
     }
 }

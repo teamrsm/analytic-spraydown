@@ -40,7 +40,7 @@ public class UserLoginActivity extends AppCompatActivity {
         callbackUUID = dataCache.subscribe(new DataCache.DataCacheUserHandler() {
             @Override
             public void onUserCached(User user) {
-                if (dataCache.unsubscribeTicksHandler(callbackUUID))
+                if (dataCache.unsubscribeUserHandler(callbackUUID))
                     callbackUUID = null;
 
                 Intent _result = new Intent();
