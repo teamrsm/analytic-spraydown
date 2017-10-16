@@ -172,41 +172,51 @@ public class DataCache extends Application
 
     private void fetchRoutes(Long[] routeIds) {
         if (isCacheInvalid() || routesQueryIsBatched) {
-            Long[] routes;
-            if (routeIds.length > mountainProjectRoutesRequestSizeLimit)
-            {
-                routes = new Long[mountainProjectRoutesRequestSizeLimit];
-                for (int i=0; i<mountainProjectRoutesRequestSizeLimit; i++) {
-                    routes[i] = routeIds[i];
-                }
-
-                Long[] routesToCache = new Long[routeIds.length - 200];
-                for (int i=200; i< routeIds.length; i++){
-                    routesToCache[i-200] = routeIds[i];
-                }
-                routesQueryIsBatched = true;
-                routesBatchedRunCache = routesToCache;
-            }
-            else
-            {
-                routes = routeIds;
-                routesQueryIsBatched = false;
-                routesBatchedRunCache = null;
-            }
-            // todo routeIDs need to be sent in batches of 200 at a time
-            m_MpModel.requestRoutes(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey(), routes);
+            getMpRoutes(routeIds);
         }
         else {
             // todo: trigger the finished listener
             m_Routes = m_Db.getRoutes(routeIds);
-            broadcastRoutesCompleted();
-            if (ticksWaitingOnRoutes)
-            {
-                mapRoutes(m_Ticks, m_Routes);
-                ticksWaitingOnRoutes = false;
-                broadcastTicksCompleted();
+
+            if (m_Routes.size() == 0) {
+                getMpRoutes(routeIds);
+            }
+            else {
+                broadcastRoutesCompleted();
+                if (ticksWaitingOnRoutes)
+                {
+                    mapRoutes(m_Ticks, m_Routes);
+                    ticksWaitingOnRoutes = false;
+                    broadcastTicksCompleted();
+                }
             }
         }
+    }
+
+    private void getMpRoutes(Long[] routeIds) {
+        Long[] routes;
+        if (routeIds.length > mountainProjectRoutesRequestSizeLimit)
+        {
+            routes = new Long[mountainProjectRoutesRequestSizeLimit];
+            for (int i=0; i<mountainProjectRoutesRequestSizeLimit; i++) {
+                routes[i] = routeIds[i];
+            }
+
+            Long[] routesToCache = new Long[routeIds.length - 200];
+            for (int i=200; i< routeIds.length; i++){
+                routesToCache[i-200] = routeIds[i];
+            }
+            routesQueryIsBatched = true;
+            routesBatchedRunCache = routesToCache;
+        }
+        else
+        {
+            routes = routeIds;
+            routesQueryIsBatched = false;
+            routesBatchedRunCache = null;
+        }
+        // todo routeIDs need to be sent in batches of 200 at a time
+        m_MpModel.requestRoutes(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey(), routes);
     }
 
     /*
@@ -249,6 +259,7 @@ public class DataCache extends Application
         m_CurrentUser.setUserId(user.getUserId());
 
         m_Db.insertUser(m_CurrentUser);
+        getTicks();
 
         broadcastUserCompleted();
     }
