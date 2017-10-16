@@ -2,6 +2,7 @@ package com.sprayme.teamrsm.analyticspraydown;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
@@ -28,6 +29,7 @@ import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
+import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
@@ -37,6 +39,7 @@ import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,6 +48,8 @@ import java.util.stream.Collectors;
 public class MainActivity extends AppCompatActivity {
 
     static final int LOGIN_REQUEST = 1;
+
+    public static SharedPreferences mSharedPref;
 
     private DataCache dataCache = null;
     private BetaSpewDb db = null;
@@ -98,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
         snapHelper.attachToRecyclerView(mRecyclerView);
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+        mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
         /** for debugging the db **/
         Context context = this;
@@ -255,14 +261,34 @@ public class MainActivity extends AppCompatActivity {
 
     public void onFinished(List<Tick> ticks) {
         Set<Route> routes = new HashSet<Route>();
+//        boolean ignoreTopropes = MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
         for (Tick tick : ticks) {
+//            if (ignoreTopropes){
+//                TickType tickType = tick.getType();
+//                boolean skip = tickType == TickType.Fell;
+//                skip |= tickType == TickType.Toprope;
+//                skip |= tickType == TickType.Unknown;
+//                if (skip)
+//                    continue;
+//            }
             if (tick.getRoute() != null)
             routes.add(tick.getRoute());
         }
 
-        pyramids.put(RouteType.Sport, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive));
-        pyramids.put(RouteType.Trad, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Trad, 5, 2, PyramidStepType.Additive));
-        pyramids.put(RouteType.Boulder, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Boulder, 5, 2, PyramidStepType.Additive));
+        if (MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_SPORT_PYRAMID, true))
+            pyramids.put(RouteType.Sport, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive));
+
+        if (MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_TRAD_PYRAMID, true))
+            pyramids.put(RouteType.Trad, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Trad, 5, 2, PyramidStepType.Additive));
+
+        if (MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_BOULDER_PYRAMID, true))
+            pyramids.put(RouteType.Boulder, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Boulder, 5, 2, PyramidStepType.Additive));
+
+        if (MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_ICE_PYRAMID, true))
+            pyramids.put(RouteType.Ice, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Ice, 5, 2, PyramidStepType.Additive));
+
+        if (MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_AID_PYRAMID, true))
+            pyramids.put(RouteType.Aid, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Aid, 5, 2, PyramidStepType.Additive));
 
         mRecyclerAdapter.update(getData());
     }

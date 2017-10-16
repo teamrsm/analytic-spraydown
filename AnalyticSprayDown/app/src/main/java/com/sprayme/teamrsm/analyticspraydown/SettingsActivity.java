@@ -5,6 +5,15 @@ import android.os.Bundle;
 
 public class SettingsActivity extends AppCompatActivity {
 
+    public static final String KEY_PREF_CACHE_TIMEOUT = "cache_invalidate_time_preference";
+    public static final String KEY_PREF_USE_ONLY_LEADS = "only_use_leads_preference";
+    public static final String KEY_PREF_IGNORE_DUPLICATES = "ignore_duplicates_preference";
+    public static final String KEY_PREF_SHOW_SPORT_PYRAMID = "build_sport_pyramid_preference";
+    public static final String KEY_PREF_SHOW_TRAD_PYRAMID = "build_trad_pyramid_preference";
+    public static final String KEY_PREF_SHOW_BOULDER_PYRAMID = "build_boulder_pyramid_preference";
+    public static final String KEY_PREF_SHOW_ICE_PYRAMID = "build_ice_pyramid_preference";
+    public static final String KEY_PREF_SHOW_AID_PYRAMID = "build_aid_pyramid_preference";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

@@ -52,7 +52,7 @@ public class SprayamidView extends View {
     protected void onDraw(Canvas canvas) {
 //        mDrawable.draw(canvas);
 
-        if (pyramid == null)
+        if (pyramid == null || pyramid.getSteps() == null)
             return;
 
         // calculate pyramid drawing parameters

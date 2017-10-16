@@ -1,5 +1,7 @@
 package com.sprayme.teamrsm.analyticspraydown.utilities;
 
+import com.sprayme.teamrsm.analyticspraydown.MainActivity;
+import com.sprayme.teamrsm.analyticspraydown.SettingsActivity;
 import com.sprayme.teamrsm.analyticspraydown.models.Grade;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
@@ -17,10 +19,13 @@ import java.util.stream.Collectors;
 public class SprayarificStructures {
 
     public static Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier) {
-        List<Route> filteredRoutes = routes.stream()
-                .filter((route) -> Objects.nonNull(route))
-                .filter((route) -> route.getType() == type)
-                .collect(Collectors.toList());
+        List<Route> filteredRoutes = routes;
+        if (MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_IGNORE_DUPLICATES, true)) {
+            filteredRoutes = routes.stream()
+                    .filter((route) -> Objects.nonNull(route))
+                    .filter((route) -> route.getType() == type)
+                    .collect(Collectors.toList());
+        }
 
         Route hardestRoute = filteredRoutes.stream().max(
                 (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
