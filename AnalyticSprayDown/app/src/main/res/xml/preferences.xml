@@ -13,11 +13,12 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pyramid_settings_category" >
-        <android.support.v7.preference.SwitchPreferenceCompat
-            android:defaultValue="true"
-            android:key="only_use_leads_preference"
-            android:summary="Leave out topropes and follows."
-            android:title="@string/only_use_leads_preference" />
+        <!-- MP api currently doesn't return tick type so we can't use this setting to filter on -->
+        <!--<android.support.v7.preference.SwitchPreferenceCompat-->
+            <!--android:defaultValue="true"-->
+            <!--android:key="only_use_leads_preference"-->
+            <!--android:summary="Leave out topropes and follows."-->
+            <!--android:title="@string/only_use_leads_preference" />-->
         <android.support.v7.preference.SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="ignore_duplicates_preference"

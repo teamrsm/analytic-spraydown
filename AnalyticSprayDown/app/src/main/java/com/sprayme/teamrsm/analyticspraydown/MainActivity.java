@@ -261,16 +261,16 @@ public class MainActivity extends AppCompatActivity {
 
     public void onFinished(List<Tick> ticks) {
         Set<Route> routes = new HashSet<Route>();
-//        boolean ignoreTopropes = MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
+        boolean ignoreTopropes = false; //MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
         for (Tick tick : ticks) {
-//            if (ignoreTopropes){
-//                TickType tickType = tick.getType();
-//                boolean skip = tickType == TickType.Fell;
-//                skip |= tickType == TickType.Toprope;
-//                skip |= tickType == TickType.Unknown;
-//                if (skip)
-//                    continue;
-//            }
+            if (ignoreTopropes){
+                TickType tickType = tick.getType();
+                boolean skip = tickType == TickType.Fell;
+                skip |= tickType == TickType.Toprope;
+                skip |= tickType == TickType.Unknown;
+                if (skip)
+                    continue;
+            }
             if (tick.getRoute() != null)
             routes.add(tick.getRoute());
         }
