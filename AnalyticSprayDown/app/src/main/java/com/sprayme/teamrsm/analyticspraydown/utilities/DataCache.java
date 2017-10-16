@@ -148,9 +148,13 @@ public class DataCache extends Application
         else {
             m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
 
-            Long[] routeIds = getRouteIdArray(m_Ticks);
-            loadRoutes(routeIds);
-            broadcastTicksCompleted();
+            if (m_Ticks.size() == 0)
+                m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
+            else {
+                Long[] routeIds = getRouteIdArray(m_Ticks);
+                loadRoutes(routeIds);
+                broadcastTicksCompleted();
+            }
         }
     }
 
@@ -162,9 +166,8 @@ public class DataCache extends Application
             fetchRoutes(routeIds);
         else if (isCacheInvalid())
             fetchRoutes(routeIds);
-        else {
-
-        }
+        else
+            broadcastRoutesCompleted();
     }
 
     private void fetchRoutes(Long[] routeIds) {

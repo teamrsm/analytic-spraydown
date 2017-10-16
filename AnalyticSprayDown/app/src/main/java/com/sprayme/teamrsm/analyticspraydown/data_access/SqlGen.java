@@ -119,7 +119,7 @@ class SqlGen {
 
     public static String makeUserIdWhereClause(long userId) {
         return new StringBuilder()
-                .append("WHERE ").append(USER_ID)
+                .append(" ").append(USER_ID)
                 .append(" = ").append(userId).toString();
     }
 
