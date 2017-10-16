@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PagerSnapHelper;
 import android.support.v7.widget.RecyclerView;
@@ -96,6 +97,8 @@ public class MainActivity extends AppCompatActivity {
         SnapHelper snapHelper = new PagerSnapHelper();
         snapHelper.attachToRecyclerView(mRecyclerView);
 
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
         /** for debugging the db **/
         Context context = this;
         button.setOnClickListener(new View.OnClickListener() {
@@ -112,10 +115,16 @@ public class MainActivity extends AppCompatActivity {
         mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mArrayAdapter);
 
+        Context context = this;
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this, "Time for an upgrade!", Toast.LENGTH_SHORT).show();
+
+//                if (id == R.id.action_settings) {
+                    Intent intent = new Intent(context, SettingsActivity.class);
+                    startActivity(intent);
+//                    return true;
+//                }
             }
         });
     }

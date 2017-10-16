@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/general_settings_category" >
+    <android.support.v7.preference.EditTextPreference
+        android:defaultValue="24"
+        android:key="cache_invalidate_time_preference"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:inputType="number"
+        android:summary="How long we'll wait before pulling your latest sprays."
+        android:title="@string/cache_invalidate_time_preference" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pyramid_settings_category" >
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="only_use_leads_preference"
+            android:summary="Leave out topropes and follows."
+            android:title="@string/only_use_leads_preference" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="ignore_duplicates_preference"
+            android:summary="Only include ticks for the same climb once."
+            android:title="@string/ignore_duplicates_preference" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="build_sport_pyramid_preference"
+            android:summary="You put what in the crack?"
+            android:title="@string/build_sport_pyramid_preference" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="build_trad_pyramid_preference"
+            android:summary="What's a bolt?"
+            android:title="@string/build_trad_pyramid_preference" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="build_boulder_pyramid_preference"
+            android:summary="Just pull harder, bro."
+            android:title="@string/build_boulder_pyramid_preference" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="build_ice_pyramid_preference"
+            android:summary="For the icy and frigid."
+            android:title="@string/build_ice_pyramid_preference" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="build_aid_pyramid_preference"
+            android:summary="I don't like to touch rocks with my bare hands."
+            android:title="@string/build_aid_pyramid_preference" />
+    </PreferenceCategory>
+</PreferenceScreen>
