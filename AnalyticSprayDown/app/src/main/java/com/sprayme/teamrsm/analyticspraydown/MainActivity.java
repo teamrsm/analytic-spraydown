@@ -151,6 +151,16 @@ public class MainActivity extends AppCompatActivity {
             dataCache = DataCache.getInstance();
             dataCache.setDb(db);
             currentUser = dataCache.getLastUser();
+            ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+                @Override
+                public void onTicksCached(List<Tick> ticks) {
+                    if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+                        ticksCallbackUuid = null;
+
+                    onFinished(ticks);
+                }
+            });
+            dataCache.loadUserTicks();
         } catch (InvalidUserException e) {
             /* launch login, we have no known user */
             canLaunchLogin = true;
@@ -172,6 +182,17 @@ public class MainActivity extends AppCompatActivity {
             // Make sure the request was successful
             if (resultCode == RESULT_OK) {
                 currentUser = dataCache.getCurrentUser();
+
+                ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+                    @Override
+                    public void onTicksCached(List<Tick> ticks) {
+                        if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+                            ticksCallbackUuid = null;
+
+                        onFinished(ticks);
+                    }
+                });
+                dataCache.loadUserTicks();
             }
         }
     }
@@ -192,19 +213,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemThatWasClickedId = item.getItemId();
-        if (itemThatWasClickedId == R.id.build_pyramid) {
-            ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-                @Override
-                public void onTicksCached(List<Tick> ticks) {
-                    if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-                        ticksCallbackUuid = null;
-
-                    onFinished(ticks);
-                }
-            });
-            dataCache.loadUserTicks();
-            return true;
-        }
+//        if (itemThatWasClickedId == R.id.build_pyramid) {
+//            ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+//                @Override
+//                public void onTicksCached(List<Tick> ticks) {
+//                    if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+//                        ticksCallbackUuid = null;
+//
+//                    onFinished(ticks);
+//                }
+//            });
+//            dataCache.loadUserTicks();
+//            return true;
+//        }
 
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -212,9 +233,9 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
 
         // Activate the navigation drawer toggle
         if (mDrawerToggle.onOptionsItemSelected(item)) {
