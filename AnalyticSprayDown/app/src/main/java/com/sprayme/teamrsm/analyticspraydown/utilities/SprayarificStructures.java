@@ -22,7 +22,16 @@ public class SprayarificStructures {
                 .filter((route) -> route.getType() == type)
                 .collect(Collectors.toList());
 
-        return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier);
+        Route hardestRoute = filteredRoutes.stream().max(
+                (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
+        long hardestCount = filteredRoutes.stream().filter((route) -> route.getGrade().compareTo(hardestRoute.getGrade()) == 0).count();
+
+        if (hardestCount > 1)
+            return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, type, hardestRoute.getGrade().nextHardest());
+        else
+            return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, type);
+
+
     }
 
     public static Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier, Grade goal) {
@@ -30,6 +39,6 @@ public class SprayarificStructures {
                 .filter((route) -> route.getType() == type)
                 .collect(Collectors.toList());
 
-        return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, goal);
+        return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, type, goal);
     }
 }
