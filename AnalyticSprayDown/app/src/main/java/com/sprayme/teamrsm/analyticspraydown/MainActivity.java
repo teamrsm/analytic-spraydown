@@ -3,11 +3,14 @@ package com.sprayme.teamrsm.analyticspraydown;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.support.v4.util.ArraySet;
+import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.PagerSnapHelper;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SnapHelper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,14 +31,14 @@ import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 import com.sprayme.teamrsm.analyticspraydown.utilities.SprayarificStructures;
-import com.sprayme.teamrsm.analyticspraydown.views.SprayamidView;
+import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
@@ -47,9 +50,14 @@ public class MainActivity extends AppCompatActivity {
     private User currentUser = null;
 
     private ListView mDrawerList;
-    private ArrayAdapter<String> mAdapter;
+    private ArrayAdapter<String> mArrayAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
+    private RecyclerView mRecyclerView;
+    private RecyclerAdapter mRecyclerAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+    private static ConcurrentHashMap<RouteType, Pyramid> pyramids = new ConcurrentHashMap<>();
+
     private String mActivityTitle;
     private UUID userCallbackUuid, ticksCallbackUuid, routesCallbackUuid;
 
@@ -73,6 +81,21 @@ public class MainActivity extends AppCompatActivity {
 
         Button button =(Button)findViewById(R.id.viewDbButton);
 
+        //RecyclerView
+        mRecyclerView = (RecyclerView) findViewById(R.id.pyramid_recycler_view);
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setHorizontalScrollBarEnabled(false);
+
+        mRecyclerAdapter = new RecyclerAdapter(this, getData());
+        mRecyclerView.setAdapter(mRecyclerAdapter);
+
+        //Layout manager for the Recycler View
+        mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        mRecyclerView.setLayoutManager(mLayoutManager);
+
+        SnapHelper snapHelper = new PagerSnapHelper();
+        snapHelper.attachToRecyclerView(mRecyclerView);
+
         /** for debugging the db **/
         Context context = this;
         button.setOnClickListener(new View.OnClickListener() {
@@ -86,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void addDrawerItems() {
         String[] osArray = { /*"Stats", "Training",*/ "Settings" };
-        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
-        mDrawerList.setAdapter(mAdapter);
+        mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
+        mDrawerList.setAdapter(mArrayAdapter);
 
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -128,6 +151,16 @@ public class MainActivity extends AppCompatActivity {
             dataCache = DataCache.getInstance();
             dataCache.setDb(db);
             currentUser = dataCache.getLastUser();
+            ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+                @Override
+                public void onTicksCached(List<Tick> ticks) {
+                    if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+                        ticksCallbackUuid = null;
+
+                    onFinished(ticks);
+                }
+            });
+            dataCache.loadUserTicks();
         } catch (InvalidUserException e) {
             /* launch login, we have no known user */
             canLaunchLogin = true;
@@ -149,6 +182,17 @@ public class MainActivity extends AppCompatActivity {
             // Make sure the request was successful
             if (resultCode == RESULT_OK) {
                 currentUser = dataCache.getCurrentUser();
+
+                ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+                    @Override
+                    public void onTicksCached(List<Tick> ticks) {
+                        if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+                            ticksCallbackUuid = null;
+
+                        onFinished(ticks);
+                    }
+                });
+                dataCache.loadUserTicks();
             }
         }
     }
@@ -169,19 +213,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemThatWasClickedId = item.getItemId();
-        if (itemThatWasClickedId == R.id.build_pyramid) {
-            ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-                @Override
-                public void onTicksCached(List<Tick> ticks) {
-                    if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-                        ticksCallbackUuid = null;
-
-                    onFinished(ticks);
-                }
-            });
-            dataCache.loadUserTicks();
-            return true;
-        }
+//        if (itemThatWasClickedId == R.id.build_pyramid) {
+//            ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+//                @Override
+//                public void onTicksCached(List<Tick> ticks) {
+//                    if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+//                        ticksCallbackUuid = null;
+//
+//                    onFinished(ticks);
+//                }
+//            });
+//            dataCache.loadUserTicks();
+//            return true;
+//        }
 
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -189,9 +233,9 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
 
         // Activate the navigation drawer toggle
         if (mDrawerToggle.onOptionsItemSelected(item)) {
@@ -206,18 +250,20 @@ public class MainActivity extends AppCompatActivity {
             if (tick.getRoute() != null)
             routes.add(tick.getRoute());
         }
-        Route hardestRoute = routes.stream().max(
-                (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
-        long hardestCount = routes.stream().filter((route) -> route.getGrade().compareTo(hardestRoute.getGrade()) == 0).count();
 
-        Pyramid pyramid;
-        if (hardestCount > 1){
-            pyramid =  SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive, hardestRoute.getGrade().nextHardest());
-        }
-        else
-            pyramid = SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive);
-        SprayamidView view = (SprayamidView)findViewById(R.id.pyramidView);
-        view.setPyramid(pyramid);
-        view.invalidate();
+        pyramids.put(RouteType.Sport, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive));
+        pyramids.put(RouteType.Trad, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Trad, 5, 2, PyramidStepType.Additive));
+        pyramids.put(RouteType.Boulder, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Boulder, 5, 2, PyramidStepType.Additive));
+
+        mRecyclerAdapter.update(getData());
+    }
+
+    public static List<Pyramid> getData() {
+        List<Pyramid> subActivityData = new ArrayList<>();
+        subActivityData.add(pyramids.get(RouteType.Sport));
+        subActivityData.add(pyramids.get(RouteType.Trad));
+        subActivityData.add(pyramids.get(RouteType.Boulder));
+
+        return subActivityData;
     }
 }

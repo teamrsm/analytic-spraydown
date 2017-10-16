@@ -13,11 +13,13 @@ public class Pyramid {
     private int stepChangeSize;
     private PyramidStepType stepType;
     private PyramidStep[] steps;
+    private RouteType routeType;
 
-    public Pyramid (List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType){
+    public Pyramid (List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, RouteType routeType){
         this.height = height;
         this.stepChangeSize = stepChangeSize;
         this.stepType = stepType;
+        this.routeType = routeType;
 
         Route hardestRoute = routes.stream().max(
                 (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
@@ -32,10 +34,11 @@ public class Pyramid {
         steps = buildPyramidSteps(routes, height, stepChangeSize, stepType, hardestGrade);
     }
 
-    public Pyramid (List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, Grade goal){
+    public Pyramid (List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, RouteType routeType, Grade goal){
         this.height = height;
         this.stepChangeSize = stepChangeSize;
         this.stepType = stepType;
+        this.routeType = routeType;
 
         Grade currentGrade = goal;
 
@@ -80,5 +83,9 @@ public class Pyramid {
 
     public PyramidStep[] getSteps(){
         return steps;
+    }
+
+    public RouteType getRouteType() {
+        return routeType;
     }
 }
