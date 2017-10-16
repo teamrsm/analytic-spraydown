@@ -10,7 +10,6 @@ import android.widget.TextView;
 import com.sprayme.teamrsm.analyticspraydown.R;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 /**
@@ -39,7 +38,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.Activi
     @Override
     public void onBindViewHolder(ActivityViewHolder holder, int position) {
         Pyramid currentCard = activityData.get(position);
-        holder.title.setText(currentCard != null ? currentCard.getRouteType().toString() : "null");
+        holder.title.setText(currentCard != null ? currentCard.getRouteType().toString() : "");
         holder.pyramidView.setPyramid(currentCard);
         holder.pyramidView.invalidate();
     }

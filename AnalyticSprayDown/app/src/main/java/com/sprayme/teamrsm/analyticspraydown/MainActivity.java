@@ -8,7 +8,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.LinearSnapHelper;
 import android.support.v7.widget.PagerSnapHelper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SnapHelper;
@@ -32,11 +31,9 @@ import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 import com.sprayme.teamrsm.analyticspraydown.utilities.SprayarificStructures;
-import com.sprayme.teamrsm.analyticspraydown.uicomponents.SprayamidView;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -237,12 +234,6 @@ public class MainActivity extends AppCompatActivity {
         pyramids.put(RouteType.Trad, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Trad, 5, 2, PyramidStepType.Additive));
         pyramids.put(RouteType.Boulder, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Boulder, 5, 2, PyramidStepType.Additive));
 
-//        SprayamidView view = (SprayamidView)findViewById(R.id.pyramidView);
-//        view.setPyramid(pyramid);
-//        view.invalidate();
-//        mRecyclerAdapter = new RecyclerAdapter(this, getData());
-//        mRecyclerView.setAdapter(mRecyclerAdapter);
-//        mRecyclerView.invalidate();
         mRecyclerAdapter.update(getData());
     }
 
