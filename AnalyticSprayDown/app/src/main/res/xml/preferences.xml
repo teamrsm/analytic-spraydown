@@ -8,7 +8,7 @@
         android:selectAllOnFocus="true"
         android:singleLine="true"
         android:inputType="number"
-        android:summary="How long we'll wait before pulling your latest sprays."
+        android:summary="@string/cache_invalidate_time_preference_summary"
         android:title="@string/cache_invalidate_time_preference" />
     </PreferenceCategory>
 
@@ -17,37 +17,64 @@
         <!--<android.support.v7.preference.SwitchPreferenceCompat-->
             <!--android:defaultValue="true"-->
             <!--android:key="only_use_leads_preference"-->
-            <!--android:summary="Leave out topropes and follows."-->
+            <!--android:summary="@string/only_use_leads_preference_summary"-->
             <!--android:title="@string/only_use_leads_preference" />-->
         <android.support.v7.preference.SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="ignore_duplicates_preference"
-            android:summary="Only include ticks for the same climb once."
+            android:summary="@string/ignore_duplicates_preference_summary"
             android:title="@string/ignore_duplicates_preference" />
         <android.support.v7.preference.SwitchPreferenceCompat
             android:defaultValue="true"
+            android:key="always_optimistic_preference"
+            android:summary="@string/always_optimistic_preference_summary"
+            android:title="@string/always_optimistic_preference" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="true"
             android:key="build_sport_pyramid_preference"
-            android:summary="You put what in the crack?"
+            android:summary="@string/build_sport_pyramid_preference_summary"
             android:title="@string/build_sport_pyramid_preference" />
         <android.support.v7.preference.SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="build_trad_pyramid_preference"
-            android:summary="What's a bolt?"
+            android:summary="@string/build_trad_pyramid_preference_summary"
             android:title="@string/build_trad_pyramid_preference" />
         <android.support.v7.preference.SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="build_boulder_pyramid_preference"
-            android:summary="Just pull harder, bro."
+            android:summary="@string/build_boulder_pyramid_preference_summary"
             android:title="@string/build_boulder_pyramid_preference" />
         <android.support.v7.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="build_ice_pyramid_preference"
-            android:summary="For the icy and frigid."
+            android:summary="@string/build_ice_pyramid_preference_summary"
             android:title="@string/build_ice_pyramid_preference" />
-        <android.support.v7.preference.SwitchPreferenceCompat
-            android:defaultValue="false"
-            android:key="build_aid_pyramid_preference"
-            android:summary="I don't like to touch rocks with my bare hands."
-            android:title="@string/build_aid_pyramid_preference" />
+        <!--<android.support.v7.preference.SwitchPreferenceCompat-->
+            <!--android:defaultValue="false"-->
+            <!--android:key="build_aid_pyramid_preference"-->
+            <!--android:summary="@string/build_aid_pyramid_preference_summary"-->
+            <!--android:title="@string/build_aid_pyramid_preference" />-->
+        <android.support.v7.preference.EditTextPreference
+            android:defaultValue="5"
+            android:key="pyramid_height_preference"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:inputType="number"
+            android:summary="@string/pyramid_height_preference_summary"
+            android:title="@string/pyramid_height_preference" />
+        <android.support.v7.preference.EditTextPreference
+            android:defaultValue="2"
+            android:key="pyramid_step_modifier_size_preference"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:inputType="number"
+            android:summary="@string/pyramid_step_modifier_size_preference_summary"
+            android:title="@string/pyramid_step_modifier_size_preference" />
+        <ListPreference
+            android:key="pyramid_step_modifier_type_preference"
+            android:title="@string/pyramid_step_modifier_type_preference"
+            android:entries="@array/pyramid_step_modifier_type_preference_entries"
+            android:entryValues="@array/pyramid_step_modifier_type_preference_values"
+            android:defaultValue="Additive"/>
     </PreferenceCategory>
 </PreferenceScreen>

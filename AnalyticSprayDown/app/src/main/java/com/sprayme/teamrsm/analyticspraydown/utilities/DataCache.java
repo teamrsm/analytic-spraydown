@@ -2,6 +2,8 @@ package com.sprayme.teamrsm.analyticspraydown.utilities;
 
 import android.app.Application;
 
+import com.sprayme.teamrsm.analyticspraydown.MainActivity;
+import com.sprayme.teamrsm.analyticspraydown.SettingsActivity;
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
@@ -38,7 +40,7 @@ public class DataCache extends Application
     private ConcurrentHashMap<UUID,DataCacheTicksHandler> ticksHandlers = new ConcurrentHashMap<>();
     private ConcurrentHashMap<UUID,DataCacheRoutesHandler> routeHandlers = new ConcurrentHashMap<>();
 
-    private static final int invalidCacheHours = 24;
+    private static int invalidCacheHours = 24;
     private static final int mountainProjectRoutesRequestSizeLimit = 200;
 
     /* member variables */
@@ -54,7 +56,10 @@ public class DataCache extends Application
     private Long[] routesBatchedRunCache = null;
 
     /* Singleton Constructor */
-    private DataCache(){ m_MpModel = new MPModel(this); }
+    private DataCache(){
+        m_MpModel = new MPModel(this);
+        invalidCacheHours = Integer.valueOf(MainActivity.mSharedPref.getString(SettingsActivity.KEY_PREF_CACHE_TIMEOUT, "24"));
+    }
 
     public static synchronized DataCache getInstance(){
         if (instance == null)

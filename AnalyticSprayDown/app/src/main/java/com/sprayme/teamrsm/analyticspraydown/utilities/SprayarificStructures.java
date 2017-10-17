@@ -31,7 +31,7 @@ public class SprayarificStructures {
                 (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
         long hardestCount = filteredRoutes.stream().filter((route) -> route.getGrade().compareTo(hardestRoute.getGrade()) == 0).count();
 
-        if (hardestCount > 1)
+        if (hardestCount > 1 || MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_ALWAYS_BUILD_OPTIMISTIC, true))
             return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, type, hardestRoute.getGrade().nextHardest());
         else
             return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, type);

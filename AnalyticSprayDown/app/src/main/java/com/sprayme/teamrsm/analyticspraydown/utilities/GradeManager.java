@@ -30,6 +30,7 @@ public class GradeManager {
                 else
                     return 0;
             case BoulderHueco:
+                gradeStr = gradeStr.replace("-", "").replace("+", "");
                 if (huecoGrades.containsKey(gradeStr))
                     return huecoGrades.get(gradeStr);
                 else
