@@ -22,7 +22,7 @@ public class Tick {
         this.notes = notes;
 
         if (notes.startsWith("Lead / Onsight."))
-            type = TickType.Onsite;
+            type = TickType.Onsight;
         else if (notes.startsWith("Lead / Redpoint."))
             type = TickType.Redpoint;
         else if (notes.startsWith("Lead / Pinkpoint."))
@@ -35,6 +35,14 @@ public class Tick {
             type = TickType.Toprope;
         else
             type = TickType.Unknown;
+    }
+
+    public Tick(Long routeId, Date date, Integer numPitches, String notes, TickType type){
+        this.routeId = routeId;
+        this.date = date;
+        this.pitches = numPitches;
+        this.notes = notes;
+        this.type = type;
     }
 
     public Long getRouteId() {

@@ -7,5 +7,5 @@ public enum TickType{
     Pinkpoint,
     Redpoint,
     Flash,
-    Onsite
+    Onsight
 }

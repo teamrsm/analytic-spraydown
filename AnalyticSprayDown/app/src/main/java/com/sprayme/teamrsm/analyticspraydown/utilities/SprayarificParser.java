@@ -2,6 +2,7 @@ package com.sprayme.teamrsm.analyticspraydown.utilities;
 
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
+import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 
 import org.json.JSONArray;
@@ -78,6 +79,8 @@ public class SprayarificParser {
         final int notesIndex = 3;
         final int urlIndex = 4;
         final int pitchesIndex = 5;
+        final int styleIndex = 9;
+        final int leadStyleIndex = 10;
         BufferedReader reader = new BufferedReader(new StringReader(csv));
         List<Tick> ticks = new ArrayList<>();
         try {
@@ -105,8 +108,23 @@ public class SprayarificParser {
                 String url = tickCsv[urlIndex];
                 int startIndex = url.lastIndexOf('/');
                 Long routeId = Long.valueOf((url.substring(startIndex + 1)));
+                String style = tickCsv[styleIndex];
+                String leadStyle = tickCsv[leadStyleIndex];
+                TickType type = TickType.Unknown;
+                if (style.equalsIgnoreCase("tr"))
+                    type = TickType.Toprope;
+                else if (style.equalsIgnoreCase("lead")){
+                    if (leadStyle.equalsIgnoreCase("onsight"))
+                        type = TickType.Onsight;
+                    else if (leadStyle.equalsIgnoreCase("flash"))
+                        type = TickType.Flash;
+                    else if (leadStyle.equalsIgnoreCase("redpoint"))
+                        type = TickType.Redpoint;
+                    else if (leadStyle.equalsIgnoreCase("pinkpoint"))
+                        type = TickType.Pinkpoint;
+                }
 
-                ticks.add(new Tick(routeId, date, pitches, notes));
+                ticks.add(new Tick(routeId, date, pitches, notes, type));
 
                 count++;
             }
