@@ -18,7 +18,7 @@ public class Route {
         this.id = id;
         this.name = name;
 
-        GradeType gradetype = GradeType.RouteYosemite;
+        GradeType gradetype;
         if (type.equalsIgnoreCase("Sport")) {
             this.type = RouteType.Sport;
             gradetype = GradeType.RouteYosemite;

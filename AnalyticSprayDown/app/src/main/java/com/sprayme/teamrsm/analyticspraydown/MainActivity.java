@@ -2,11 +2,13 @@ package com.sprayme.teamrsm.analyticspraydown;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PagerSnapHelper;
 import android.support.v7.widget.RecyclerView;
@@ -27,6 +29,7 @@ import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
+import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
@@ -36,6 +39,7 @@ import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +48,8 @@ import java.util.stream.Collectors;
 public class MainActivity extends AppCompatActivity {
 
     static final int LOGIN_REQUEST = 1;
+
+    public static SharedPreferences mSharedPref;
 
     private DataCache dataCache = null;
     private BetaSpewDb db = null;
@@ -96,6 +102,9 @@ public class MainActivity extends AppCompatActivity {
         SnapHelper snapHelper = new PagerSnapHelper();
         snapHelper.attachToRecyclerView(mRecyclerView);
 
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+        mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+
         /** for debugging the db **/
         Context context = this;
         button.setOnClickListener(new View.OnClickListener() {
@@ -112,10 +121,16 @@ public class MainActivity extends AppCompatActivity {
         mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mArrayAdapter);
 
+        Context context = this;
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this, "Time for an upgrade!", Toast.LENGTH_SHORT).show();
+
+//                if (id == R.id.action_settings) {
+                    Intent intent = new Intent(context, SettingsActivity.class);
+                    startActivity(intent);
+//                    return true;
+//                }
             }
         });
     }
@@ -246,14 +261,40 @@ public class MainActivity extends AppCompatActivity {
 
     public void onFinished(List<Tick> ticks) {
         Set<Route> routes = new HashSet<Route>();
+        boolean ignoreTopropes = false; //MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
         for (Tick tick : ticks) {
+            if (tick.getNotes().contains("sprayarific.dontsprayme"))
+                continue;
+            if (ignoreTopropes){
+                TickType tickType = tick.getType();
+                boolean skip = tickType == TickType.Fell;
+                skip |= tickType == TickType.Toprope;
+                skip |= tickType == TickType.Unknown;
+                if (skip)
+                    continue;
+            }
             if (tick.getRoute() != null)
             routes.add(tick.getRoute());
         }
 
-        pyramids.put(RouteType.Sport, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, 5, 2, PyramidStepType.Additive));
-        pyramids.put(RouteType.Trad, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Trad, 5, 2, PyramidStepType.Additive));
-        pyramids.put(RouteType.Boulder, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Boulder, 5, 2, PyramidStepType.Additive));
+        int height = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_HEIGHT, "5"));
+        int stepSize = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_SIZE, "2"));
+        String stepTypeStr = mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_TYPE, "Additive");
+        PyramidStepType stepType = PyramidStepType.valueOf(stepTypeStr);
+        if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_SPORT_PYRAMID, true))
+            pyramids.put(RouteType.Sport, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, height, stepSize, stepType));
+
+        if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_TRAD_PYRAMID, true))
+            pyramids.put(RouteType.Trad, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Trad, height, stepSize, stepType));
+
+        if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_BOULDER_PYRAMID, true))
+            pyramids.put(RouteType.Boulder, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Boulder, height, stepSize, stepType));
+
+        if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_ICE_PYRAMID, false))
+            pyramids.put(RouteType.Ice, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Ice, height, stepSize, stepType));
+
+        if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_AID_PYRAMID, false))
+            pyramids.put(RouteType.Aid, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Aid, height, stepSize, stepType));
 
         mRecyclerAdapter.update(getData());
     }

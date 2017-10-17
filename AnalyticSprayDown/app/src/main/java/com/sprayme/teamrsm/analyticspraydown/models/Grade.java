@@ -51,13 +51,27 @@ public class Grade {
     }
 
     public Grade nextHardest(){
-        // todo protect from max values
-        return new Grade(gradeValue + 1, type);
+        // todo protect from max values and support euro grades
+        if (type != GradeType.BoulderHueco)
+            return new Grade(gradeValue + 1, type);
+        else{
+            Grade grade = new Grade(gradeValue + 1, type);
+            while (grade.toString().contains("-") || grade.toString().contains("+"))
+                grade = new Grade(grade.getGradeValue() + 1, type);
+            return grade;
+        }
     }
 
     public Grade nextEasiest(){
-        // todo protect from min values
-        return new Grade(gradeValue - 1, type);
+        // todo protect from min values and support euro grades
+        if (type != GradeType.BoulderHueco)
+            return new Grade(gradeValue - 1, type);
+        else{
+            Grade grade = new Grade(gradeValue - 1, type);
+            while (grade.toString().contains("-") || grade.toString().contains("+"))
+                grade = new Grade(grade.getGradeValue() - 1, type);
+            return grade;
+        }
     }
 
     @Override

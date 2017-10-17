@@ -74,7 +74,7 @@ public class Pyramid {
     }
 
     public int getWidth(){
-        return steps[steps.length-1].getSize();
+        return steps != null ? steps[steps.length-1].getSize() : 0;
     }
 
     public int getHeight(){
