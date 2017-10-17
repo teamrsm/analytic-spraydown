@@ -20,7 +20,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
@@ -31,15 +30,14 @@ import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
+import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 import com.sprayme.teamrsm.analyticspraydown.utilities.SprayarificStructures;
-import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,6 +46,7 @@ import java.util.stream.Collectors;
 public class MainActivity extends AppCompatActivity {
 
     static final int LOGIN_REQUEST = 1;
+    static final int IMPORT_REQUEST = 2;
     private final int settingsPosition = 0;
     private final int importPosition = 1;
 
@@ -133,8 +132,8 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(intent);
                 }
                 else if (position == importPosition){
-                    Intent intent = new Intent(context, SettingsActivity.class);
-                    startActivity(intent);
+                    Intent intent = new Intent(context, ImportCsvActivity.class);
+                    startActivityForResult(intent, IMPORT_REQUEST);
                 }
 
                 mDrawerLayout.closeDrawer(mDrawerList);
@@ -173,16 +172,16 @@ public class MainActivity extends AppCompatActivity {
             dataCache = DataCache.getInstance();
             dataCache.setDb(db);
             currentUser = dataCache.getLastUser();
-            ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-                @Override
-                public void onTicksCached(List<Tick> ticks) {
-                    if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-                        ticksCallbackUuid = null;
-
-                    onFinished(ticks);
-                }
-            });
-            dataCache.loadUserTicks();
+//            ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+//                @Override
+//                public void onTicksCached(List<Tick> ticks) {
+//                    if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+//                        ticksCallbackUuid = null;
+//
+//                    onFinished(ticks);
+//                }
+//            });
+//            dataCache.loadUserTicks();
         } catch (InvalidUserException e) {
             /* launch login, we have no known user */
             canLaunchLogin = true;
@@ -200,11 +199,27 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Check which request we're responding to
-        if (requestCode == LOGIN_REQUEST) {
+        if (requestCode == LOGIN_REQUEST && false) {
             // Make sure the request was successful
             if (resultCode == RESULT_OK) {
                 currentUser = dataCache.getCurrentUser();
 
+                ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+                    @Override
+                    public void onTicksCached(List<Tick> ticks) {
+                        if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+                            ticksCallbackUuid = null;
+
+                        onFinished(ticks);
+                    }
+                });
+                dataCache.loadUserTicks();
+            }
+        }
+
+        if (requestCode == IMPORT_REQUEST) {
+            // Make sure the request was successful
+            if (resultCode == RESULT_OK) {
                 ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
                     @Override
                     public void onTicksCached(List<Tick> ticks) {

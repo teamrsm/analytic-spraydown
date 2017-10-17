@@ -32,7 +32,7 @@ public class ImportCsvActivity extends AppCompatActivity {
         callbackUUID = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
             @Override
             public void onTicksCached(List<Tick> ticks) {
-                if (dataCache.unsubscribeUserHandler(callbackUUID))
+                if (dataCache.unsubscribeTicksHandler(callbackUUID))
                     callbackUUID = null;
 
                 Intent _result = new Intent();
@@ -40,7 +40,7 @@ public class ImportCsvActivity extends AppCompatActivity {
                 finish();
             }
         });
-        dataCache.importFromCsv(csv.getText().toString());
+        dataCache.importFromMountainProjectCsv(csv.getText().toString());
 
         // todo: listen to datacache for success / failure
     }

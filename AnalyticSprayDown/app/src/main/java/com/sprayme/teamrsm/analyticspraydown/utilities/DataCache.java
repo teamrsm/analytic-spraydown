@@ -163,8 +163,11 @@ public class DataCache extends Application
         }
     }
 
-    public void importFromCsv(String csv){
+    public void importFromMountainProjectCsv(String csv){
+        List<Tick> ticks = SprayarificParser.parseTicksMountainProjectCsv(csv);
 
+        if (ticks.size() > 0)
+            onTicksLoaded(ticks);
     }
 
     /*
