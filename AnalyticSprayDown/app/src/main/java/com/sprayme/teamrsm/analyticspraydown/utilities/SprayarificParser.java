@@ -88,7 +88,7 @@ public class SprayarificParser {
 
             int count = 0;
             while ((line = reader.readLine()) != null){
-                String[] tickCsv = line.split("\\s*|\\s*");
+                String[] tickCsv = line.split("\\s*\\|\\s*");
                 Date date;
                 DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
                 try {
@@ -103,7 +103,7 @@ public class SprayarificParser {
                 }
                 catch (NumberFormatException e) {}
                 String url = tickCsv[urlIndex];
-                int startIndex = url.lastIndexOf('\\');
+                int startIndex = url.lastIndexOf('/');
                 Long routeId = Long.valueOf((url.substring(startIndex + 1)));
 
                 ticks.add(new Tick(routeId, date, pitches, notes));
