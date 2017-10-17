@@ -147,7 +147,6 @@ public class MainActivity extends AppCompatActivity {
             /** Called when a drawer has settled in a completely open state. */
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
-//                getSupportActionBar().setTitle("Navigation!");
                 invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
             }
 
@@ -172,16 +171,16 @@ public class MainActivity extends AppCompatActivity {
             dataCache = DataCache.getInstance();
             dataCache.setDb(db);
             currentUser = dataCache.getLastUser();
-//            ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-//                @Override
-//                public void onTicksCached(List<Tick> ticks) {
-//                    if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-//                        ticksCallbackUuid = null;
-//
-//                    onFinished(ticks);
-//                }
-//            });
-//            dataCache.loadUserTicks();
+            ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+                @Override
+                public void onTicksCached(List<Tick> ticks) {
+                    if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+                        ticksCallbackUuid = null;
+
+                    onFinished(ticks);
+                }
+            });
+            dataCache.loadUserTicks();
         } catch (InvalidUserException e) {
             /* launch login, we have no known user */
             canLaunchLogin = true;
@@ -199,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Check which request we're responding to
-        if (requestCode == LOGIN_REQUEST && false) {
+        if (requestCode == LOGIN_REQUEST) {
             // Make sure the request was successful
             if (resultCode == RESULT_OK) {
                 currentUser = dataCache.getCurrentUser();
