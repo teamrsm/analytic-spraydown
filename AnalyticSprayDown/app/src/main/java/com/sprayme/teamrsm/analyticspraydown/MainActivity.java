@@ -20,7 +20,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
@@ -31,15 +30,14 @@ import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
+import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 import com.sprayme.teamrsm.analyticspraydown.utilities.SprayarificStructures;
-import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,6 +46,9 @@ import java.util.stream.Collectors;
 public class MainActivity extends AppCompatActivity {
 
     static final int LOGIN_REQUEST = 1;
+    static final int IMPORT_REQUEST = 2;
+    private final int settingsPosition = 0;
+    private final int importPosition = 1;
 
     public static SharedPreferences mSharedPref;
 
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private RecyclerAdapter mRecyclerAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
+    private String[] mNavigationDrawerItems;
     private static ConcurrentHashMap<RouteType, Pyramid> pyramids = new ConcurrentHashMap<>();
 
     private String mActivityTitle;
@@ -117,20 +119,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addDrawerItems() {
-        String[] osArray = { /*"Stats", "Training",*/ "Settings" };
-        mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
+        mNavigationDrawerItems = getResources().getStringArray(R.array.navigation_drawer_items);
+        mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mNavigationDrawerItems);
         mDrawerList.setAdapter(mArrayAdapter);
 
         Context context = this;
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-//                if (id == R.id.action_settings) {
+                if (position == settingsPosition) {
                     Intent intent = new Intent(context, SettingsActivity.class);
                     startActivity(intent);
-//                    return true;
-//                }
+                }
+                else if (position == importPosition){
+                    Intent intent = new Intent(context, ImportCsvActivity.class);
+                    startActivityForResult(intent, IMPORT_REQUEST);
+                }
+
+                mDrawerLayout.closeDrawer(mDrawerList);
             }
         });
     }
@@ -141,7 +147,6 @@ public class MainActivity extends AppCompatActivity {
             /** Called when a drawer has settled in a completely open state. */
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
-                getSupportActionBar().setTitle("Navigation!");
                 invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
             }
 
@@ -198,6 +203,22 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 currentUser = dataCache.getCurrentUser();
 
+                ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+                    @Override
+                    public void onTicksCached(List<Tick> ticks) {
+                        if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+                            ticksCallbackUuid = null;
+
+                        onFinished(ticks);
+                    }
+                });
+                dataCache.loadUserTicks();
+            }
+        }
+
+        if (requestCode == IMPORT_REQUEST) {
+            // Make sure the request was successful
+            if (resultCode == RESULT_OK) {
                 ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
                     @Override
                     public void onTicksCached(List<Tick> ticks) {
@@ -301,9 +322,17 @@ public class MainActivity extends AppCompatActivity {
 
     public static List<Pyramid> getData() {
         List<Pyramid> subActivityData = new ArrayList<>();
-        subActivityData.add(pyramids.get(RouteType.Sport));
-        subActivityData.add(pyramids.get(RouteType.Trad));
-        subActivityData.add(pyramids.get(RouteType.Boulder));
+
+        if (pyramids.containsKey(RouteType.Sport))
+            subActivityData.add(pyramids.get(RouteType.Sport));
+        if (pyramids.containsKey(RouteType.Trad))
+            subActivityData.add(pyramids.get(RouteType.Trad));
+        if (pyramids.containsKey(RouteType.Boulder))
+            subActivityData.add(pyramids.get(RouteType.Boulder));
+        if (pyramids.containsKey(RouteType.Ice))
+            subActivityData.add(pyramids.get(RouteType.Ice));
+        if (pyramids.containsKey(RouteType.Aid))
+            subActivityData.add(pyramids.get(RouteType.Aid));
 
         return subActivityData;
     }

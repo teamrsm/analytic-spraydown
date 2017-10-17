@@ -8,6 +8,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -68,6 +71,55 @@ public class SprayarificParser {
             //todo handle error wisely
         }
         return null;
+    }
+
+    public static List<Tick> parseTicksMountainProjectCsv(String csv){
+        final int dateIndex = 0;
+        final int notesIndex = 3;
+        final int urlIndex = 4;
+        final int pitchesIndex = 5;
+        BufferedReader reader = new BufferedReader(new StringReader(csv));
+        List<Tick> ticks = new ArrayList<>();
+        try {
+            String line = reader.readLine();
+            String countStr = line.split("\\s.")[0];
+            int totalCount = Integer.valueOf(countStr);
+            reader.readLine(); // next line is the column headers
+
+            int count = 0;
+            while ((line = reader.readLine()) != null){
+                String[] tickCsv = line.split("\\s*\\|\\s*");
+                Date date;
+                DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+                try {
+                    date = df.parse(tickCsv[dateIndex]);
+                } catch (ParseException e) {
+                    date = null;
+                }
+                String notes = tickCsv[notesIndex];
+                int pitches = 0;
+                try {
+                    pitches = Integer.valueOf(tickCsv[pitchesIndex]);
+                }
+                catch (NumberFormatException e) {}
+                String url = tickCsv[urlIndex];
+                int startIndex = url.lastIndexOf('/');
+                Long routeId = Long.valueOf((url.substring(startIndex + 1)));
+
+                ticks.add(new Tick(routeId, date, pitches, notes));
+
+                count++;
+            }
+
+            if (count != totalCount){
+                //todo we missed a tick somehow
+            }
+        }
+        catch (IOException e){
+            // todo handle this
+        }
+
+        return ticks;
     }
 
     public static List<Route> parseRoutesJson(String jsonText) {
