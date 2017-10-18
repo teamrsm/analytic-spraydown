@@ -14,6 +14,7 @@ public class Tick {
     private String notes;
     private Route route;
     private TickType type;
+    private boolean isRepeat;
 
     public Tick(Long routeId, Date date, Integer numPitches, String notes){
         this.routeId = routeId;
@@ -37,7 +38,7 @@ public class Tick {
             type = TickType.Unknown;
     }
 
-    public Tick(Long routeId, Date date, Integer numPitches, String notes, TickType type){
+    public Tick(Long routeId, Date date, Integer numPitches, String notes, TickType type, boolean isRepeat){
         this.routeId = routeId;
         this.date = date;
         this.pitches = numPitches;
@@ -72,5 +73,7 @@ public class Tick {
     public TickType getType() {
         return type;
     }
+
+    public boolean isRepeat() { return isRepeat; }
 }
 
