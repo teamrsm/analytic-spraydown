@@ -20,6 +20,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Spinner;
 
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
@@ -29,6 +30,7 @@ import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.TickType;
+import com.sprayme.teamrsm.analyticspraydown.models.TimeScale;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
@@ -36,6 +38,8 @@ import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 import com.sprayme.teamrsm.analyticspraydown.utilities.SprayarificStructures;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
     private final int importPosition = 1;
 
     public static SharedPreferences mSharedPref;
+    private TimeScale mTimeScale = TimeScale.Year;
+    private int mTimeScaleSpinnerPos = 3;
 
     private DataCache dataCache = null;
     private BetaSpewDb db = null;
@@ -67,14 +73,14 @@ public class MainActivity extends AppCompatActivity {
     private static ConcurrentHashMap<RouteType, Pyramid> pyramids = new ConcurrentHashMap<>();
 
     private String mActivityTitle;
-    private UUID userCallbackUuid, ticksCallbackUuid, routesCallbackUuid;
+    private UUID ticksCallbackUuid;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        this.deleteDatabase("BetaSpew.db");
+        //this.deleteDatabase("BetaSpew.db");
         db = BetaSpewDb.getInstance(this);
 
         mDrawerList = (ListView)findViewById(R.id.navList);
@@ -106,6 +112,38 @@ public class MainActivity extends AppCompatActivity {
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // time scale selection spinner
+        Spinner spinner = (Spinner) findViewById(R.id.time_scale_spinner);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.time_scale_spinner_entries, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        spinner.setSelection(3);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                switch (position){
+                    case 0: mTimeScale = TimeScale.Month; break;
+                    case 1: mTimeScale = TimeScale.ThreeMonth; break;
+                    case 2: mTimeScale = TimeScale.SixMonth; break;
+                    case 3: mTimeScale = TimeScale.Year; break;
+                    case 4: mTimeScale = TimeScale.Lifetime; break;
+                }
+                ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+                    @Override
+                    public void onTicksCached(List<Tick> ticks) {
+                        if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+                            ticksCallbackUuid = null;
+
+                        onFinished(ticks);
+                    }
+                });
+                dataCache.loadUserTicks();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
 
         /** for debugging the db **/
         Context context = this;
@@ -193,6 +231,37 @@ public class MainActivity extends AppCompatActivity {
 
         // Sync the toggle state after onRestoreInstanceState has occurred.
         mDrawerToggle.syncState();
+
+        Spinner spinner = (Spinner) findViewById(R.id.time_scale_spinner);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position == mTimeScaleSpinnerPos)
+                    return;
+                else
+                    mTimeScaleSpinnerPos = position;
+
+                switch (position){
+                    case 0: mTimeScale = TimeScale.Month; break;
+                    case 1: mTimeScale = TimeScale.ThreeMonth; break;
+                    case 2: mTimeScale = TimeScale.SixMonth; break;
+                    case 3: mTimeScale = TimeScale.Year; break;
+                    case 4: mTimeScale = TimeScale.Lifetime; break;
+                }
+                ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+                    @Override
+                    public void onTicksCached(List<Tick> ticks) {
+                        if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+                            ticksCallbackUuid = null;
+
+                        onFinished(ticks);
+                    }
+                });
+                dataCache.loadUserTicks();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
     }
 
     @Override
@@ -282,11 +351,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void onFinished(List<Tick> ticks) {
         Set<Route> routes = new HashSet<Route>();
-        boolean ignoreTopropes = false; //MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
+        boolean ignoreTopropes = MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
         for (Tick tick : ticks) {
-            if (tick.getNotes().contains("sprayarific.dontsprayme"))
+            if (tick.getRoute() == null)
                 continue;
-            if (ignoreTopropes){
+//            if (tick.getNotes().contains("sprayarific.dontsprayme"))
+//                continue;
+            // filter for ignore toprope setting
+            if (ignoreTopropes && tick.getRoute().getType() != RouteType.Boulder){
                 TickType tickType = tick.getType();
                 boolean skip = tickType == TickType.Fell;
                 skip |= tickType == TickType.Toprope;
@@ -294,9 +366,28 @@ public class MainActivity extends AppCompatActivity {
                 if (skip)
                     continue;
             }
-            if (tick.getRoute() != null)
+
+            // filter for the selected time scale
+            if (mTimeScale != TimeScale.Lifetime){
+                Date date = new Date();
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(date);
+                switch (mTimeScale) {
+                    case Month: cal.add(Calendar.MONTH, -1); break;
+                    case ThreeMonth: cal.add(Calendar.MONTH, -3); break;
+                    case SixMonth: cal.add(Calendar.MONTH, -6); break;
+                    case Year: cal.add(Calendar.YEAR, -1); break;
+                    default: break;
+                }
+                date = cal.getTime();
+                if (date.getTime() > tick.getDate().getTime())
+                    continue;
+            }
+
             routes.add(tick.getRoute());
         }
+        if (routes.size() == 0)
+            return;
 
         int height = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_HEIGHT, "5"));
         int stepSize = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_SIZE, "2"));

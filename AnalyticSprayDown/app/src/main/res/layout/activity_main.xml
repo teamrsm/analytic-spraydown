@@ -24,6 +24,14 @@
             android:layout_marginTop="20dp"
             android:scrollbars="horizontal" />
 
+        <Spinner
+            android:id="@+id/time_scale_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:entries="@array/time_scale_spinner_entries"
+            android:drawSelectorOnTop="true"/>
+
         <Button
             android:id="@+id/viewDbButton"
             android:layout_width="match_parent"

@@ -3,6 +3,7 @@ package com.sprayme.teamrsm.analyticspraydown.utilities;
 import com.sprayme.teamrsm.analyticspraydown.MainActivity;
 import com.sprayme.teamrsm.analyticspraydown.SettingsActivity;
 import com.sprayme.teamrsm.analyticspraydown.models.Grade;
+import com.sprayme.teamrsm.analyticspraydown.models.GradeType;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
@@ -31,8 +32,16 @@ public class SprayarificStructures {
                 (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
         long hardestCount = filteredRoutes.stream().filter((route) -> route.getGrade().compareTo(hardestRoute.getGrade()) == 0).count();
 
+        Grade hardestGrade = hardestRoute != null ? hardestRoute.getGrade() : null;
+        if ( hardestGrade == null)
+        switch (type) {
+            case Sport:
+            case Trad: hardestGrade = new Grade("5.10a", GradeType.RouteYosemite); break;
+            case Boulder: hardestGrade = new Grade("V4", GradeType.BoulderHueco); break;
+            default: break;
+        }
         if (hardestCount > 1 || MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_ALWAYS_BUILD_OPTIMISTIC, true))
-            return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, type, hardestRoute.getGrade().nextHardest());
+            return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, type, hardestGrade.nextHardest());
         else
             return new Pyramid(filteredRoutes, height, stepChangeSize, stepModifier, type);
 

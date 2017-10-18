@@ -39,11 +39,18 @@
         <!--<item>Stats</item>-->
         <!--<item>Training</item>-->
         <item>Settings</item>
-        <item>Import</item>
+        <!--<item>Import</item>-->
     </string-array>
     <string-array name="pyramid_step_modifier_type_preference_entries">
         <item>Additive</item>
         <item>Multiplicative</item>
+    </string-array>
+    <string-array name="time_scale_spinner_entries">
+        <item>Month</item>
+        <item>3 Months</item>
+        <item>6 Months</item>
+        <item>Year</item>
+        <item>Lifetime</item>
     </string-array>
 
 </resources>
