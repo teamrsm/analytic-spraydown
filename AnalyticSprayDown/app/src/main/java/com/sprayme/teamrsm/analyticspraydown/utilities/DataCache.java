@@ -302,6 +302,9 @@ public class DataCache extends Application
 
     @Override
     public void onUserLoaded(User user) {
+        if (user == null)
+            return;
+
         m_CurrentUser.setUserName(user.getUserName());
         m_CurrentUser.setUserId(user.getUserId());
 

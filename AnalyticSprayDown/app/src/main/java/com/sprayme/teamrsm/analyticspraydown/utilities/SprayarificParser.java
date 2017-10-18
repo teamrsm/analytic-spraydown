@@ -27,6 +27,8 @@ import java.util.Locale;
 public class SprayarificParser {
 
     public static User parseUserJson(String jsonText) {
+        if (jsonText == null)
+            return null;
         try {
             User mpUser = new User();
             JSONObject obj = new JSONObject(jsonText);
