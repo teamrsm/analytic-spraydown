@@ -1,106 +1,39 @@
 package com.sprayme.teamrsm.analyticspraydown.utilities;
 
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.support.annotation.RequiresApi;
-
-import com.sprayme.teamrsm.analyticspraydown.models.Route;
-import com.sprayme.teamrsm.analyticspraydown.models.Tick;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
 import java.util.Scanner;
 
 /**
  * Created by Said on 10/4/2017.
  */
-//
-@RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
-public class MPQueryTask extends AsyncTask<URL, Void, String> {
 
-    public interface AsyncResponse {
-        void processFinish(String output);
-    }
+public class MPQueryTaskHelper {
 
-    final String MP_BASE_URL = "https://www.mountainproject.com/data/";
+    private static final String MP_BASE_URL = "https://www.mountainproject.com/data/";
 
-    final String ROUTES = "get-routes";
-    final String TICKS = "get-ticks";
-    final String USER = "get-user";
+    private static final String ROUTES = "get-routes";
+    private static final String TICKS = "get-ticks";
+    private static final String USER = "get-user";
 
-    final String PARAM_EMAIL = "email";
-    final String PARAM_USERID = "userId";
-    final String PARAM_KEY = "key";
-    final String START_POS_KEY = "startPos";
-    final String PARAM_ROUTEIDS = "routeIds";
+    private static final String PARAM_EMAIL = "email";
+    private static final String PARAM_USERID = "userId";
+    private static final String PARAM_KEY = "key";
+    private static final String START_POS_KEY = "startPos";
+    private static final String PARAM_ROUTEIDS = "routeIds";
 
-    private String email;
-    private String key;
-    private long userId = -1;
-
-
-    public AsyncResponse delegate = null;
-
-    public MPQueryTask(String emailAddress, String apiKey, AsyncResponse delegate) {
-        this.email = emailAddress;
-        this.key = apiKey;
-        this.delegate = delegate;
-    }
-
-    public MPQueryTask(long userId, String apiKey, AsyncResponse delegate) {
-        this.userId = userId;
-        this.key = apiKey;
-        this.delegate = delegate;
-    }
-
-    @Override
-    protected String doInBackground(URL... urls) {
-        URL executeUrl = urls[0];
-        String mpQueryResults = null;
-
-        try {
-            mpQueryResults = getResponseFromHttpUrl(executeUrl);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return mpQueryResults;
-    }
-
-    @Override
-    protected void onPostExecute(String result) {
-        delegate.processFinish(result);
-    }
     /*
     * Builds the URL used to query mountain project
     * for users ticks
     * */
-    public URL buildTicksUrl(int startIndex) {
-        String userParam;
-        String userIdentifier;
-        if (userId > 0){
-            userParam = PARAM_USERID;
-            userIdentifier = userId+"";
-        }
-        else{
-            userParam = PARAM_EMAIL;
-            userIdentifier = email;
-        }
+    public static URL buildTicksUrl(long userId, String key, int startIndex) {
+        String userParam = PARAM_USERID;
+        String userIdentifier = userId+"";
 
         Uri ticksUri = Uri.parse(MP_BASE_URL).buildUpon()
                 .appendPath(TICKS)
@@ -123,7 +56,7 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
     * Builds the URL used to query mountain project
     * for routes given an array of routeIds.
     * */
-    public URL buildRoutesUrl(Long[] routeIds) {
+    public static URL buildRoutesUrl(String key, Long[] routeIds) {
         String idString = null;
 
         for (Long id : routeIds) {
@@ -153,7 +86,7 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
     * Build URL to query mountain project data api to query
     * for the user with the given email address
     * */
-    public URL buildUserUrl() {
+    public static URL buildUserUrl(String email, String key) {
         Uri userUri = Uri.parse(MP_BASE_URL).buildUpon()
                 .appendPath(USER)
                 .appendQueryParameter(PARAM_EMAIL, email)
@@ -173,7 +106,7 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
     /*
     * Returns the entire result from the HTTP response.
     * */
-    private String getResponseFromHttpUrl(URL url) throws IOException {
+    public static String getResponseFromHttpUrl(URL url) throws IOException {
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
 
         try {
@@ -181,14 +114,13 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
 
             Scanner scanner = new Scanner(in);
             scanner.useDelimiter("\\A");
-
+            String returnVal = null;
             boolean hasInput = scanner.hasNext();
             if (hasInput) {
-                return scanner.next();
+                returnVal = scanner.next();
             }
-            else {
-                return null;
-            }
+            scanner.close();
+            return returnVal;
         } finally {
             urlConnection.disconnect();
         }
