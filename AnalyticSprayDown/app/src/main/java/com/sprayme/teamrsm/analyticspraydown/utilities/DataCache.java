@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Said on 10/9/2017.
@@ -41,7 +42,7 @@ public class DataCache extends Application
     private ConcurrentHashMap<UUID,DataCacheTicksHandler> ticksHandlers = new ConcurrentHashMap<>();
     private ConcurrentHashMap<UUID,DataCacheRoutesHandler> routeHandlers = new ConcurrentHashMap<>();
 
-    private static int invalidCacheHours = 24;
+    private static int invalidCacheHours = 0;
     private static final int mountainProjectRoutesRequestSizeLimit = 200;
 
     /* member variables */
@@ -81,17 +82,14 @@ public class DataCache extends Application
     * */
     private boolean isCacheInvalid() {
 
-        /* instantiating java.util.date defaults to current time. */
-
         Date lastAccessDate = m_Db.getLastAccessTime(m_CurrentUser.getUserId());
 
-        Date cacheInvalidationDate = new Date();
         Calendar cal = Calendar.getInstance();
-        cal.setTime(cacheInvalidationDate);
-        cal.add(Calendar.HOUR_OF_DAY, -1 * invalidCacheHours);
-        cacheInvalidationDate = cal.getTime();
+        cal.setTime(lastAccessDate);
+        cal.add(Calendar.HOUR_OF_DAY, invalidCacheHours);
+        Date cacheInvalidationDate = cal.getTime();
 
-        if (cacheInvalidationDate.getTime() <= lastAccessDate.getTime())
+        if (lastAccessDate.getTime() < cacheInvalidationDate.getTime())
             return false;
         else
             return true;
@@ -309,7 +307,7 @@ public class DataCache extends Application
         m_CurrentUser.setUserId(user.getUserId());
 
         m_Db.insertUser(m_CurrentUser);
-        getTicks();
+        loadUserTicks();
 
         broadcastUserCompleted();
     }

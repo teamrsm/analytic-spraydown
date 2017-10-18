@@ -45,7 +45,7 @@ import android.database.MatrixCursor;
  */
 
 public class BetaSpewDb extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
     private static final String DATABASE_NAME = "BetaSpew.db";
     private static BetaSpewDb instance;
 
@@ -107,6 +107,14 @@ public class BetaSpewDb extends SQLiteOpenHelper {
                 db.execSQL(SqlGen.makeRoutesTableDrop());
                 db.execSQL(SqlGen.makeRoutesTableCreate());
                 //todo: reload routes
+            }
+            if (oldVersion < 4 && newVersion >= 4) {
+                /* Added TICK_DATE to UNIQUE CONSTRAINT on TICKS Table */
+
+                // todo: get ticks
+                db.execSQL(SqlGen.makeTicksTableDrop());
+                db.execSQL(SqlGen.makeTicksTableCreate());
+                // todo: reload ticks
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -190,7 +198,7 @@ public class BetaSpewDb extends SQLiteOpenHelper {
             updateValues.put(LAST_ACCESS, unixDate);
 
             db.update(USERS_TABLE_NAME, updateValues, SqlGen.makeUserIdWhereClause(userId), null);
-
+            db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
