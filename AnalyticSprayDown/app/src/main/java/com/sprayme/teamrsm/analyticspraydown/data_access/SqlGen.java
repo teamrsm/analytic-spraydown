@@ -26,7 +26,8 @@ class SqlGen {
                 .append(TICK_DATE).append(" DATE ").append("NOT NULL, ")
                 .append(NOTES).append(" TEXT, ")
                 .append(TICK_TYPE).append(" TEXT, ")
-                .append("UNIQUE (").append(USER_ID).append(",").append(ROUTE_ID).append(")")
+                .append("UNIQUE (").append(USER_ID).append(",").append(ROUTE_ID)
+                .append(",").append(TICK_DATE).append(")")
                 .append(" ON CONFLICT REPLACE")
                 .append(")").toString();
     }
@@ -120,7 +121,7 @@ class SqlGen {
     public static String makeUserIdWhereClause(long userId) {
         return new StringBuilder()
                 .append(" ").append(USER_ID)
-                .append(" = ").append(userId).toString();
+                .append("=").append(userId).toString();
     }
 
     public static String makeGetRoutes(Long[] routeIds) {
@@ -144,7 +145,7 @@ class SqlGen {
         }
 
         int lastIndex = inList.lastIndexOf(",");
-        return inList.substring(0, lastIndex - 1).toString();
+        return inList.length() > 0 ? inList.substring(0, lastIndex - 1).toString() : null;
     }
 
 }

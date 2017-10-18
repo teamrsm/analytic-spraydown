@@ -10,7 +10,6 @@ import android.widget.TextView;
 import com.sprayme.teamrsm.analyticspraydown.R;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 
-import java.util.Collections;
 import java.util.List;
 /**
  * Created by climbak on 10/15/17.
@@ -18,7 +17,7 @@ import java.util.List;
 
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ActivityViewHolder> {
     private final LayoutInflater inflater;
-    List<Pyramid> activityData = Collections.EMPTY_LIST;
+    private List<Pyramid> activityData;
 
     public RecyclerAdapter(Context context, List<Pyramid> subActivityData) {
         inflater = LayoutInflater.from(context);

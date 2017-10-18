@@ -61,8 +61,23 @@ public class SprayarificParser {
                 }
                 Integer pitches = (int) arr.getJSONObject(i).optLong("pitches", 0);
                 String notes = arr.getJSONObject(i).getString("notes");
+                String style = arr.getJSONObject(i).getString("style");
+                String leadStyle = arr.getJSONObject(i).getString("leadStyle");
+                TickType type = TickType.Unknown;
+                if (style.equalsIgnoreCase("tr"))
+                    type = TickType.Toprope;
+                else if (style.equalsIgnoreCase("lead")){
+                    if (leadStyle.equalsIgnoreCase("onsight"))
+                        type = TickType.Onsight;
+                    else if (leadStyle.equalsIgnoreCase("flash"))
+                        type = TickType.Flash;
+                    else if (leadStyle.equalsIgnoreCase("redpoint"))
+                        type = TickType.Redpoint;
+                    else if (leadStyle.equalsIgnoreCase("pinkpoint"))
+                        type = TickType.Pinkpoint;
+                }
 
-                Tick tick = new Tick(routeId, date, pitches, notes);
+                Tick tick = (new Tick(routeId, date, pitches, notes, type));
                 ticks.add(tick);
             }
 

@@ -46,6 +46,7 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
     final String PARAM_EMAIL = "email";
     final String PARAM_USERID = "userId";
     final String PARAM_KEY = "key";
+    final String START_POS_KEY = "startPos";
     final String PARAM_ROUTEIDS = "routeIds";
 
     private String email;
@@ -89,7 +90,7 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
     * Builds the URL used to query mountain project
     * for users ticks
     * */
-    public URL buildTicksUrl() {
+    public URL buildTicksUrl(int startIndex) {
         String userParam;
         String userIdentifier;
         if (userId > 0){
@@ -105,6 +106,7 @@ public class MPQueryTask extends AsyncTask<URL, Void, String> {
                 .appendPath(TICKS)
                 .appendQueryParameter(userParam, userIdentifier)
                 .appendQueryParameter(PARAM_KEY, key)
+                .appendQueryParameter(START_POS_KEY, startIndex+"")
                 .build();
 
         URL url = null;

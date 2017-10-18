@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
+import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 
 import java.util.ArrayList;
@@ -237,10 +238,11 @@ public class BetaSpewDb extends SQLiteOpenHelper {
                 long routeId = cursor.getLong(cursor.getColumnIndex(ROUTE_ID));
                 Date tickDate = new Date(cursor.getLong(cursor.getColumnIndex(TICK_DATE)));
                 String notes = cursor.getString(cursor.getColumnIndex(NOTES));
-                String tickType = cursor.getString(cursor.getColumnIndex(TICK_TYPE));
+                TickType tickType = TickType.valueOf(cursor.getString(cursor.getColumnIndex(TICK_TYPE)));
+
 
                 // todo: join with routes to get num pitches
-                userTicks.add(new Tick(routeId, tickDate, null, notes));
+                userTicks.add(new Tick(routeId, tickDate, null, notes, tickType));
             }
         } catch (Exception e) {
             e.printStackTrace();

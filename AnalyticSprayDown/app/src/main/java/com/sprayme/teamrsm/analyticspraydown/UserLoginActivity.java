@@ -2,17 +2,14 @@ package com.sprayme.teamrsm.analyticspraydown;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.TextView;
 
-import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 
-import java.util.List;
 import java.util.UUID;
 
 public class UserLoginActivity extends AppCompatActivity {

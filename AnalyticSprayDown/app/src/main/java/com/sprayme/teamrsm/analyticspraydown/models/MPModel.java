@@ -37,14 +37,14 @@ public class MPModel {
         mpQuery.execute(url);
     }
 
-    public void requestTicks(long userId, String apiKey) {
+    public void requestTicks(long userId, String apiKey, int startIndex) {
         MPQueryTask mpQuery = new MPQueryTask(userId, apiKey, output -> {
             List<Tick> ticks = SprayarificParser.parseTicksJson(output);
             listener.onTicksLoaded(ticks);
 //            Long[] routeIds = getRouteIdArray(ticks);
 //            requestRoutes(userId, apiKey, routeIds);
         });
-        URL url = mpQuery.buildTicksUrl();
+        URL url = mpQuery.buildTicksUrl(startIndex);
         mpQuery.execute(url);
     }
 

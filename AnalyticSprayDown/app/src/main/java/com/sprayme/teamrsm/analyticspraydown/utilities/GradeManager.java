@@ -18,6 +18,11 @@ public class GradeManager {
     // todo make resources
 
     public static int getGradeValue(String gradeStr, GradeType type){
+        // todo come up with a better way to remove danger ratings
+        int index = gradeStr.indexOf(" ");
+        if (index > 0)
+            gradeStr = gradeStr.substring(0, index);
+
         switch(type) {
             case RouteYosemite:
                 if (yosemiteGrades.containsKey(gradeStr))

@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,6 +52,8 @@ public class DataCache extends Application
     private List<Tick> m_Ticks = null;
     private List<Route> m_Routes = null;
 
+    private boolean ticksQueryIsBatched = false;
+    private int ticksQueryNextStartingIndex = 0;
     private boolean ticksWaitingOnRoutes = false;
     private boolean routesQueryIsBatched = false;
     private Long[] routesBatchedRunCache = null;
@@ -143,22 +146,33 @@ public class DataCache extends Application
             fetchTicks();
         else if (isCacheInvalid())
             fetchTicks();
+        else if (m_Routes == null){
+            Long[] routeIds = getRouteIdArray(m_Ticks);
+            ticksWaitingOnRoutes = true;
+            loadRoutes(routeIds);
+        }
         else
             broadcastTicksCompleted();
     }
 
     private void fetchTicks() {
-        if (isCacheInvalid())
-            m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
+        if (isCacheInvalid() || ticksQueryIsBatched) {
+            ticksQueryIsBatched = true;
+            m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey(), ticksQueryNextStartingIndex);
+            ticksQueryNextStartingIndex += 200;
+        }
         else {
             m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
 
-            if (m_Ticks.size() == 0)
-                m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
+            if (m_Ticks.size() == 0){
+                ticksQueryIsBatched = true;
+                m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey(), ticksQueryNextStartingIndex);
+                ticksQueryNextStartingIndex += 200;
+            }
             else {
                 Long[] routeIds = getRouteIdArray(m_Ticks);
+                ticksWaitingOnRoutes = true;
                 loadRoutes(routeIds);
-                broadcastTicksCompleted();
             }
         }
     }
@@ -178,8 +192,19 @@ public class DataCache extends Application
             fetchRoutes(routeIds);
         else if (isCacheInvalid())
             fetchRoutes(routeIds);
-        else
-            broadcastRoutesCompleted();
+        else {
+            HashSet<Long> routesHash = new HashSet<>();
+            ArrayList<Long> missingRoutes = new ArrayList<>();
+            m_Routes.forEach(route -> routesHash.add(route.getId()));
+            for (Long id : routeIds) {
+                if (!routesHash.contains(id))
+                    missingRoutes.add(id);
+            }
+            if (missingRoutes.size() > 0)
+                fetchRoutes(missingRoutes.toArray(new Long[missingRoutes.size()]));
+            else
+                broadcastRoutesCompleted();
+        }
     }
 
     private void fetchRoutes(Long[] routeIds) {
@@ -257,6 +282,16 @@ public class DataCache extends Application
         /* persist to database, then retrieve latest set. */
         m_Db.upsertTicks(ticks, m_CurrentUser.getUserId());
         m_Db.updateAccessMoment(m_CurrentUser.getUserId());
+        if (ticksQueryIsBatched){
+            if (ticks.size() < 200){
+                ticksQueryIsBatched = false;
+                ticksQueryNextStartingIndex = 0;
+            }
+            else{
+                fetchTicks();
+                return;
+            }
+        }
 
         m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
         ticksWaitingOnRoutes = true;
