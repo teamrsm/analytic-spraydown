@@ -42,7 +42,7 @@ public class DataCache extends Application
     private ConcurrentHashMap<UUID,DataCacheTicksHandler> ticksHandlers = new ConcurrentHashMap<>();
     private ConcurrentHashMap<UUID,DataCacheRoutesHandler> routeHandlers = new ConcurrentHashMap<>();
 
-    private static int invalidCacheHours = 0;
+    private static int invalidCacheHours = 24;
     private static final int mountainProjectRoutesRequestSizeLimit = 200;
 
     /* member variables */
