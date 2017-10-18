@@ -45,13 +45,17 @@ public class GradeManager {
                     return fontGrades.get(gradeStr);
                 else
                     return 0;
+            case Ice:
+                if (waterIceGrades.containsKey(gradeStr))
+                    return waterIceGrades.get(gradeStr);
+                else
+                    return 0;
             default:
                 return 0;
         }
     }
 
     public static String getGradeString(int gradeValue, GradeType type){
-        Set<String> keys;
         switch (type) {
             case RouteYosemite:
                  if (yosemiteReverseGrades.containsKey(gradeValue))
@@ -69,6 +73,10 @@ public class GradeManager {
                 if (fontReverseGrades.containsKey(gradeValue))
                     return fontReverseGrades.get(gradeValue);
                 return null;
+            case Ice:
+                if (waterIceReverseGrades.containsKey(gradeValue))
+                    return waterIceReverseGrades.get(gradeValue);
+                return null;
             default:
                 return null;
         }
@@ -83,11 +91,11 @@ public class GradeManager {
             case Boulder:
                 return boulderToHueco(grade);
             case Ice:
-                return null; // also handle AI
+                return grade; // also handle AI
             case Aid:
-                return null;
+                return grade;
             case Mixed:
-                return null;
+                return grade;
             default:
                 return null;
         }
@@ -102,11 +110,11 @@ public class GradeManager {
             case Boulder:
                 return boulderToFont(grade);
             case Ice:
-                return null; // also handle AI
+                return grade; // also handle AI
             case Aid:
-                return null;
+                return grade;
             case Mixed:
-                return null;
+                return grade;
             default:
                 return null;
         }
@@ -490,6 +498,36 @@ public class GradeManager {
         grades.put(48,"8C");
         grades.put(51,"8C+");
         grades.put(54,"9A");
+        return grades;
+    }
+
+    private static HashMap<String, Integer> waterIceGrades = createWaterIceGrades();
+    private static HashMap<String, Integer> createWaterIceGrades(){
+        HashMap<String, Integer> grades = new HashMap<String, Integer>();
+        grades.put("WI0",1);
+        grades.put("WI1",2);
+        grades.put("WI2",3);
+        grades.put("WI3",4);
+        grades.put("WI4",5);
+        grades.put("WI5",6);
+        grades.put("WI6",7);
+        grades.put("WI7",8);
+        grades.put("WI8",9);
+        return grades;
+    }
+
+    private static HashMap<Integer, String> waterIceReverseGrades = createReverseWaterIceGrades();
+    private static HashMap<Integer, String> createReverseWaterIceGrades(){
+        HashMap<Integer, String> grades = new HashMap<>();
+        grades.put(1,"WI0");
+        grades.put(2,"WI1");
+        grades.put(3,"WI2");
+        grades.put(4,"WI3");
+        grades.put(5,"WI4");
+        grades.put(6,"WI5");
+        grades.put(7,"WI6");
+        grades.put(8,"WI7");
+        grades.put(9,"WI8");
         return grades;
     }
 
