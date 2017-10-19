@@ -15,7 +15,7 @@ import java.util.Scanner;
 
 public class MPQueryTaskHelper {
 
-    private static final String MP_BASE_URL = "https://www.mountainproject.com/data/";
+    public static final String MP_BASE_URL = "https://www.mountainproject.com/data/";
 
     private static final String ROUTES = "get-routes";
     private static final String TICKS = "get-ticks";
