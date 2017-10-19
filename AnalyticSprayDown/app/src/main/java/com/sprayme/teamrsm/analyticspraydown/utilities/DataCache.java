@@ -41,7 +41,7 @@ public class DataCache extends Application
     private ConcurrentHashMap<UUID,DataCacheTicksHandler> ticksHandlers = new ConcurrentHashMap<>();
     private ConcurrentHashMap<UUID,DataCacheRoutesHandler> routeHandlers = new ConcurrentHashMap<>();
 
-    private static int invalidCacheHours = 24;
+
     private static final int mountainProjectRoutesRequestSizeLimit = 200;
 
     /* member variables */
@@ -51,13 +51,14 @@ public class DataCache extends Application
     private User m_CurrentUser;
     private List<Tick> m_Ticks = null;
     private List<Route> m_Routes = null;
+    private static int m_InvalidCacheHours;
 
     private boolean ticksWaitingOnRoutes = false;
 
     /* Singleton Constructor */
     private DataCache(){
         m_MpModel = new MPModel(this);
-        invalidCacheHours = Integer.valueOf(MainActivity.mSharedPref.getString(SettingsActivity.KEY_PREF_CACHE_TIMEOUT, "24"));
+        m_InvalidCacheHours = Integer.valueOf(MainActivity.mSharedPref.getString(SettingsActivity.KEY_PREF_CACHE_TIMEOUT, "24"));
     }
 
     public static synchronized DataCache getInstance(){
@@ -77,17 +78,14 @@ public class DataCache extends Application
     * */
     private boolean isCacheInvalid() {
 
-        /* instantiating java.util.date defaults to current time. */
-
         Date lastAccessDate = m_Db.getLastAccessTime(m_CurrentUser.getUserId());
 
-        Date cacheInvalidationDate = new Date();
         Calendar cal = Calendar.getInstance();
-        cal.setTime(cacheInvalidationDate);
-        cal.add(Calendar.HOUR_OF_DAY, -1 * invalidCacheHours);
-        cacheInvalidationDate = cal.getTime();
+        cal.setTime(lastAccessDate);
+        cal.add(Calendar.HOUR_OF_DAY, m_InvalidCacheHours);
+        Date cacheInvalidationDate = cal.getTime();
 
-        if (cacheInvalidationDate.getTime() <= lastAccessDate.getTime())
+        if (lastAccessDate.getTime() < cacheInvalidationDate.getTime())
             return false;
         else
             return true;
@@ -263,7 +261,7 @@ public class DataCache extends Application
         m_CurrentUser.setUserId(user.getUserId());
 
         m_Db.insertUser(m_CurrentUser);
-        getTicks();
+        loadUserTicks();
 
         broadcastUserCompleted();
     }
