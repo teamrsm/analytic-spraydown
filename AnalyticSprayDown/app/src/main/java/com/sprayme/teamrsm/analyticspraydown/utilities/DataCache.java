@@ -161,6 +161,7 @@ public class DataCache extends Application
             }
             else {
                 Long[] routeIds = getRouteIdArray(m_Ticks);
+                ticksWaitingOnRoutes = true;
                 loadRoutes(routeIds);
             }
         }
@@ -204,7 +205,7 @@ public class DataCache extends Application
             // todo: trigger the finished listener
             m_Routes = m_Db.getRoutes(routeIds);
 
-            if (m_Routes.size() == 0) {
+            if (m_Routes.size() < routeIds.length) {
                 getMpRoutes(routeIds);
             }
             else {
@@ -261,7 +262,6 @@ public class DataCache extends Application
         m_CurrentUser.setUserId(user.getUserId());
 
         m_Db.insertUser(m_CurrentUser);
-        loadUserTicks();
 
         broadcastUserCompleted();
     }

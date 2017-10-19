@@ -44,7 +44,7 @@ public class MPQueryRoutesTask extends AsyncTask<Long[], Void, List<Route>> {
                     routes[i] = routesLeft[i];
                 }
 
-                if (count > MP_ROUTE_RETURN_LIMIT) {
+                if (routesLeft.length > MP_ROUTE_RETURN_LIMIT) {
                     Long[] routesToCache = new Long[routesLeft.length - 200];
                     for (int i = 200; i < routesLeft.length; i++) {
                         routesToCache[i - 200] = routesLeft[i];

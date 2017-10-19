@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        this.deleteDatabase("BetaSpew.db");
+//        this.deleteDatabase("BetaSpew.db");
         db = BetaSpewDb.getInstance(this);
 
         mDrawerList = (ListView)findViewById(R.id.navList);
