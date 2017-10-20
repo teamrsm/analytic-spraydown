@@ -6,6 +6,7 @@ import android.os.Bundle;
 public class SettingsActivity extends AppCompatActivity {
 
     public static final String KEY_PREF_CACHE_TIMEOUT = "cache_invalidate_time_preference";
+    public static final String KEY_PREF_GRADE_LOCALE = "grade_system_preference";
     public static final String KEY_PREF_USE_ONLY_LEADS = "only_use_leads_preference";
     public static final String KEY_PREF_ALWAYS_BUILD_OPTIMISTIC = "always_optimistic_preference";
     public static final String KEY_PREF_IGNORE_DUPLICATES = "ignore_duplicates_preference";

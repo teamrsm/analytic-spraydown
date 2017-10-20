@@ -250,7 +250,8 @@ public class BetaSpewDb extends SQLiteOpenHelper {
 
 
                 // todo: join with routes to get num pitches
-                userTicks.add(new Tick(routeId, tickDate, null, notes, tickType));
+                // todo: support the concept of isRepeat
+                userTicks.add(new Tick(routeId, tickDate, null, notes, tickType, false));
             }
         } catch (Exception e) {
             e.printStackTrace();

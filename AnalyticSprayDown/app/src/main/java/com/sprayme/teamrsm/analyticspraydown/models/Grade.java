@@ -1,5 +1,7 @@
 package com.sprayme.teamrsm.analyticspraydown.models;
 
+import com.sprayme.teamrsm.analyticspraydown.MainActivity;
+import com.sprayme.teamrsm.analyticspraydown.SettingsActivity;
 import com.sprayme.teamrsm.analyticspraydown.utilities.GradeManager;
 
 /**
@@ -75,7 +77,25 @@ public class Grade {
     }
 
     @Override
-    public String toString(){ return gradeString; }
+    public String toString(){
+        if ((type == GradeType.RouteYosemite || type == GradeType.BoulderHueco) &&
+                MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_GRADE_LOCALE, false))
+            return GradeManager.toEuro(this).toString();
+        else if ((type == GradeType.RouteEuropean || type == GradeType.BoulderFont) &&
+                !MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_GRADE_LOCALE, false))
+            return GradeManager.toAmerican(this).toString();
+        else
+            return gradeString;
+    }
 
-    public String toShortString() { return gradeString.replace("5.", ""); }
+    public String toShortString() {
+        if ((type == GradeType.RouteYosemite || type == GradeType.BoulderHueco) &&
+                MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_GRADE_LOCALE, false))
+            return GradeManager.toEuro(this).toShortString();
+        else if ((type == GradeType.RouteEuropean || type == GradeType.BoulderFont) &&
+                !MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_GRADE_LOCALE, false))
+            return GradeManager.toAmerican(this).toShortString();
+        else
+            return gradeString.replace("5.", "");
+    }
 }

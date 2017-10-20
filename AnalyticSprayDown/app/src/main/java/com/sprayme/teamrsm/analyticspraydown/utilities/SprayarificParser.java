@@ -79,7 +79,8 @@ public class SprayarificParser {
                         type = TickType.Pinkpoint;
                 }
 
-                Tick tick = (new Tick(routeId, date, pitches, notes, type));
+                // todo: support concept of isRepeat
+                Tick tick = (new Tick(routeId, date, pitches, notes, type, false));
                 ticks.add(tick);
             }
 
@@ -141,7 +142,8 @@ public class SprayarificParser {
                         type = TickType.Pinkpoint;
                 }
 
-                ticks.add(new Tick(routeId, date, pitches, notes, type));
+                //todo: support concept of isRepeat
+                ticks.add(new Tick(routeId, date, pitches, notes, type, false));
 
                 count++;
             }

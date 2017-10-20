@@ -10,6 +10,11 @@
         android:inputType="number"
         android:summary="@string/cache_invalidate_time_preference_summary"
         android:title="@string/cache_invalidate_time_preference" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="grade_system_preference"
+            android:summary="@string/grade_system_preference_summary"
+            android:title="@string/grade_system_preference" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pyramid_settings_category" >

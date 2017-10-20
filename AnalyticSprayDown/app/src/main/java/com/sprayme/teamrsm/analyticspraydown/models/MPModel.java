@@ -1,9 +1,9 @@
 package com.sprayme.teamrsm.analyticspraydown.models;
 
-import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryTask;
-import com.sprayme.teamrsm.analyticspraydown.utilities.SprayarificParser;
+import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryRoutesTask;
+import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryTicksTask;
+import com.sprayme.teamrsm.analyticspraydown.utilities.MPQueryUserTask;
 
-import java.net.URL;
 import java.util.List;
 
 /**
@@ -28,37 +28,25 @@ public class MPModel {
     }
 
     public void requestUser(String emailAddress, String apiKey) {
-        MPQueryTask mpQuery = new MPQueryTask(emailAddress, apiKey,
+        MPQueryUserTask mpQuery = new MPQueryUserTask(emailAddress, apiKey,
                 output -> {
-            User user = SprayarificParser.parseUserJson(output);
-            listener.onUserLoaded(user);
+            listener.onUserLoaded(output);
         });
-        URL url = mpQuery.buildUserUrl();
-        mpQuery.execute(url);
+        mpQuery.execute();
     }
 
-    public void requestTicks(long userId, String apiKey, int startIndex) {
-        MPQueryTask mpQuery = new MPQueryTask(userId, apiKey, output -> {
-            List<Tick> ticks = SprayarificParser.parseTicksJson(output);
-            listener.onTicksLoaded(ticks);
-//            Long[] routeIds = getRouteIdArray(ticks);
-//            requestRoutes(userId, apiKey, routeIds);
+    public void requestTicks(long userId, String apiKey) {
+        MPQueryTicksTask mpQuery = new MPQueryTicksTask(userId, apiKey, output -> {
+            listener.onTicksLoaded(output);
         });
-        URL url = mpQuery.buildTicksUrl(startIndex);
-        mpQuery.execute(url);
+        mpQuery.execute();
     }
 
-    public void requestRoutes(long userId, String apiKey, Long[] routeIds)
-            throws IllegalArgumentException {
-        if (routeIds.length > 200)
-            throw new IllegalArgumentException("requestRoutes can only handle up to 200 route IDs" +
-                    " at a time. This is a restriction in the MP api.");
+    public void requestRoutes(String apiKey, Long[] routeIds) {
 
-        MPQueryTask mpQuery = new MPQueryTask(userId, apiKey, output -> {
-            List<Route> routes = SprayarificParser.parseRoutesJson(output);
-            listener.onRoutesLoaded(routes);
+        MPQueryRoutesTask mpQuery = new MPQueryRoutesTask(apiKey, output -> {
+            listener.onRoutesLoaded(output);
         });
-        URL url = mpQuery.buildRoutesUrl(routeIds);
-        mpQuery.execute(url);
+        mpQuery.execute(routeIds);
     }
 }
