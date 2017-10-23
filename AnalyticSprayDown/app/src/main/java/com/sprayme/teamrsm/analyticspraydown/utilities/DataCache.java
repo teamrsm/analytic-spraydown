@@ -6,6 +6,7 @@ import com.sprayme.teamrsm.analyticspraydown.MainActivity;
 import com.sprayme.teamrsm.analyticspraydown.SettingsActivity;
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
+import com.sprayme.teamrsm.analyticspraydown.models.Grade;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
@@ -199,14 +200,14 @@ public class DataCache extends Application
 
     private void fetchRoutes(Long[] routeIds) {
         if (isCacheInvalid()) {
-            getMpRoutes(routeIds);
+            m_MpModel.requestRoutes(m_CurrentUser.getApiKey(), routeIds);
         }
         else {
             // todo: trigger the finished listener
             m_Routes = m_Db.getRoutes(routeIds);
 
             if (m_Routes.size() < routeIds.length) {
-                getMpRoutes(routeIds);
+                m_MpModel.requestRoutes(m_CurrentUser.getApiKey(), routeIds);
             }
             else {
                 broadcastRoutesCompleted();
@@ -220,9 +221,12 @@ public class DataCache extends Application
         }
     }
 
-    private void getMpRoutes(Long[] routeIds) {
-        m_MpModel.requestRoutes(m_CurrentUser.getApiKey(), routeIds);
-    }
+    /*
+    * Stats Methods
+    * */
+//    public Grade calculateOnsightLevel() {
+//
+//    }
 
     /*
     * MPModel Subscription Methods
@@ -260,12 +264,16 @@ public class DataCache extends Application
 
         m_CurrentUser.setUserName(user.getUserName());
         m_CurrentUser.setUserId(user.getUserId());
+        m_CurrentUser.setAvatarUrl(user.getAvatarUrl());
 
         m_Db.insertUser(m_CurrentUser);
 
         broadcastUserCompleted();
     }
 
+    /*
+    * Helper methods
+    * */
     private Long[] getRouteIdArray(List<Tick> ticks) {
         List<Long> routeIds = new ArrayList<>();
         for (Tick tick : ticks) {

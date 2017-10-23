@@ -45,7 +45,7 @@ import android.database.MatrixCursor;
  */
 
 public class BetaSpewDb extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
     private static final String DATABASE_NAME = "BetaSpew.db";
     private static BetaSpewDb instance;
 
@@ -76,11 +76,13 @@ public class BetaSpewDb extends SQLiteOpenHelper {
             db.execSQL(SqlGen.makeUsersTableCreate());
             db.execSQL(SqlGen.makeTicksTableCreate());
             db.execSQL(SqlGen.makeRoutesTableCreate());
+            db.execSQL(SqlGen.makeGradeMapTableCreate());
             db.setTransactionSuccessful();
         } catch (Exception e) {
             db.execSQL(SqlGen.makeRoutesTableDrop());
             db.execSQL(SqlGen.makeTicksTableDrop());
             db.execSQL(SqlGen.makeUsersTableDrop());
+            db.execSQL(SqlGen.makeGradeMapTableDrop());
         } finally {
             db.endTransaction();
         }
@@ -116,6 +118,19 @@ public class BetaSpewDb extends SQLiteOpenHelper {
                 db.execSQL(SqlGen.makeTicksTableCreate());
                 // todo: reload ticks
             }
+            if (oldVersion < 5 && newVersion >= 5) {
+                /* Added GradeMap. Added url to USERS table.*/
+
+                db.execSQL(SqlGen.makeGradeMapTableCreate());
+                db.execSQL(SqlGen.makeInsertGradeMapStatement());
+
+                // todo: get users
+                db.execSQL(SqlGen.makeUsersTableDrop());
+                db.execSQL(SqlGen.makeUsersTableCreate());
+                // todo: reload users
+            }
+
+            db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
