@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -21,6 +22,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
@@ -57,12 +60,14 @@ public class MainActivity extends AppCompatActivity {
     public static SharedPreferences mSharedPref;
     private TimeScale mTimeScale = TimeScale.Year;
     private int mTimeScaleSpinnerPos = 3;
+    private boolean isFinishedInflate = false;
 
     private DataCache dataCache = null;
     private BetaSpewDb db = null;
     private User currentUser = null;
 
     private ListView mDrawerList;
+    private NavigationView mNavigationView;
     private ArrayAdapter<String> mArrayAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
@@ -73,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
     private static ConcurrentHashMap<RouteType, Pyramid> pyramids = new ConcurrentHashMap<>();
 
     private String mActivityTitle;
-    private UUID ticksCallbackUuid;
+    private UUID userCallbackUuid, ticksCallbackUuid;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,11 +88,11 @@ public class MainActivity extends AppCompatActivity {
 //        this.deleteDatabase("BetaSpew.db");
         db = BetaSpewDb.getInstance(this);
 
-        mDrawerList = (ListView)findViewById(R.id.navList);
+//        mDrawerList = (ListView)findViewById(R.id.navList);
         mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
         mActivityTitle = getTitle().toString();
 
-        addDrawerItems();
+//        addDrawerItems();
         setupDrawer();
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -198,6 +203,44 @@ public class MainActivity extends AppCompatActivity {
 
         mDrawerToggle.setDrawerIndicatorEnabled(true);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
+        //Initializing NavigationView
+        mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+
+        Context context = this;
+
+        //Setting Navigation View Item Selected Listener to handle the item click of the navigation menu
+        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+
+            // This method will trigger on item Click of navigation menu
+            @Override
+            public boolean onNavigationItemSelected(MenuItem menuItem) {
+
+
+                //Checking if the item is in checked state or not, if not make it in checked state
+                if(menuItem.isChecked()) menuItem.setChecked(false);
+                else menuItem.setChecked(true);
+
+                //Closing drawer on item click
+                mDrawerLayout.closeDrawers();
+
+                //Check to see which item was being clicked and perform appropriate action
+                switch (menuItem.getItemId()){
+
+                    case R.id.settings:
+                        Intent intent = new Intent(context, SettingsActivity.class);
+                        startActivity(intent);
+                        return true;
+//                    case R.id.import_csv:
+//                        Intent intent = new Intent(context, ImportCsvActivity.class);
+//                        startActivityForResult(intent, IMPORT_REQUEST);
+//                        return true;
+                    default:
+                        Toast.makeText(getApplicationContext(),"Something's wrong",Toast.LENGTH_SHORT).show();
+                        return true;
+
+                }
+            }
+        });
     }
 
     @Override
@@ -207,6 +250,12 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             dataCache = DataCache.getInstance();
+            userCallbackUuid = dataCache.subscribe(new DataCache.DataCacheUserHandler() {
+                @Override
+                public void onUserCached(User user) {
+                    updateUserElements(user);
+                }
+            });
             dataCache.setDb(db);
             currentUser = dataCache.getLastUser();
             ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
@@ -389,6 +438,7 @@ public class MainActivity extends AppCompatActivity {
         if (routes.size() == 0)
             return;
 
+        // todo refactor these Collectors.toList() calls to comply with api level 22
         int height = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_HEIGHT, "5"));
         int stepSize = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_SIZE, "2"));
         String stepTypeStr = mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_TYPE, "Additive");
@@ -426,5 +476,15 @@ public class MainActivity extends AppCompatActivity {
             subActivityData.add(pyramids.get(RouteType.Aid));
 
         return subActivityData;
+    }
+
+    private void updateUserElements(User user){
+        View parentView = mNavigationView.getHeaderView(0);
+        TextView username = (TextView) parentView.findViewById(R.id.username);
+        username.setText(user.getUserName());
+        TextView email = (TextView) parentView.findViewById(R.id.email);
+        email.setText((user.getEmailAddr()));
+
+        // todo set user image
     }
 }

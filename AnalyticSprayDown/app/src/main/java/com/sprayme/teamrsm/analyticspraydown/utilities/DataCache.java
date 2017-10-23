@@ -106,6 +106,7 @@ public class DataCache extends Application
             throw new InvalidUserException("No Known last user");
 
         m_CurrentUser = lastUser;
+        broadcastUserCompleted();
         return lastUser;
     }
 
@@ -126,6 +127,7 @@ public class DataCache extends Application
         m_CurrentUser.setApiKey("");
         m_CurrentUser.setUserName("");
         m_CurrentUser.setUserId(null);
+        broadcastUserCompleted();
     }
 
     /*

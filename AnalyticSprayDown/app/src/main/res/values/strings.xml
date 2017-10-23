@@ -37,6 +37,7 @@
         in their abilities and so some functionality can only be had by importing richer data sets.</string>
     <string name="csv_import_button">Import</string>
     <string name="mp_data_link_label">You can find this on the Mountain Project api page when you are logged in:</string>
+    <string name="drawer_menu_settings">Settings</string>
 
     <string-array name="navigation_drawer_items">
         <!--<item>Stats</item>-->
