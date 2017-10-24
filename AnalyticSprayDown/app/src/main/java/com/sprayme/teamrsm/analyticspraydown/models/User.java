@@ -45,4 +45,9 @@ public class User {
     public void setApiKey(String apiKey) {
         _apiKey = apiKey;
     }
+
+    private String _avatarUrl;
+
+    public String getAvatarUrl() { return _avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { _avatarUrl = avatarUrl; }
 }

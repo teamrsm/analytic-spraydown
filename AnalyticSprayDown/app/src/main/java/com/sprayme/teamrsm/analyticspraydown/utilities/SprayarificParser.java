@@ -35,6 +35,7 @@ public class SprayarificParser {
 
             mpUser.setUserId(obj.getLong("id"));
             mpUser.setUserName(obj.getString("name"));
+            mpUser.setAvatarUrl(obj.getString("avatar"));
 
             return mpUser;
         }

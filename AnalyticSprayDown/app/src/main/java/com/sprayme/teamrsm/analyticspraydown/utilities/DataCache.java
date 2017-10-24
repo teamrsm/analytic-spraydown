@@ -6,6 +6,7 @@ import com.sprayme.teamrsm.analyticspraydown.MainActivity;
 import com.sprayme.teamrsm.analyticspraydown.SettingsActivity;
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
+import com.sprayme.teamrsm.analyticspraydown.models.Grade;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
@@ -17,6 +18,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -199,14 +201,14 @@ public class DataCache extends Application
 
     private void fetchRoutes(Long[] routeIds) {
         if (isCacheInvalid()) {
-            getMpRoutes(routeIds);
+            m_MpModel.requestRoutes(m_CurrentUser.getApiKey(), routeIds);
         }
         else {
             // todo: trigger the finished listener
             m_Routes = m_Db.getRoutes(routeIds);
 
             if (m_Routes.size() < routeIds.length) {
-                getMpRoutes(routeIds);
+                m_MpModel.requestRoutes(m_CurrentUser.getApiKey(), routeIds);
             }
             else {
                 broadcastRoutesCompleted();
@@ -220,8 +222,24 @@ public class DataCache extends Application
         }
     }
 
-    private void getMpRoutes(Long[] routeIds) {
-        m_MpModel.requestRoutes(m_CurrentUser.getApiKey(), routeIds);
+    /*
+    * Stats Methods
+    * */
+
+    /*
+    * Returns the gradeId and percentage value of the grade with the maximum onsight percentage.
+    * */
+    public Map.Entry<Long, Float> calculateOnsightLevel(String ratingType, String routeType) {
+        HashMap<Long, Float> osPercentages = m_Db.getOnsightPercentages(m_CurrentUser.getUserId(),
+                ratingType, routeType);
+
+        Map.Entry<Long, Float> maxEntry = null;
+        for (Map.Entry<Long, Float> entry : osPercentages.entrySet()) {
+            if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0)
+                maxEntry = entry;
+        }
+
+        return maxEntry;
     }
 
     /*
@@ -260,12 +278,16 @@ public class DataCache extends Application
 
         m_CurrentUser.setUserName(user.getUserName());
         m_CurrentUser.setUserId(user.getUserId());
+        m_CurrentUser.setAvatarUrl(user.getAvatarUrl());
 
         m_Db.insertUser(m_CurrentUser);
 
         broadcastUserCompleted();
     }
 
+    /*
+    * Helper methods
+    * */
     private Long[] getRouteIdArray(List<Tick> ticks) {
         List<Long> routeIds = new ArrayList<>();
         for (Tick tick : ticks) {
