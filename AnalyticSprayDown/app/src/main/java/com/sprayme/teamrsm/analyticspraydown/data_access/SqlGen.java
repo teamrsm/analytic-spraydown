@@ -16,6 +16,7 @@ class SqlGen {
     static final String NOTES = "NOTES";
     static final String TICK_TYPE = "TICK_TYPE";
     static final String LAST_ACCESS = "LAST_ACCESS";
+    static final String ROW_NUM = "ROW_NUM";
 
     public static String makeTicksTableCreate() {
         return new StringBuilder()
@@ -147,10 +148,22 @@ class SqlGen {
 
     public static String makeGetUserTicks(long userId) {
         return new StringBuilder()
-                .append("SELECT * ")
-                .append(" FROM ").append(TICKS_TABLE_NAME)
+                .append("SELECT ")
+                .append("t1.").append(ROUTE_ID).append(",")
+                .append("t1.").append(TICK_DATE).append(",")
+                .append("r.").append(PITCHES).append(",")
+                .append("t1.").append(NOTES).append(",")
+                .append("t1.").append(TICK_TYPE).append(",")
+                .append("(SELECT COUNT(*) + 1 FROM TICKS t2 WHERE t1.ROUTE_ID = t2.ROUTE_ID " +
+                        "AND t1.TICK_DATE > t2.TICK_DATE ) AS ").append(ROW_NUM)
+                .append(" FROM ")
+                .append(TICKS_TABLE_NAME).append(" t1 ")
+                .append("JOIN ")
+                .append(ROUTES_TABLE_NAME).append(" r ")
+                .append("ON ").append("t1.").append(ROUTE_ID)
+                .append(" = ").append("r.").append(ROUTE_ID)
                 .append(" WHERE ")
-                .append(USER_ID).append(" = ").append(userId).toString();
+                .append("t1.").append(USER_ID).append(" = ").append(userId).toString();
     }
 
     public static String makeUserIdWhereClause(long userId) {

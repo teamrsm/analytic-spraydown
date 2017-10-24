@@ -31,6 +31,7 @@ import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_ID;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_NAME;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_TYPE;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_URL;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROW_NUM;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.STARS;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICKS_TABLE_NAME;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICK_DATE;
@@ -263,13 +264,16 @@ public class BetaSpewDb extends SQLiteOpenHelper {
             while (cursor.moveToNext()) {
                 long routeId = cursor.getLong(cursor.getColumnIndex(ROUTE_ID));
                 Date tickDate = new Date(cursor.getLong(cursor.getColumnIndex(TICK_DATE)));
+                Integer pitches = cursor.getInt(cursor.getColumnIndex(PITCHES));
                 String notes = cursor.getString(cursor.getColumnIndex(NOTES));
                 TickType tickType = TickType.valueOf(cursor.getString(cursor.getColumnIndex(TICK_TYPE)));
+                Integer rowNum = cursor.getInt(cursor.getColumnIndex(ROW_NUM));
 
+                boolean isRepeat = false;
+                if (rowNum > 1)
+                    isRepeat = true;
 
-                // todo: join with routes to get num pitches
-                // todo: support the concept of isRepeat
-                userTicks.add(new Tick(routeId, tickDate, null, notes, tickType, false));
+                userTicks.add(new Tick(routeId, tickDate, pitches, notes, tickType, isRepeat));
             }
         } catch (Exception e) {
             e.printStackTrace();
