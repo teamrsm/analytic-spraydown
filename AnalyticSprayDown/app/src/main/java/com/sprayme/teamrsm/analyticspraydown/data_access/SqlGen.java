@@ -123,6 +123,11 @@ class SqlGen {
     }
     /*-********************************************************************/
 
+    /*-********************* STATS ***************************/
+    static final String ONSIGHT_PERCENTAGE = "OnsightPercentage";
+    static final String REDPOINT_PERCENTAGE = "RedpointPercentage";
+    /*-*******************************************************/
+
     public static String makeGetLastUser() {
         return new StringBuilder()
                 .append("SELECT *")
@@ -168,42 +173,49 @@ class SqlGen {
     }
 
     public static String makeOnsightPercentage(long userId, String ratingType, String routeType) {
-        return new StringBuilder()
+        String osPerc = new StringBuilder()
                 .append("SELECT ")
                 .append(GRADE_ID).append(",")
-                .append("(OnsightCount / CAST(TotalCount AS REAL)) * 100 AS OnsightPercentage,")
-                .append("(RedpointCount / CAST(TotalCount AS REAL)) * 100 AS RedpointPercentage")
-                .append("FROM (")
+                .append("(OnsightCount / CAST(TotalCount AS REAL)) * 100 AS ")
+                .append(ONSIGHT_PERCENTAGE).append(",")
+                .append("(RedpointCount / CAST(TotalCount AS REAL)) * 100 AS ")
+                .append(REDPOINT_PERCENTAGE)
+                .append(" FROM (")
                 .append(makeTickTypeCounts(userId, ratingType, routeType))
                 .append(") cnts ").toString();
+
+        return osPerc;
     }
 
     public static String makeTickTypeCounts(long userId, String ratingType, String routeType) {
-        return new StringBuilder()
+        String tickTypes = new StringBuilder()
                 .append("SELECT ").append(GRADE_ID).append(", ")
                 .append("SUM(CASE WHEN TICK_TYPE = 'Onsight' THEN 1 ELSE 0 END) AS OnsightCount,")
                 .append("SUM(CASE WHEN TICK_TYPE = 'Redpoint' THEN 1 ELSE 0 END) AS RedpointCount,")
                 .append("SUM(CASE WHEN TICK_TYPE = 'Unknown' THEN 1 ELSE 0 END) AS UnknownCount,")
                 .append("SUM(CASE WHEN TICK_TYPE = 'Fell' THEN 1 ELSE 0 END) AS FellCount,")
                 .append("SUM(CASE WHEN TICK_TYPE = 'Follow' THEN 1 ELSE 0 END) AS FollowCount,")
-                .append("SUM(CASE WHEN TICK_TYPE = 'TopropeCount' THEN 1 ELSE 0 END) AS TopropeCount,")
-                .append("SUM(CASE WHEN TICK_TYPE = 'SoloCount' THEN 1 ELSE 0 END) AS SoloCount,")
+                .append("SUM(CASE WHEN TICK_TYPE = 'Toprope' THEN 1 ELSE 0 END) AS TopropeCount,")
+                .append("SUM(CASE WHEN TICK_TYPE = 'Solo' THEN 1 ELSE 0 END) AS SoloCount,")
                 .append("SUM(CASE WHEN TICK_TYPE = 'Pinkpoint' THEN 1 ELSE 0 END) AS PinkpointCount,")
-                .append("SUM(CASE WHEN TICK_TYPE = 'FlashCount' THEN 1 ELSE 0 END) AS FlashCount,")
+                .append("SUM(CASE WHEN TICK_TYPE = 'Flash' THEN 1 ELSE 0 END) AS FlashCount,")
                 .append("SUM(CASE WHEN TICK_TYPE = NULL THEN 1 ELSE 0 END) AS NullCount,")
                 .append("Count(*) AS TotalCount")
                 .append(" FROM (")
                 .append(makeMapRoutesToGrades(userId, ratingType, routeType))
                 .append(") tks ")
                 .append("GROUP BY ").append(GRADE_ID).toString();
+
+        return tickTypes;
     }
 
     public static String makeMapRoutesToGrades(long userId, String ratingType, String routeType) {
-        return new StringBuilder()
+        String mapRtoG = new StringBuilder()
                 .append("SELECT ")
                 .append(RATING).append(",")
-                .append(GRADE_ID)
-                .append("FROM ")
+                .append(GRADE_ID).append(",")
+                .append(TICK_TYPE)
+                .append(" FROM ")
                 .append(TICKS_TABLE_NAME).append(" t ")
                 .append("JOIN ")
                 .append(ROUTES_TABLE_NAME).append(" r ")
@@ -215,8 +227,11 @@ class SqlGen {
                 .append("gm.").append(ratingType)
                 .append(" WHERE ")
                 .append("t.").append(USER_ID).append(" = ").append(userId)
-                .append(" AND ").append("r.").append(ROUTE_TYPE).append(" = ").append(routeType)
+                .append(" AND ").append("r.").append(ROUTE_TYPE).append(" = '")
+                .append(routeType).append("'")
                 .toString();
+
+        return mapRtoG;
     }
 
     private static String buildInList(Long[] inLongs) {

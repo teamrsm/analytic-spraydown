@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -224,9 +225,22 @@ public class DataCache extends Application
     /*
     * Stats Methods
     * */
-//    public Grade calculateOnsightLevel() {
-//
-//    }
+
+    /*
+    * Returns the gradeId and percentage value of the grade with the maximum onsight percentage.
+    * */
+    public Map.Entry<Long, Float> calculateOnsightLevel(String ratingType, String routeType) {
+        HashMap<Long, Float> osPercentages = m_Db.getOnsightPercentages(m_CurrentUser.getUserId(),
+                ratingType, routeType);
+
+        Map.Entry<Long, Float> maxEntry = null;
+        for (Map.Entry<Long, Float> entry : osPercentages.entrySet()) {
+            if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0)
+                maxEntry = entry;
+        }
+
+        return maxEntry;
+    }
 
     /*
     * MPModel Subscription Methods

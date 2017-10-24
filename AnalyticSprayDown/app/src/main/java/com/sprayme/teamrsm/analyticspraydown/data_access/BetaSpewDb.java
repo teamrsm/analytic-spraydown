@@ -15,12 +15,15 @@ import com.sprayme.teamrsm.analyticspraydown.models.User;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.API_KEY;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.EMAIL_ADDR;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.GRADE_ID;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.LAST_ACCESS;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.NOTES;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ONSIGHT_PERCENTAGE;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.PITCHES;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.RATING;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTES_TABLE_NAME;
@@ -336,6 +339,28 @@ public class BetaSpewDb extends SQLiteOpenHelper {
         }
 
         return routes;
+    }
+
+    public HashMap<Long, Float> getOnsightPercentages (long userId, String ratingType, String routeType) {
+        HashMap<Long, Float> onsightPercentages = new HashMap<>();
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(SqlGen.makeOnsightPercentage(userId, ratingType, routeType), null);
+
+        try {
+            while (cursor.moveToNext()) {
+                Long gradeId = cursor.getLong(cursor.getColumnIndex(GRADE_ID));
+                Float onsightPercentage = cursor.getFloat(cursor.getColumnIndex(ONSIGHT_PERCENTAGE));
+
+                onsightPercentages.put(gradeId, onsightPercentage);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            cursor.close();
+        }
+
+        return onsightPercentages;
     }
 
     /******* this function is a helper for AndroidDatabaseManager.java ********/
