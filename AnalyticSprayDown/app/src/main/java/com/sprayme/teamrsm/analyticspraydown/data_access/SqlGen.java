@@ -158,7 +158,7 @@ class SqlGen {
                         "AND t1.TICK_DATE > t2.TICK_DATE ) AS ").append(ROW_NUM)
                 .append(" FROM ")
                 .append(TICKS_TABLE_NAME).append(" t1 ")
-                .append("JOIN ")
+                .append("LEFT JOIN ")
                 .append(ROUTES_TABLE_NAME).append(" r ")
                 .append("ON ").append("t1.").append(ROUTE_ID)
                 .append(" = ").append("r.").append(ROUTE_ID)

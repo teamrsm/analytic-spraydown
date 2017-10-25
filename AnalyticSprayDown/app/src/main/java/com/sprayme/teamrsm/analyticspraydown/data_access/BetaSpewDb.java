@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.API_KEY;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.AVATAR_URL;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.EMAIL_ADDR;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.GRADE_ID;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.LAST_ACCESS;
@@ -157,6 +158,7 @@ public class BetaSpewDb extends SQLiteOpenHelper {
                 lastUser.setUserId(cursor.getLong(cursor.getColumnIndex(USER_ID)));
                 lastUser.setEmailAddr(cursor.getString(cursor.getColumnIndex(EMAIL_ADDR)));
                 lastUser.setApiKey(cursor.getString(cursor.getColumnIndex(API_KEY)));
+                lastUser.setAvatarUrl(cursor.getString(cursor.getColumnIndex(AVATAR_URL)));
             }
 
         } catch (Exception e) {
@@ -195,6 +197,7 @@ public class BetaSpewDb extends SQLiteOpenHelper {
             insertValues.put(USER_NAME, user.getUserName());
             insertValues.put(EMAIL_ADDR, user.getEmailAddr());
             insertValues.put(API_KEY, user.getApiKey());
+            insertValues.put(AVATAR_URL, user.getAvatarUrl());
             insertValues.put(LAST_ACCESS, unixDate);
 
             db.insertOrThrow(USERS_TABLE_NAME, null, insertValues);

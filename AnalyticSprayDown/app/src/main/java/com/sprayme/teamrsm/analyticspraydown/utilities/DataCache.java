@@ -232,6 +232,9 @@ public class DataCache extends Application
     * Returns the gradeId and percentage value of the grade with the maximum onsight percentage.
     * */
     public Map.Entry<Long, Float> calculateOnsightLevel(String ratingType, String routeType) {
+        if (m_CurrentUser == null)
+            return null;
+
         HashMap<Long, Float> osPercentages = m_Db.getOnsightPercentages(m_CurrentUser.getUserId(),
                 ratingType, routeType);
 

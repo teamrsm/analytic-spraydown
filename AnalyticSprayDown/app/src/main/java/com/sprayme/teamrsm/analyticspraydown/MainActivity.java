@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
@@ -21,11 +23,14 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.mikepenz.iconics.IconicsDrawable;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
@@ -34,6 +39,9 @@ import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
+import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader;
+import com.mikepenz.materialdrawer.util.DrawerImageLoader;
+import com.mikepenz.materialdrawer.util.DrawerUIUtils;
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
@@ -245,63 +253,37 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }).build();
 
-//        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close) {
-//
-//            /** Called when a drawer has settled in a completely open state. */
-//            public void onDrawerOpened(View drawerView) {
-//                super.onDrawerOpened(drawerView);
-//                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-//            }
-//
-//            /** Called when a drawer has settled in a completely closed state. */
-//            public void onDrawerClosed(View view) {
-//                super.onDrawerClosed(view);
-//                getSupportActionBar().setTitle(mActivityTitle);
-//                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-//            }
-//        };
+        //initialize and create the profile image loader logic
+        DrawerImageLoader.init(new AbstractDrawerImageLoader() {
+            @Override
+            public void set(ImageView imageView, Uri uri, Drawable placeholder, String tag) {
+                Glide.with(imageView.getContext()).load(uri).placeholder(placeholder).into(imageView);
+            }
 
-//        mDrawerToggle.setDrawerIndicatorEnabled(true);
-//        mDrawerLayout.setDrawerListener(mDrawerToggle);
+            @Override
+            public void cancel(ImageView imageView) {
+                Glide.clear(imageView);
+            }
 
-//        //Initializing NavigationView
-//        mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
-//
-//        Context context = this;
-//
-//        // Setting Navigation View Item Selected Listener to handle the item click of the navigation menu
-//        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-//
-//            // This method will trigger on item Click of navigation menu
-//            @Override
-//            public boolean onNavigationItemSelected(MenuItem menuItem) {
-//
-//
-//                //Checking if the item is in checked state or not, if not make it in checked state
-//                if(menuItem.isChecked()) menuItem.setChecked(false);
-//                else menuItem.setChecked(true);
-//
-//                //Closing drawer on item click
-//                mDrawerLayout.closeDrawers();
-//
-//                //Check to see which item was being clicked and perform appropriate action
-//                switch (menuItem.getItemId()){
-//
-//                    case R.id.settings:
-//                        Intent intent = new Intent(context, SettingsActivity.class);
-//                        startActivity(intent);
-//                        return true;
-////                    case R.id.import_csv:
-////                        Intent intent = new Intent(context, ImportCsvActivity.class);
-////                        startActivityForResult(intent, IMPORT_REQUEST);
-////                        return true;
-//                    default:
-//                        Toast.makeText(getApplicationContext(),"Something's wrong",Toast.LENGTH_SHORT).show();
-//                        return true;
-//
-//                }
-//            }
-//        });
+            @Override
+            public Drawable placeholder(Context ctx, String tag) {
+                //define different placeholders for different imageView targets
+                //default tags are accessible via the DrawerImageLoader.Tags
+                //custom ones can be checked via string. see the CustomUrlBasePrimaryDrawerItem LINE 111
+                if (DrawerImageLoader.Tags.PROFILE.name().equals(tag)) {
+                    return DrawerUIUtils.getPlaceHolder(ctx);
+                } else if (DrawerImageLoader.Tags.ACCOUNT_HEADER.name().equals(tag)) {
+                    return new IconicsDrawable(ctx).iconText(" ").backgroundColorRes(com.mikepenz.materialdrawer.R.color.primary).sizeDp(56);
+                } else if ("customUrlItem".equals(tag)) {
+                    return new IconicsDrawable(ctx).iconText(" ").backgroundColorRes(R.color.md_red_500).sizeDp(56);
+                }
+
+                //we use the default one for
+                //DrawerImageLoader.Tags.PROFILE_DRAWER_ITEM.name()
+
+                return super.placeholder(ctx, tag);
+            }
+        });
     }
 
     @Override
@@ -543,11 +525,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateUserElements(User user){
 
-        mAccountHeader.addProfile(
-                new ProfileDrawerItem()
-                        .withEmail(user.getEmailAddr())
-                        .withName(user.getUserName())
-                        .withIcon(getResources().getDrawable(R.mipmap.ic_launcher)), 0);
+        ProfileDrawerItem profile = new ProfileDrawerItem()
+                .withEmail(user.getEmailAddr())
+                .withName(user.getUserName());
+        if (user.getAvatarUrl() == null)
+            profile.withIcon(getResources().getDrawable(R.mipmap.ic_launcher));
+        else
+            profile.withIcon(user.getAvatarUrl());
+
+        mAccountHeader.addProfile(profile, 0);
 
         // todo set user image
     }
