@@ -540,11 +540,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateUserElements(User user){
-//        View parentView = mNavigationView.getHeaderView(0);
-//        TextView username = (TextView) parentView.findViewById(R.id.username);
-//        username.setText(user.getUserName());
-//        TextView email = (TextView) parentView.findViewById(R.id.email);
-//        email.setText((user.getEmailAddr()));
 
         mAccountHeader.addProfile(
                 new ProfileDrawerItem()
