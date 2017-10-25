@@ -20,19 +20,23 @@
         </activity>
         <activity
             android:name=".UserLoginActivity"
-            android:parentActivityName=".MainActivity" />
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/NoDrawerTheme" />
         <activity
             android:name=".utilities.AndroidDatabaseManager"
             android:parentActivityName=".MainActivity" />
         <activity
             android:name=".SettingsActivity"
             android:label="Settings"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/NoDrawerTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-        <activity android:name=".ImportCsvActivity"></activity>
+        <activity
+            android:name=".ImportCsvActivity"
+            android:parentActivityName=".MainActivity" />
     </application>
 
 </manifest>

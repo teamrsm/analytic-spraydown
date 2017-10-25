@@ -14,6 +14,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PagerSnapHelper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SnapHelper;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,6 +26,14 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mikepenz.materialdrawer.AccountHeader;
+import com.mikepenz.materialdrawer.AccountHeaderBuilder;
+import com.mikepenz.materialdrawer.Drawer;
+import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IProfile;
+import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
@@ -71,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayAdapter<String> mArrayAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
+    private Drawer mDrawer;
+    private AccountHeader mAccountHeader;
     private RecyclerView mRecyclerView;
     private RecyclerAdapter mRecyclerAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
@@ -83,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.main_page);
 
 //        this.deleteDatabase("BetaSpew.db");
         db = BetaSpewDb.getInstance(this);
@@ -95,8 +106,8 @@ public class MainActivity extends AppCompatActivity {
 //        addDrawerItems();
         setupDrawer();
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+//        getSupportActionBar().setHomeButtonEnabled(true);
 
         Button button =(Button)findViewById(R.id.viewDbButton);
 
@@ -185,62 +196,112 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupDrawer() {
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close) {
-
-            /** Called when a drawer has settled in a completely open state. */
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-            }
-
-            /** Called when a drawer has settled in a completely closed state. */
-            public void onDrawerClosed(View view) {
-                super.onDrawerClosed(view);
-                getSupportActionBar().setTitle(mActivityTitle);
-                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-            }
-        };
-
-        mDrawerToggle.setDrawerIndicatorEnabled(true);
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-        //Initializing NavigationView
-        mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
 
         Context context = this;
 
-        //Setting Navigation View Item Selected Listener to handle the item click of the navigation menu
-        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+        // Create the AccountHeader
+        mAccountHeader = new AccountHeaderBuilder()
+                .withActivity(this)
+                .withHeaderBackground(R.drawable.background_material)
+                .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
+                    @Override
+                    public boolean onProfileChanged(View view, IProfile profile, boolean currentProfile) {
+                        return false;
+                    }
+                })
+                .build();
 
-            // This method will trigger on item Click of navigation menu
-            @Override
-            public boolean onNavigationItemSelected(MenuItem menuItem) {
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(mActivityTitle);
 
+        mDrawer = new DrawerBuilder()
+                .withActivity(this)
+                .withRootView(R.id.drawer_container)
+                .withAccountHeader(mAccountHeader)
+                .withToolbar(toolbar)
+                .inflateMenu(R.menu.drawer_menu)
+                .withDisplayBelowStatusBar(false)
+                .withActionBarDrawerToggleAnimated(true)
+                .withSelectedItem(-1)
+                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+                    @Override
+                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+                        switch ((int)drawerItem.getIdentifier()){
 
-                //Checking if the item is in checked state or not, if not make it in checked state
-                if(menuItem.isChecked()) menuItem.setChecked(false);
-                else menuItem.setChecked(true);
+                            case R.id.settings:
+                                Intent intent = new Intent(context, SettingsActivity.class);
+                                startActivity(intent);
+                                return true;
+        //                    case R.id.import_csv:
+        //                        Intent intent = new Intent(context, ImportCsvActivity.class);
+        //                        startActivityForResult(intent, IMPORT_REQUEST);
+        //                        return true;
+                            default:
+                                Toast.makeText(getApplicationContext(),"Something's wrong",Toast.LENGTH_SHORT).show();
+                                return false;
 
-                //Closing drawer on item click
-                mDrawerLayout.closeDrawers();
+                        }
+                    }
+                }).build();
 
-                //Check to see which item was being clicked and perform appropriate action
-                switch (menuItem.getItemId()){
+//        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close) {
+//
+//            /** Called when a drawer has settled in a completely open state. */
+//            public void onDrawerOpened(View drawerView) {
+//                super.onDrawerOpened(drawerView);
+//                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+//            }
+//
+//            /** Called when a drawer has settled in a completely closed state. */
+//            public void onDrawerClosed(View view) {
+//                super.onDrawerClosed(view);
+//                getSupportActionBar().setTitle(mActivityTitle);
+//                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+//            }
+//        };
 
-                    case R.id.settings:
-                        Intent intent = new Intent(context, SettingsActivity.class);
-                        startActivity(intent);
-                        return true;
-//                    case R.id.import_csv:
-//                        Intent intent = new Intent(context, ImportCsvActivity.class);
-//                        startActivityForResult(intent, IMPORT_REQUEST);
+//        mDrawerToggle.setDrawerIndicatorEnabled(true);
+//        mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+//        //Initializing NavigationView
+//        mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+//
+//        Context context = this;
+//
+//        // Setting Navigation View Item Selected Listener to handle the item click of the navigation menu
+//        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+//
+//            // This method will trigger on item Click of navigation menu
+//            @Override
+//            public boolean onNavigationItemSelected(MenuItem menuItem) {
+//
+//
+//                //Checking if the item is in checked state or not, if not make it in checked state
+//                if(menuItem.isChecked()) menuItem.setChecked(false);
+//                else menuItem.setChecked(true);
+//
+//                //Closing drawer on item click
+//                mDrawerLayout.closeDrawers();
+//
+//                //Check to see which item was being clicked and perform appropriate action
+//                switch (menuItem.getItemId()){
+//
+//                    case R.id.settings:
+//                        Intent intent = new Intent(context, SettingsActivity.class);
+//                        startActivity(intent);
 //                        return true;
-                    default:
-                        Toast.makeText(getApplicationContext(),"Something's wrong",Toast.LENGTH_SHORT).show();
-                        return true;
-
-                }
-            }
-        });
+////                    case R.id.import_csv:
+////                        Intent intent = new Intent(context, ImportCsvActivity.class);
+////                        startActivityForResult(intent, IMPORT_REQUEST);
+////                        return true;
+//                    default:
+//                        Toast.makeText(getApplicationContext(),"Something's wrong",Toast.LENGTH_SHORT).show();
+//                        return true;
+//
+//                }
+//            }
+//        });
     }
 
     @Override
@@ -279,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Sync the toggle state after onRestoreInstanceState has occurred.
-        mDrawerToggle.syncState();
+//        mDrawerToggle.syncState();
 
         Spinner spinner = (Spinner) findViewById(R.id.time_scale_spinner);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -392,9 +453,9 @@ public class MainActivity extends AppCompatActivity {
 //        }
 
         // Activate the navigation drawer toggle
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
+//        if (mDrawerToggle.onOptionsItemSelected(item)) {
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -479,11 +540,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateUserElements(User user){
-        View parentView = mNavigationView.getHeaderView(0);
-        TextView username = (TextView) parentView.findViewById(R.id.username);
-        username.setText(user.getUserName());
-        TextView email = (TextView) parentView.findViewById(R.id.email);
-        email.setText((user.getEmailAddr()));
+//        View parentView = mNavigationView.getHeaderView(0);
+//        TextView username = (TextView) parentView.findViewById(R.id.username);
+//        username.setText(user.getUserName());
+//        TextView email = (TextView) parentView.findViewById(R.id.email);
+//        email.setText((user.getEmailAddr()));
+
+        mAccountHeader.addProfile(
+                new ProfileDrawerItem()
+                        .withEmail(user.getEmailAddr())
+                        .withName(user.getUserName())
+                        .withIcon(getResources().getDrawable(R.mipmap.ic_launcher)), 0);
 
         // todo set user image
     }
