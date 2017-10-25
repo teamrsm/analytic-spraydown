@@ -15,12 +15,15 @@ import com.sprayme.teamrsm.analyticspraydown.models.User;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.API_KEY;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.EMAIL_ADDR;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.GRADE_ID;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.LAST_ACCESS;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.NOTES;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ONSIGHT_PERCENTAGE;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.PITCHES;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.RATING;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTES_TABLE_NAME;
@@ -28,6 +31,7 @@ import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_ID;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_NAME;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_TYPE;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_URL;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROW_NUM;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.STARS;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICKS_TABLE_NAME;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICK_DATE;
@@ -45,7 +49,7 @@ import android.database.MatrixCursor;
  */
 
 public class BetaSpewDb extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
     private static final String DATABASE_NAME = "BetaSpew.db";
     private static BetaSpewDb instance;
 
@@ -76,11 +80,13 @@ public class BetaSpewDb extends SQLiteOpenHelper {
             db.execSQL(SqlGen.makeUsersTableCreate());
             db.execSQL(SqlGen.makeTicksTableCreate());
             db.execSQL(SqlGen.makeRoutesTableCreate());
+            db.execSQL(SqlGen.makeGradeMapTableCreate());
             db.setTransactionSuccessful();
         } catch (Exception e) {
             db.execSQL(SqlGen.makeRoutesTableDrop());
             db.execSQL(SqlGen.makeTicksTableDrop());
             db.execSQL(SqlGen.makeUsersTableDrop());
+            db.execSQL(SqlGen.makeGradeMapTableDrop());
         } finally {
             db.endTransaction();
         }
@@ -116,6 +122,19 @@ public class BetaSpewDb extends SQLiteOpenHelper {
                 db.execSQL(SqlGen.makeTicksTableCreate());
                 // todo: reload ticks
             }
+            if (oldVersion < 5 && newVersion >= 5) {
+                /* Added GradeMap. Added url to USERS table.*/
+
+                db.execSQL(SqlGen.makeGradeMapTableCreate());
+                db.execSQL(SqlGen.makeInsertGradeMapStatement());
+
+                // todo: get users
+                db.execSQL(SqlGen.makeUsersTableDrop());
+                db.execSQL(SqlGen.makeUsersTableCreate());
+                // todo: reload users
+            }
+
+            db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -245,13 +264,16 @@ public class BetaSpewDb extends SQLiteOpenHelper {
             while (cursor.moveToNext()) {
                 long routeId = cursor.getLong(cursor.getColumnIndex(ROUTE_ID));
                 Date tickDate = new Date(cursor.getLong(cursor.getColumnIndex(TICK_DATE)));
+                Integer pitches = cursor.getInt(cursor.getColumnIndex(PITCHES));
                 String notes = cursor.getString(cursor.getColumnIndex(NOTES));
                 TickType tickType = TickType.valueOf(cursor.getString(cursor.getColumnIndex(TICK_TYPE)));
+                Integer rowNum = cursor.getInt(cursor.getColumnIndex(ROW_NUM));
 
+                boolean isRepeat = false;
+                if (rowNum > 1)
+                    isRepeat = true;
 
-                // todo: join with routes to get num pitches
-                // todo: support the concept of isRepeat
-                userTicks.add(new Tick(routeId, tickDate, null, notes, tickType, false));
+                userTicks.add(new Tick(routeId, tickDate, pitches, notes, tickType, isRepeat));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -321,6 +343,28 @@ public class BetaSpewDb extends SQLiteOpenHelper {
         }
 
         return routes;
+    }
+
+    public HashMap<Long, Float> getOnsightPercentages (long userId, String ratingType, String routeType) {
+        HashMap<Long, Float> onsightPercentages = new HashMap<>();
+
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(SqlGen.makeOnsightPercentage(userId, ratingType, routeType), null);
+
+        try {
+            while (cursor.moveToNext()) {
+                Long gradeId = cursor.getLong(cursor.getColumnIndex(GRADE_ID));
+                Float onsightPercentage = cursor.getFloat(cursor.getColumnIndex(ONSIGHT_PERCENTAGE));
+
+                onsightPercentages.put(gradeId, onsightPercentage);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            cursor.close();
+        }
+
+        return onsightPercentages;
     }
 
     /******* this function is a helper for AndroidDatabaseManager.java ********/
