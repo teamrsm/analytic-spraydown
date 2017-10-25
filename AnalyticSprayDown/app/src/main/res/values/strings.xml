@@ -38,6 +38,7 @@
     <string name="csv_import_button">Import</string>
     <string name="mp_data_link_label">You can find this on the Mountain Project api page when you are logged in:</string>
     <string name="drawer_menu_settings">Settings</string>
+    <string name="add_user">Add User</string>
 
     <string-array name="navigation_drawer_items">
         <!--<item>Stats</item>-->

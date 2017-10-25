@@ -30,12 +30,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.mikepenz.google_material_typeface_library.GoogleMaterial;
 import com.mikepenz.iconics.IconicsDrawable;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
+import com.mikepenz.materialdrawer.model.ProfileSettingDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
@@ -70,9 +72,11 @@ import java.util.stream.Collectors;
 public class MainActivity extends AppCompatActivity {
 
     static final int LOGIN_REQUEST = 1;
-    static final int IMPORT_REQUEST = 2;
+    static final int SETTINGS_REQUEST = 2;
+    static final int IMPORT_REQUEST = 3;
     private final int settingsPosition = 0;
     private final int importPosition = 1;
+    private static final int PROFILE_SETTING = 100000;
 
     public static SharedPreferences mSharedPref;
     private TimeScale mTimeScale = TimeScale.Year;
@@ -217,6 +221,29 @@ public class MainActivity extends AppCompatActivity {
                         return false;
                     }
                 })
+                .addProfiles(
+                        new ProfileSettingDrawerItem().withName(R.string.add_user).withIcon(new IconicsDrawable(this, GoogleMaterial.Icon.gmd_add).actionBar().paddingDp(5).colorRes(R.color.material_drawer_primary_text)).withIdentifier(PROFILE_SETTING)
+//                        new ProfileSettingDrawerItem().withName("Manage Account").withIcon(GoogleMaterial.Icon.gmd_settings).withIdentifier(100001)
+                ).withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
+                    @Override
+                    public boolean onProfileChanged(View view, IProfile profile, boolean current) {
+                        //sample usage of the onProfileChanged listener
+                        //if the clicked item has the identifier 1 add a new profile ;)
+                        if (profile instanceof IDrawerItem && profile.getIdentifier() == PROFILE_SETTING) {
+                            int count = 100 + mAccountHeader.getProfiles().size() + 1;
+                            IProfile newProfile = new ProfileDrawerItem().withNameShown(true).withName("Batman" + count).withEmail("batman" + count + "@gmail.com").withIcon(R.mipmap.ic_launcher).withIdentifier(count);
+                            if (mAccountHeader.getProfiles() != null) {
+                                //we know that there are 2 setting elements. set the new profile above them ;)
+                                mAccountHeader.addProfile(newProfile, mAccountHeader.getProfiles().size() - 2);
+                            } else {
+                                mAccountHeader.addProfiles(newProfile);
+                            }
+                        }
+
+                        //false if you have not consumed the event and it should close the drawer
+                        return false;
+                    }
+                })
                 .build();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -239,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
 
                             case R.id.settings:
                                 Intent intent = new Intent(context, SettingsActivity.class);
-                                startActivity(intent);
+                                startActivityForResult(intent, SETTINGS_REQUEST);
                                 return true;
         //                    case R.id.import_csv:
         //                        Intent intent = new Intent(context, ImportCsvActivity.class);
@@ -377,6 +404,11 @@ public class MainActivity extends AppCompatActivity {
                 });
                 dataCache.loadUserTicks();
             }
+        }
+
+        if (requestCode == SETTINGS_REQUEST)
+        {
+            // todo probably force a refresh
         }
 
         if (requestCode == IMPORT_REQUEST) {
@@ -524,6 +556,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateUserElements(User user){
+        if (mAccountHeader.getProfiles().stream().anyMatch(p -> p.getEmail() != null &&
+                p.getEmail().toString().equals(user.getEmailAddr())))
+            return;
 
         ProfileDrawerItem profile = new ProfileDrawerItem()
                 .withEmail(user.getEmailAddr())
