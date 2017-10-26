@@ -29,24 +29,18 @@ public class MPModel {
 
   public void requestUser(String emailAddress, String apiKey) {
     MPQueryUserTask mpQuery = new MPQueryUserTask(emailAddress, apiKey,
-            output -> {
-              listener.onUserLoaded(output);
-            });
+            output -> listener.onUserLoaded(output));
     mpQuery.execute();
   }
 
   public void requestTicks(long userId, String apiKey) {
-    MPQueryTicksTask mpQuery = new MPQueryTicksTask(userId, apiKey, output -> {
-      listener.onTicksLoaded(output);
-    });
+    MPQueryTicksTask mpQuery = new MPQueryTicksTask(userId, apiKey, output -> listener.onTicksLoaded(output));
     mpQuery.execute();
   }
 
   public void requestRoutes(String apiKey, Long[] routeIds) {
 
-    MPQueryRoutesTask mpQuery = new MPQueryRoutesTask(apiKey, output -> {
-      listener.onRoutesLoaded(output);
-    });
+    MPQueryRoutesTask mpQuery = new MPQueryRoutesTask(apiKey, output -> listener.onRoutesLoaded(output));
     mpQuery.execute(routeIds);
   }
 }
