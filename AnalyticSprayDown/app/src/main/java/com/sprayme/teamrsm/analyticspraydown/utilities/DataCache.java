@@ -227,8 +227,10 @@ public class DataCache extends Application
         if (!routesHash.contains(id))
           missingRoutes.add(id);
       }
-      if (missingRoutes.size() > 0)
-        fetchRoutes(missingRoutes.toArray(new Long[missingRoutes.size()]));
+      if (missingRoutes.size() > 0) {
+        m_MpModel.requestRoutes(m_CurrentUser.getApiKey(),
+                missingRoutes.toArray(new Long[missingRoutes.size()]));
+      }
       else {
         broadcastRoutesCompleted();
         if (ticksWaitingOnRoutes) {
@@ -244,10 +246,11 @@ public class DataCache extends Application
     if (isCacheInvalid()) {
       m_MpModel.requestRoutes(m_CurrentUser.getApiKey(), routeIds);
     } else {
-      // todo: trigger the finished listener
       m_Routes = m_Db.getRoutes(routeIds);
 
-      if (m_Routes.size() < routeIds.length) {
+      /* we should exercise this branch only in the case of new users with no
+        * routes in the db who have not yet invalidated the cache. */
+      if (m_Routes.size() == 0) {
         m_MpModel.requestRoutes(m_CurrentUser.getApiKey(), routeIds);
       } else {
         broadcastRoutesCompleted();
