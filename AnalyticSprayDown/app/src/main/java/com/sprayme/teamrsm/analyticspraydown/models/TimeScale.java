@@ -5,9 +5,9 @@ package com.sprayme.teamrsm.analyticspraydown.models;
  */
 
 public enum TimeScale {
-    Month,
-    ThreeMonth,
-    SixMonth,
-    Year,
-    Lifetime
+  Month,
+  ThreeMonth,
+  SixMonth,
+  Year,
+  Lifetime
 }

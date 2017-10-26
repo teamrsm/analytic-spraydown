@@ -19,49 +19,49 @@ import java.util.UUID;
 
 public class ImportCsvActivity extends AppCompatActivity {
 
-    private DataCache dataCache = null;
-    private UUID callbackUUID;
+  private DataCache dataCache = null;
+  private UUID callbackUUID;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_import_csv);
-        dataCache = DataCache.getInstance();
-        EditTextBetterPaste et = (EditTextBetterPaste) findViewById(R.id.csv_import_content);
-        et.addTextChangedListener(new TextWatcher() {
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_import_csv);
+    dataCache = DataCache.getInstance();
+    EditTextBetterPaste et = (EditTextBetterPaste) findViewById(R.id.csv_import_content);
+    et.addTextChangedListener(new TextWatcher() {
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
+      @Override
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+      }
 
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                ClipboardManager clip = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                String s1 = clip.getPrimaryClip().toString();
-            }
+      @Override
+      public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        ClipboardManager clip = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        String s1 = clip.getPrimaryClip().toString();
+      }
 
-            public void afterTextChanged(Editable s) {
+      public void afterTextChanged(Editable s) {
 
-            }
-        });
-    }
+      }
+    });
+  }
 
 
-    public void onImport(View view){
-        EditText csv = (EditText)findViewById(R.id.csv_import_content);
-        callbackUUID = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-            @Override
-            public void onTicksCached(List<Tick> ticks) {
-                if (dataCache.unsubscribeTicksHandler(callbackUUID))
-                    callbackUUID = null;
+  public void onImport(View view) {
+    EditText csv = (EditText) findViewById(R.id.csv_import_content);
+    callbackUUID = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+      @Override
+      public void onTicksCached(List<Tick> ticks) {
+        if (dataCache.unsubscribeTicksHandler(callbackUUID))
+          callbackUUID = null;
 
-                Intent _result = new Intent();
-                setResult(Activity.RESULT_OK, _result);
-                finish();
-            }
-        });
-        dataCache.importFromMountainProjectCsv(csv.getText().toString());
+        Intent _result = new Intent();
+        setResult(Activity.RESULT_OK, _result);
+        finish();
+      }
+    });
+    dataCache.importFromMountainProjectCsv(csv.getText().toString());
 
-        // todo: listen to datacache for success / failure
-    }
+    // todo: listen to datacache for success / failure
+  }
 }

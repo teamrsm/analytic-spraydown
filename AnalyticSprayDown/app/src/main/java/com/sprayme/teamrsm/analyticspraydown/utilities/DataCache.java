@@ -29,332 +29,341 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DataCache extends Application
         implements MPModel.MPModelListener {
-    public interface DataCacheTicksHandler {
-        void onTicksCached(List<Tick> ticks);
+  public interface DataCacheTicksHandler {
+    void onTicksCached(List<Tick> ticks);
+  }
+
+  public interface DataCacheRoutesHandler {
+    void onRoutesCached(List<Route> routes);
+  }
+
+  public interface DataCacheUserHandler {
+    void onUserCached(User user);
+  }
+
+  private ConcurrentHashMap<UUID, DataCacheUserHandler> userHandlers = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<UUID, DataCacheTicksHandler> ticksHandlers = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<UUID, DataCacheRoutesHandler> routeHandlers = new ConcurrentHashMap<>();
+
+
+  private static final int mountainProjectRoutesRequestSizeLimit = 200;
+
+  /* member variables */
+  private static DataCache instance = new DataCache();
+  private BetaSpewDb m_Db = null;
+  private MPModel m_MpModel = null;
+  private User m_CurrentUser;
+  private List<User> m_Users = null;
+  private List<Tick> m_Ticks = null;
+  private List<Route> m_Routes = null;
+  private static int m_InvalidCacheHours;
+
+  private boolean ticksWaitingOnRoutes = false;
+
+  /* Singleton Constructor */
+  private DataCache() {
+    m_MpModel = new MPModel(this);
+    m_InvalidCacheHours = Integer.valueOf(MainActivity.mSharedPref.getString(SettingsActivity.KEY_PREF_CACHE_TIMEOUT, "24"));
+  }
+
+  public static synchronized DataCache getInstance() {
+    if (instance == null)
+      instance = new DataCache();
+
+    return instance;
+  }
+
+  /* Database Methods */
+  public void setDb(BetaSpewDb database) {
+    m_Db = database;
+  }
+
+  /*
+  * Cache Methods
+  * */
+  private boolean isCacheInvalid() {
+
+    Date lastAccessDate = m_Db.getLastAccessTime(m_CurrentUser.getUserId());
+
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(lastAccessDate);
+    cal.add(Calendar.HOUR_OF_DAY, m_InvalidCacheHours);
+    Date cacheInvalidationDate = cal.getTime();
+
+    if (lastAccessDate.getTime() < cacheInvalidationDate.getTime())
+      return false;
+    else
+      return true;
+  }
+
+  /*
+   * User Methods
+   * */
+  public User getCurrentUser() {
+    return m_CurrentUser;
+  }
+
+  public void setCurrentUser(User user) {
+    m_CurrentUser = user;
+    //todo: update ticks
+  }
+
+  public User getLastUser() throws InvalidUserException {
+    User lastUser = m_Db.getLastUser();
+    if (lastUser.getUserId() == null)
+      throw new InvalidUserException("No Known last user");
+
+    m_CurrentUser = lastUser;
+    broadcastUserCompleted();
+    return lastUser;
+  }
+
+  public List<User> getUsers() throws InvalidUserException {
+    List<User> users = m_Db.getUsers();
+    if (users == null || users.size() == 0)
+      throw new InvalidUserException("No Known last user");
+
+    m_Users = users;
+    broadcastUserCompleted();
+    return users;
+  }
+
+  public void createNewUser(String emailAddress, String apiKey) {
+    m_MpModel.requestUser(emailAddress, apiKey);
+
+    if (m_CurrentUser == null)
+      m_CurrentUser = new User();
+    else
+      clearCurrentUser();
+
+    m_CurrentUser.setEmailAddr(emailAddress);
+    m_CurrentUser.setApiKey(apiKey);
+  }
+
+  private void clearCurrentUser() {
+    m_CurrentUser.setEmailAddr("");
+    m_CurrentUser.setApiKey("");
+    m_CurrentUser.setUserName("");
+    m_CurrentUser.setUserId(null);
+    broadcastUserCompleted();
+  }
+
+  /*
+  * Ticks Methods
+  * */
+  public List<Tick> getTicks() {
+    return m_Ticks;
+  }
+
+  public void loadUserTicks() {
+    if (m_Ticks == null)
+      fetchTicks();
+    else if (isCacheInvalid())
+      fetchTicks();
+    else if (m_Routes == null) {
+      Long[] routeIds = getRouteIdArray(m_Ticks);
+      ticksWaitingOnRoutes = true;
+      loadRoutes(routeIds);
+    } else
+      broadcastTicksCompleted();
+  }
+
+  private void fetchTicks() {
+    if (isCacheInvalid()) {
+      m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
+    } else {
+      m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
+
+      if (m_Ticks.size() == 0) {
+        m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
+      } else {
+        Long[] routeIds = getRouteIdArray(m_Ticks);
+        ticksWaitingOnRoutes = true;
+        loadRoutes(routeIds);
+      }
     }
-    public interface DataCacheRoutesHandler {
-        void onRoutesCached(List<Route> routes);
+  }
+
+  public void importFromMountainProjectCsv(String csv) {
+    List<Tick> ticks = SprayarificParser.parseTicksMountainProjectCsv(csv);
+
+    if (ticks.size() > 0)
+      onTicksLoaded(ticks);
+  }
+
+  /*
+  * Routes Methods
+  * */
+  public void loadRoutes(Long[] routeIds) {
+    if (m_Routes == null)
+      fetchRoutes(routeIds);
+    else if (isCacheInvalid())
+      fetchRoutes(routeIds);
+    else {
+      HashSet<Long> routesHash = new HashSet<>();
+      ArrayList<Long> missingRoutes = new ArrayList<>();
+      m_Routes.forEach(route -> routesHash.add(route.getId()));
+      for (Long id : routeIds) {
+        if (!routesHash.contains(id))
+          missingRoutes.add(id);
+      }
+      if (missingRoutes.size() > 0)
+        fetchRoutes(missingRoutes.toArray(new Long[missingRoutes.size()]));
+      else
+        broadcastRoutesCompleted();
     }
-    public interface DataCacheUserHandler {
-        void onUserCached(User user);
-    }
+  }
 
-    private ConcurrentHashMap<UUID,DataCacheUserHandler> userHandlers = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<UUID,DataCacheTicksHandler> ticksHandlers = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<UUID,DataCacheRoutesHandler> routeHandlers = new ConcurrentHashMap<>();
+  private void fetchRoutes(Long[] routeIds) {
+    if (isCacheInvalid()) {
+      m_MpModel.requestRoutes(m_CurrentUser.getApiKey(), routeIds);
+    } else {
+      // todo: trigger the finished listener
+      m_Routes = m_Db.getRoutes(routeIds);
 
-
-    private static final int mountainProjectRoutesRequestSizeLimit = 200;
-
-    /* member variables */
-    private static DataCache instance = new DataCache();
-    private BetaSpewDb m_Db = null;
-    private MPModel m_MpModel = null;
-    private User m_CurrentUser;
-    private List<Tick> m_Ticks = null;
-    private List<Route> m_Routes = null;
-    private static int m_InvalidCacheHours;
-
-    private boolean ticksWaitingOnRoutes = false;
-
-    /* Singleton Constructor */
-    private DataCache(){
-        m_MpModel = new MPModel(this);
-        m_InvalidCacheHours = Integer.valueOf(MainActivity.mSharedPref.getString(SettingsActivity.KEY_PREF_CACHE_TIMEOUT, "24"));
-    }
-
-    public static synchronized DataCache getInstance(){
-        if (instance == null)
-            instance = new DataCache();
-
-        return instance;
-    }
-
-    /* Database Methods */
-    public void setDb(BetaSpewDb database) {
-        m_Db = database;
-    }
-
-    /*
-    * Cache Methods
-    * */
-    private boolean isCacheInvalid() {
-
-        Date lastAccessDate = m_Db.getLastAccessTime(m_CurrentUser.getUserId());
-
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(lastAccessDate);
-        cal.add(Calendar.HOUR_OF_DAY, m_InvalidCacheHours);
-        Date cacheInvalidationDate = cal.getTime();
-
-        if (lastAccessDate.getTime() < cacheInvalidationDate.getTime())
-            return false;
-        else
-            return true;
-    }
-
-    /*
-     * User Methods
-     * */
-    public User getCurrentUser() { return m_CurrentUser; }
-    public void setCurrentUser(User user) {
-        m_CurrentUser = user;
-        //todo: update ticks
-    }
-
-    public User getLastUser() throws InvalidUserException {
-        User lastUser = m_Db.getLastUser();
-        if (lastUser.getUserId() == null)
-            throw new InvalidUserException("No Known last user");
-
-        m_CurrentUser = lastUser;
-        broadcastUserCompleted();
-        return lastUser;
-    }
-
-    public void createNewUser(String emailAddress, String apiKey) {
-        m_MpModel.requestUser(emailAddress, apiKey);
-
-        if (m_CurrentUser == null)
-            m_CurrentUser = new User();
-        else
-            clearCurrentUser();
-
-        m_CurrentUser.setEmailAddr(emailAddress);
-        m_CurrentUser.setApiKey(apiKey);
-    }
-
-    private void clearCurrentUser() {
-        m_CurrentUser.setEmailAddr("");
-        m_CurrentUser.setApiKey("");
-        m_CurrentUser.setUserName("");
-        m_CurrentUser.setUserId(null);
-        broadcastUserCompleted();
-    }
-
-    /*
-    * Ticks Methods
-    * */
-    public List<Tick> getTicks() {
-        return m_Ticks;
-    }
-
-    public void loadUserTicks() {
-        if (m_Ticks == null)
-            fetchTicks();
-        else if (isCacheInvalid())
-            fetchTicks();
-        else if (m_Routes == null){
-            Long[] routeIds = getRouteIdArray(m_Ticks);
-            ticksWaitingOnRoutes = true;
-            loadRoutes(routeIds);
+      if (m_Routes.size() < routeIds.length) {
+        m_MpModel.requestRoutes(m_CurrentUser.getApiKey(), routeIds);
+      } else {
+        broadcastRoutesCompleted();
+        if (ticksWaitingOnRoutes) {
+          mapRoutes(m_Ticks, m_Routes);
+          ticksWaitingOnRoutes = false;
+          broadcastTicksCompleted();
         }
-        else
-            broadcastTicksCompleted();
+      }
     }
-
-    private void fetchTicks() {
-        if (isCacheInvalid()) {
-            m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
-        }
-        else {
-            m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
-
-            if (m_Ticks.size() == 0){
-                m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
-            }
-            else {
-                Long[] routeIds = getRouteIdArray(m_Ticks);
-                ticksWaitingOnRoutes = true;
-                loadRoutes(routeIds);
-            }
-        }
-    }
-
-    public void importFromMountainProjectCsv(String csv){
-        List<Tick> ticks = SprayarificParser.parseTicksMountainProjectCsv(csv);
-
-        if (ticks.size() > 0)
-            onTicksLoaded(ticks);
-    }
-
-    /*
-    * Routes Methods
-    * */
-    public void loadRoutes(Long[] routeIds) {
-        if (m_Routes == null)
-            fetchRoutes(routeIds);
-        else if (isCacheInvalid())
-            fetchRoutes(routeIds);
-        else {
-            HashSet<Long> routesHash = new HashSet<>();
-            ArrayList<Long> missingRoutes = new ArrayList<>();
-            m_Routes.forEach(route -> routesHash.add(route.getId()));
-            for (Long id : routeIds) {
-                if (!routesHash.contains(id))
-                    missingRoutes.add(id);
-            }
-            if (missingRoutes.size() > 0)
-                fetchRoutes(missingRoutes.toArray(new Long[missingRoutes.size()]));
-            else
-                broadcastRoutesCompleted();
-        }
-    }
-
-    private void fetchRoutes(Long[] routeIds) {
-        if (isCacheInvalid()) {
-            m_MpModel.requestRoutes(m_CurrentUser.getApiKey(), routeIds);
-        }
-        else {
-            // todo: trigger the finished listener
-            m_Routes = m_Db.getRoutes(routeIds);
-
-            if (m_Routes.size() < routeIds.length) {
-                m_MpModel.requestRoutes(m_CurrentUser.getApiKey(), routeIds);
-            }
-            else {
-                broadcastRoutesCompleted();
-                if (ticksWaitingOnRoutes)
-                {
-                    mapRoutes(m_Ticks, m_Routes);
-                    ticksWaitingOnRoutes = false;
-                    broadcastTicksCompleted();
-                }
-            }
-        }
-    }
+  }
 
     /*
     * Stats Methods
     * */
 
-    /*
-    * Returns the gradeId and percentage value of the grade with the maximum onsight percentage.
-    * */
-    public Map.Entry<Long, Float> calculateOnsightLevel(String ratingType, String routeType) {
-        if (m_CurrentUser == null)
-            return null;
+  /*
+  * Returns the gradeId and percentage value of the grade with the maximum onsight percentage.
+  * */
+  public Map.Entry<Long, Float> calculateOnsightLevel(String ratingType, String routeType) {
+    if (m_CurrentUser == null)
+      return null;
 
-        HashMap<Long, Float> osPercentages = m_Db.getOnsightPercentages(m_CurrentUser.getUserId(),
-                ratingType, routeType);
+    HashMap<Long, Float> osPercentages = m_Db.getOnsightPercentages(m_CurrentUser.getUserId(),
+            ratingType, routeType);
 
-        Map.Entry<Long, Float> maxEntry = null;
-        for (Map.Entry<Long, Float> entry : osPercentages.entrySet()) {
-            if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0)
-                maxEntry = entry;
-        }
-
-        return maxEntry;
+    Map.Entry<Long, Float> maxEntry = null;
+    for (Map.Entry<Long, Float> entry : osPercentages.entrySet()) {
+      if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0)
+        maxEntry = entry;
     }
 
-    /*
-    * MPModel Subscription Methods
-    * */
-    @Override
-    public void onRoutesLoaded(List<Route> routes) {
-        m_Db.upsertRoutes(routes);
-        m_Routes = m_Db.getRoutes(null);
-        broadcastRoutesCompleted();
-        if (ticksWaitingOnRoutes)
-        {
-            mapRoutes(m_Ticks, m_Routes);
-            ticksWaitingOnRoutes = false;
-            broadcastTicksCompleted();
-        }
-    }
+    return maxEntry;
+  }
 
-    @Override
-    public void onTicksLoaded(List<Tick> ticks) {
+  /*
+  * MPModel Subscription Methods
+  * */
+  @Override
+  public void onRoutesLoaded(List<Route> routes) {
+    m_Db.upsertRoutes(routes);
+    m_Routes = m_Db.getRoutes(null);
+    broadcastRoutesCompleted();
+    if (ticksWaitingOnRoutes) {
+      mapRoutes(m_Ticks, m_Routes);
+      ticksWaitingOnRoutes = false;
+      broadcastTicksCompleted();
+    }
+  }
+
+  @Override
+  public void onTicksLoaded(List<Tick> ticks) {
         /* persist to database, then retrieve latest set. */
-        m_Db.upsertTicks(ticks, m_CurrentUser.getUserId());
-        m_Db.updateAccessMoment(m_CurrentUser.getUserId());
+    m_Db.upsertTicks(ticks, m_CurrentUser.getUserId());
+    m_Db.updateAccessMoment(m_CurrentUser.getUserId());
 
-        m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
-        ticksWaitingOnRoutes = true;
-        Long[] routeIds = getRouteIdArray(m_Ticks);
-        loadRoutes(routeIds);
-        //broadcastTicksCompleted();
+    m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
+    ticksWaitingOnRoutes = true;
+    Long[] routeIds = getRouteIdArray(m_Ticks);
+    loadRoutes(routeIds);
+    //broadcastTicksCompleted();
+  }
+
+  @Override
+  public void onUserLoaded(User user) {
+    if (user == null)
+      return;
+
+    m_CurrentUser.setUserName(user.getUserName());
+    m_CurrentUser.setUserId(user.getUserId());
+    m_CurrentUser.setAvatarUrl(user.getAvatarUrl());
+
+    m_Db.insertUser(m_CurrentUser);
+
+    broadcastUserCompleted();
+  }
+
+  /*
+  * Helper methods
+  * */
+  private Long[] getRouteIdArray(List<Tick> ticks) {
+    List<Long> routeIds = new ArrayList<>();
+    for (Tick tick : ticks) {
+      routeIds.add(tick.getRouteId());
+    }
+    return routeIds.toArray(new Long[routeIds.size()]);
+  }
+
+  private void mapRoutes(List<Tick> ticks, List<Route> routes) {
+    HashMap<Long, Route> routeMap = new HashMap<>();
+    for (Route route : routes) {
+      routeMap.put(route.getId(), route);
     }
 
-    @Override
-    public void onUserLoaded(User user) {
-        if (user == null)
-            return;
-
-        m_CurrentUser.setUserName(user.getUserName());
-        m_CurrentUser.setUserId(user.getUserId());
-        m_CurrentUser.setAvatarUrl(user.getAvatarUrl());
-
-        m_Db.insertUser(m_CurrentUser);
-
-        broadcastUserCompleted();
+    for (Tick tick : ticks) {
+      tick.setRoute(routeMap.get(tick.getRouteId()));
     }
+  }
 
-    /*
-    * Helper methods
-    * */
-    private Long[] getRouteIdArray(List<Tick> ticks) {
-        List<Long> routeIds = new ArrayList<>();
-        for (Tick tick : ticks) {
-            routeIds.add(tick.getRouteId());
-        }
-        return routeIds.toArray(new Long[routeIds.size()]);
-    }
+  /*
+  * Publisher / Subscriber Methods
+  * */
+  public UUID subscribe(DataCacheUserHandler handler) {
+    UUID uuid = UUID.randomUUID();
+    userHandlers.put(uuid, handler);
+    return uuid;
+  }
 
-    private void mapRoutes(List<Tick> ticks, List<Route> routes) {
-        HashMap<Long, Route> routeMap = new HashMap<>();
-        for (Route route : routes) {
-            routeMap.put(route.getId(), route);
-        }
+  public UUID subscribe(DataCacheTicksHandler handler) {
+    UUID uuid = UUID.randomUUID();
+    ticksHandlers.put(uuid, handler);
+    return uuid;
+  }
 
-        for (Tick tick : ticks) {
-            tick.setRoute(routeMap.get(tick.getRouteId()));
-        }
-    }
+  public UUID subscribe(DataCacheRoutesHandler handler) {
+    UUID uuid = UUID.randomUUID();
+    routeHandlers.put(uuid, handler);
+    return uuid;
+  }
 
-    /*
-    * Publisher / Subscriber Methods
-    * */
-    public UUID subscribe(DataCacheUserHandler handler){
-        UUID uuid = UUID.randomUUID();
-        userHandlers.put(uuid, handler);
-        return uuid;
-    }
+  public boolean unsubscribeUserHandler(UUID uuid) {
+    return userHandlers.remove(uuid) != null;
+  }
 
-    public UUID subscribe(DataCacheTicksHandler handler){
-        UUID uuid = UUID.randomUUID();
-        ticksHandlers.put(uuid, handler);
-        return uuid;
-    }
+  public boolean unsubscribeTicksHandler(UUID uuid) {
+    return ticksHandlers.remove(uuid) != null;
+  }
 
-    public UUID subscribe(DataCacheRoutesHandler handler) {
-        UUID uuid = UUID.randomUUID();
-        routeHandlers.put(uuid, handler);
-        return uuid;
-    }
+  public boolean unsubscribeRoutesHandler(UUID uuid) {
+    return routeHandlers.remove(uuid) != null;
+  }
 
-    public boolean unsubscribeUserHandler(UUID uuid){
-        return userHandlers.remove(uuid) != null;
-    }
+  private void broadcastTicksCompleted() {
+    if (ticksHandlers != null && !ticksHandlers.isEmpty())
+      ticksHandlers.forEach((k, v) -> v.onTicksCached((m_Ticks)));
+  }
 
-    public boolean unsubscribeTicksHandler(UUID uuid){
-        return ticksHandlers.remove(uuid) != null;
-    }
+  private void broadcastRoutesCompleted() {
+    routeHandlers.forEach((k, v) -> v.onRoutesCached((m_Routes)));
+  }
 
-    public boolean unsubscribeRoutesHandler(UUID uuid){
-        return routeHandlers.remove(uuid) != null;
-    }
-
-    private void broadcastTicksCompleted() {
-        if (ticksHandlers != null && !ticksHandlers.isEmpty())
-            ticksHandlers.forEach((k,v) -> v.onTicksCached((m_Ticks)));
-    }
-
-    private void broadcastRoutesCompleted() {
-        routeHandlers.forEach((k,v) -> v.onRoutesCached((m_Routes)));
-    }
-
-    private void broadcastUserCompleted() {
-        userHandlers.forEach((k,v) -> v.onUserCached((m_CurrentUser)));
-    }
+  private void broadcastUserCompleted() {
+    userHandlers.forEach((k, v) -> v.onUserCached((m_CurrentUser)));
+  }
 }

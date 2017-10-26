@@ -15,48 +15,48 @@ import java.util.List;
 
 public class MPQueryTicksTask extends AsyncTask<Void, Void, List<Tick>> {
 
-    public interface AsyncResponse {
-        void processFinish(List<Tick> ticks);
+  public interface AsyncResponse {
+    void processFinish(List<Tick> ticks);
+  }
+
+  private final int MP_TICK_RETURN_LIMIT = 200;
+
+  private String key;
+  private long userId = -1;
+  private AsyncResponse delegate = null;
+
+  public MPQueryTicksTask(long userId, String apiKey, MPQueryTicksTask.AsyncResponse delegate) {
+    this.userId = userId;
+    this.key = apiKey;
+    this.delegate = delegate;
+  }
+
+
+  @Override
+  protected List<Tick> doInBackground(Void... params) {
+    int startIndex = 0;
+    String mpQueryResults;
+    List<Tick> ticks = new ArrayList<>();
+    int ticksReturned = MP_TICK_RETURN_LIMIT;
+
+    try {
+      while (ticksReturned == MP_TICK_RETURN_LIMIT) {
+        URL executeUrl = MPQueryTaskHelper.buildTicksUrl(userId, key, startIndex);
+        mpQueryResults = MPQueryTaskHelper.getResponseFromHttpUrl(executeUrl);
+        List<Tick> result = SprayarificParser.parseTicksJson(mpQueryResults);
+        ticksReturned = result.size();
+        startIndex += 200;
+        ticks.addAll(result);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
     }
 
-    private final int MP_TICK_RETURN_LIMIT = 200;
+    return ticks;
+  }
 
-    private String key;
-    private long userId = -1;
-    private AsyncResponse delegate = null;
-
-    public MPQueryTicksTask(long userId, String apiKey, MPQueryTicksTask.AsyncResponse delegate) {
-        this.userId = userId;
-        this.key = apiKey;
-        this.delegate = delegate;
-    }
-
-
-    @Override
-    protected List<Tick> doInBackground(Void... params) {
-        int startIndex = 0;
-        String mpQueryResults;
-        List<Tick> ticks = new ArrayList<>();
-        int ticksReturned = MP_TICK_RETURN_LIMIT;
-
-        try {
-            while (ticksReturned == MP_TICK_RETURN_LIMIT) {
-                URL executeUrl = MPQueryTaskHelper.buildTicksUrl(userId, key, startIndex);
-                mpQueryResults = MPQueryTaskHelper.getResponseFromHttpUrl(executeUrl);
-                List<Tick> result = SprayarificParser.parseTicksJson(mpQueryResults);
-                ticksReturned = result.size();
-                startIndex += 200;
-                ticks.addAll(result);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return ticks;
-    }
-
-    @Override
-    protected void onPostExecute(List<Tick> ticks) {
-        delegate.processFinish(ticks);
-    }
+  @Override
+  protected void onPostExecute(List<Tick> ticks) {
+    delegate.processFinish(ticks);
+  }
 }

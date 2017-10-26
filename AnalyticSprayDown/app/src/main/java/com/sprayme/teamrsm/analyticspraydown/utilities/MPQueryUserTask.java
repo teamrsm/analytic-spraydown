@@ -13,39 +13,39 @@ import java.net.URL;
 
 public class MPQueryUserTask extends AsyncTask<Void, Void, User> {
 
-    public interface AsyncResponse {
-        void processFinish(User user);
+  public interface AsyncResponse {
+    void processFinish(User user);
+  }
+
+  private String key;
+  private String email;
+  private AsyncResponse delegate = null;
+
+  public MPQueryUserTask(String email, String apiKey, AsyncResponse delegate) {
+    this.email = email;
+    this.key = apiKey;
+    this.delegate = delegate;
+  }
+
+
+  @Override
+  protected User doInBackground(Void... params) {
+    String mpQueryResults;
+    URL url = MPQueryTaskHelper.buildUserUrl(email, key);
+    User user = null;
+
+    try {
+      mpQueryResults = MPQueryTaskHelper.getResponseFromHttpUrl(url);
+      user = SprayarificParser.parseUserJson(mpQueryResults);
+    } catch (IOException e) {
+      e.printStackTrace();
     }
 
-    private String key;
-    private String email;
-    private AsyncResponse delegate = null;
+    return user;
+  }
 
-    public MPQueryUserTask(String email, String apiKey, AsyncResponse delegate) {
-        this.email = email;
-        this.key = apiKey;
-        this.delegate = delegate;
-    }
-
-
-    @Override
-    protected User doInBackground(Void... params) {
-        String mpQueryResults;
-        URL url = MPQueryTaskHelper.buildUserUrl(email, key);
-        User user = null;
-
-        try {
-            mpQueryResults = MPQueryTaskHelper.getResponseFromHttpUrl(url);
-            user = SprayarificParser.parseUserJson(mpQueryResults);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return user;
-    }
-
-    @Override
-    protected void onPostExecute(User user) {
-        delegate.processFinish(user);
-    }
+  @Override
+  protected void onPostExecute(User user) {
+    delegate.processFinish(user);
+  }
 }

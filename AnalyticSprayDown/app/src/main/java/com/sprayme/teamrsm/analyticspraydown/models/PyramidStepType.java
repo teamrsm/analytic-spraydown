@@ -5,6 +5,6 @@ package com.sprayme.teamrsm.analyticspraydown.models;
  */
 
 public enum PyramidStepType {
-    Additive,
-    Multiplicative
+  Additive,
+  Multiplicative
 }

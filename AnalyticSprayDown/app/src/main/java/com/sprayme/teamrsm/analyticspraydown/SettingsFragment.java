@@ -8,15 +8,15 @@ import android.support.v7.preference.PreferenceFragmentCompat;
 public class SettingsFragment extends PreferenceFragmentCompat {
 
 
-    public SettingsFragment() {
-        // Required empty public constructor
-    }
+  public SettingsFragment() {
+    // Required empty public constructor
+  }
 
 
-    @Override
-    public void onCreatePreferences(Bundle savedInstanceState,
-                                    String rootKey) {
-        setPreferencesFromResource(R.xml.preferences, rootKey);
-    }
+  @Override
+  public void onCreatePreferences(Bundle savedInstanceState,
+                                  String rootKey) {
+    setPreferencesFromResource(R.xml.preferences, rootKey);
+  }
 
 }

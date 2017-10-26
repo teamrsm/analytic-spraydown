@@ -15,114 +15,114 @@ import java.util.Scanner;
 
 public class MPQueryTaskHelper {
 
-    public static final String MP_BASE_URL = "https://www.mountainproject.com/data/";
+  public static final String MP_BASE_URL = "https://www.mountainproject.com/data/";
 
-    private static final String ROUTES = "get-routes";
-    private static final String TICKS = "get-ticks";
-    private static final String USER = "get-user";
+  private static final String ROUTES = "get-routes";
+  private static final String TICKS = "get-ticks";
+  private static final String USER = "get-user";
 
-    private static final String PARAM_EMAIL = "email";
-    private static final String PARAM_USERID = "userId";
-    private static final String PARAM_KEY = "key";
-    private static final String START_POS_KEY = "startPos";
-    private static final String PARAM_ROUTEIDS = "routeIds";
+  private static final String PARAM_EMAIL = "email";
+  private static final String PARAM_USERID = "userId";
+  private static final String PARAM_KEY = "key";
+  private static final String START_POS_KEY = "startPos";
+  private static final String PARAM_ROUTEIDS = "routeIds";
 
-    /*
-    * Builds the URL used to query mountain project
-    * for users ticks
-    * */
-    public static URL buildTicksUrl(long userId, String key, int startIndex) {
-        String userParam = PARAM_USERID;
-        String userIdentifier = userId+"";
+  /*
+  * Builds the URL used to query mountain project
+  * for users ticks
+  * */
+  public static URL buildTicksUrl(long userId, String key, int startIndex) {
+    String userParam = PARAM_USERID;
+    String userIdentifier = userId + "";
 
-        Uri ticksUri = Uri.parse(MP_BASE_URL).buildUpon()
-                .appendPath(TICKS)
-                .appendQueryParameter(userParam, userIdentifier)
-                .appendQueryParameter(PARAM_KEY, key)
-                .appendQueryParameter(START_POS_KEY, startIndex+"")
-                .build();
+    Uri ticksUri = Uri.parse(MP_BASE_URL).buildUpon()
+            .appendPath(TICKS)
+            .appendQueryParameter(userParam, userIdentifier)
+            .appendQueryParameter(PARAM_KEY, key)
+            .appendQueryParameter(START_POS_KEY, startIndex + "")
+            .build();
 
-        URL url = null;
-        try {
-            url = new URL(ticksUri.toString());
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-
-        return url;
+    URL url = null;
+    try {
+      url = new URL(ticksUri.toString());
+    } catch (MalformedURLException e) {
+      e.printStackTrace();
     }
 
-    /*
-    * Builds the URL used to query mountain project
-    * for routes given an array of routeIds.
-    * */
-    public static URL buildRoutesUrl(String key, Long[] routeIds) {
-        String idString = null;
+    return url;
+  }
 
-        for (Long id : routeIds) {
-            idString += id + ",";
-        }
-        if (idString != null && idString.length() > 0) {
-            idString = idString.substring(0, idString.length() - 1);
-        }
+  /*
+  * Builds the URL used to query mountain project
+  * for routes given an array of routeIds.
+  * */
+  public static URL buildRoutesUrl(String key, Long[] routeIds) {
+    String idString = null;
 
-        Uri routesUri = Uri.parse(MP_BASE_URL).buildUpon()
-                .appendPath(ROUTES)
-                .appendQueryParameter(PARAM_ROUTEIDS, idString)
-                .appendQueryParameter(PARAM_KEY, key)
-                .build();
-
-        URL routesUrl = null;
-        try {
-            routesUrl = new URL(routesUri.toString());
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-
-        return routesUrl;
+    for (Long id : routeIds) {
+      idString += id + ",";
+    }
+    if (idString != null && idString.length() > 0) {
+      idString = idString.substring(0, idString.length() - 1);
     }
 
-    /*
-    * Build URL to query mountain project data api to query
-    * for the user with the given email address
-    * */
-    public static URL buildUserUrl(String email, String key) {
-        Uri userUri = Uri.parse(MP_BASE_URL).buildUpon()
-                .appendPath(USER)
-                .appendQueryParameter(PARAM_EMAIL, email)
-                .appendQueryParameter(PARAM_KEY, key)
-                .build();
+    Uri routesUri = Uri.parse(MP_BASE_URL).buildUpon()
+            .appendPath(ROUTES)
+            .appendQueryParameter(PARAM_ROUTEIDS, idString)
+            .appendQueryParameter(PARAM_KEY, key)
+            .build();
 
-        URL userUrl = null;
-        try {
-            userUrl = new URL(userUri.toString());
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-
-        return userUrl;
+    URL routesUrl = null;
+    try {
+      routesUrl = new URL(routesUri.toString());
+    } catch (MalformedURLException e) {
+      e.printStackTrace();
     }
 
-    /*
-    * Returns the entire result from the HTTP response.
-    * */
-    public static String getResponseFromHttpUrl(URL url) throws IOException {
-        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+    return routesUrl;
+  }
 
-        try {
-            InputStream in = urlConnection.getInputStream();
+  /*
+  * Build URL to query mountain project data api to query
+  * for the user with the given email address
+  * */
+  public static URL buildUserUrl(String email, String key) {
+    Uri userUri = Uri.parse(MP_BASE_URL).buildUpon()
+            .appendPath(USER)
+            .appendQueryParameter(PARAM_EMAIL, email)
+            .appendQueryParameter(PARAM_KEY, key)
+            .build();
 
-            Scanner scanner = new Scanner(in);
-            scanner.useDelimiter("\\A");
-            String returnVal = null;
-            boolean hasInput = scanner.hasNext();
-            if (hasInput) {
-                returnVal = scanner.next();
-            }
-            scanner.close();
-            return returnVal;
-        } finally {
-            urlConnection.disconnect();
-        }
+    URL userUrl = null;
+    try {
+      userUrl = new URL(userUri.toString());
+    } catch (MalformedURLException e) {
+      e.printStackTrace();
     }
+
+    return userUrl;
+  }
+
+  /*
+  * Returns the entire result from the HTTP response.
+  * */
+  public static String getResponseFromHttpUrl(URL url) throws IOException {
+    HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+
+    try {
+      InputStream in = urlConnection.getInputStream();
+
+      Scanner scanner = new Scanner(in);
+      scanner.useDelimiter("\\A");
+      String returnVal = null;
+      boolean hasInput = scanner.hasNext();
+      if (hasInput) {
+        returnVal = scanner.next();
+      }
+      scanner.close();
+      return returnVal;
+    } finally {
+      urlConnection.disconnect();
+    }
+  }
 }
