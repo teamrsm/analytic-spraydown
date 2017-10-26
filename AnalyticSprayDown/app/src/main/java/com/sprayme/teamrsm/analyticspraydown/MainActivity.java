@@ -75,30 +75,21 @@ public class MainActivity extends AppCompatActivity {
   static final int LOGIN_REQUEST = 1;
   static final int SETTINGS_REQUEST = 2;
   static final int IMPORT_REQUEST = 3;
-  private final int settingsPosition = 0;
-  private final int importPosition = 1;
   private static final int PROFILE_ADD = 100000;
 
   public static SharedPreferences mSharedPref;
   private TimeScale mTimeScale = TimeScale.Year;
   private int mTimeScaleSpinnerPos = 3;
-  private boolean isFinishedInflate = false;
 
   private DataCache dataCache = null;
   private BetaSpewDb db = null;
   private User currentUser = null;
-
-  private ListView mDrawerList;
-  private NavigationView mNavigationView;
-  private ArrayAdapter<String> mArrayAdapter;
-  private ActionBarDrawerToggle mDrawerToggle;
   private DrawerLayout mDrawerLayout;
   private Drawer mDrawer;
   private AccountHeader mAccountHeader;
   private RecyclerView mRecyclerView;
   private RecyclerAdapter mRecyclerAdapter;
   private RecyclerView.LayoutManager mLayoutManager;
-  private String[] mNavigationDrawerItems;
   private static ConcurrentHashMap<RouteType, Pyramid> pyramids = new ConcurrentHashMap<>();
 
   private String mActivityTitle;
@@ -188,28 +179,6 @@ public class MainActivity extends AppCompatActivity {
 
         Intent dbmanager = new Intent(context, AndroidDatabaseManager.class);
         startActivity(dbmanager);
-      }
-    });
-  }
-
-  private void addDrawerItems() {
-    mNavigationDrawerItems = getResources().getStringArray(R.array.navigation_drawer_items);
-    mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mNavigationDrawerItems);
-    mDrawerList.setAdapter(mArrayAdapter);
-
-    Context context = this;
-    mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-      @Override
-      public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (position == settingsPosition) {
-          Intent intent = new Intent(context, SettingsActivity.class);
-          startActivity(intent);
-        } else if (position == importPosition) {
-          Intent intent = new Intent(context, ImportCsvActivity.class);
-          startActivityForResult(intent, IMPORT_REQUEST);
-        }
-
-        mDrawerLayout.closeDrawer(mDrawerList);
       }
     });
   }
@@ -379,6 +348,19 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void initUsers() throws InvalidUserException {
+    List<MPProfileDrawerItem> profiles = dataCache.getUserProfiles();
+    currentUser = dataCache.getCurrentUser() != null ? dataCache.getCurrentUser() : dataCache.getLastUser();
+    MPProfileDrawerItem currentProfile = null;
+    int count = 0;
+    for (MPProfileDrawerItem profile : profiles) {
+      int position = profile.getUser() == currentUser || count++ == 0 ? 0 : 1;
+      if (position == 0)
+        currentProfile = profile;
+      mAccountHeader.addProfile(profile, position);
+    }
+
+    mAccountHeader.setActiveProfile(currentProfile);
+
     profileCallbackUuid = dataCache.subscribe(new DataCache.DataCacheProfileHandler() {
       @Override
       public void onProfileCached(MPProfileDrawerItem profile) {
@@ -389,16 +371,6 @@ public class MainActivity extends AppCompatActivity {
         mAccountHeader.setActiveProfile(profile, true);
       }
     });
-    currentUser = dataCache.getCurrentUser() != null ? dataCache.getCurrentUser() : dataCache.getLastUser();
-    List<MPProfileDrawerItem> profiles = dataCache.getUserProfiles();
-    int count = 0;
-    for (MPProfileDrawerItem profile : profiles) {
-      int position = profile.getUser() == currentUser || count++ == 0 ? 0 : 1;
-      mAccountHeader.addProfile(profile, position);
-    }
-
-    mAccountHeader.setActiveProfile(0);
-
   }
 
   private boolean onSelectedProfileChanged(IProfile profile){
@@ -432,24 +404,9 @@ public class MainActivity extends AppCompatActivity {
     if (requestCode == IMPORT_REQUEST) {
       // Make sure the request was successful
       if (resultCode == RESULT_OK) {
-//        ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-//          @Override
-//          public void onTicksCached(List<Tick> ticks) {
-//            if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-//              ticksCallbackUuid = null;
-//
-//            onFinished(ticks);
-//          }
-//        });
         dataCache.loadUserTicks();
       }
     }
-  }
-
-  @Override
-  public void onConfigurationChanged(Configuration newConfig) {
-    super.onConfigurationChanged(newConfig);
-    mDrawerToggle.onConfigurationChanged(newConfig);
   }
 
   @Override
