@@ -1,6 +1,7 @@
 package com.sprayme.teamrsm.analyticspraydown.utilities;
 
 import android.app.Application;
+import android.support.v4.util.ArraySet;
 
 import com.sprayme.teamrsm.analyticspraydown.MainActivity;
 import com.sprayme.teamrsm.analyticspraydown.SettingsActivity;
@@ -8,6 +9,7 @@ import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
 import com.sprayme.teamrsm.analyticspraydown.models.Grade;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
+import com.sprayme.teamrsm.analyticspraydown.models.MPProfileDrawerItem;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
@@ -19,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,23 +40,22 @@ public class DataCache extends Application
     void onRoutesCached(List<Route> routes);
   }
 
-  public interface DataCacheUserHandler {
-    void onUserCached(User user);
+  public interface DataCacheProfileHandler {
+    void onProfileCached(MPProfileDrawerItem profile);
   }
 
-  private ConcurrentHashMap<UUID, DataCacheUserHandler> userHandlers = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<UUID, DataCacheProfileHandler> profileHandlers = new ConcurrentHashMap<>();
   private ConcurrentHashMap<UUID, DataCacheTicksHandler> ticksHandlers = new ConcurrentHashMap<>();
   private ConcurrentHashMap<UUID, DataCacheRoutesHandler> routeHandlers = new ConcurrentHashMap<>();
-
-
-  private static final int mountainProjectRoutesRequestSizeLimit = 200;
 
   /* member variables */
   private static DataCache instance = new DataCache();
   private BetaSpewDb m_Db = null;
   private MPModel m_MpModel = null;
   private User m_CurrentUser;
+  private boolean m_UserChanged;
   private List<User> m_Users = null;
+  private List<MPProfileDrawerItem> m_UserProfiles;
   private List<Tick> m_Ticks = null;
   private List<Route> m_Routes = null;
   private static int m_InvalidCacheHours;
@@ -105,6 +107,7 @@ public class DataCache extends Application
 
   public void setCurrentUser(User user) {
     m_CurrentUser = user;
+    m_UserChanged = true;
     //todo: update ticks
   }
 
@@ -114,39 +117,53 @@ public class DataCache extends Application
       throw new InvalidUserException("No Known last user");
 
     m_CurrentUser = lastUser;
-    broadcastUserCompleted();
+//    broadcastUserCompleted();
     return lastUser;
   }
 
-  public List<User> getUsers() throws InvalidUserException {
+  public List<MPProfileDrawerItem> getUserProfiles() throws InvalidUserException {
     List<User> users = m_Db.getUsers();
     if (users == null || users.size() == 0)
-      throw new InvalidUserException("No Known last user");
+      throw new InvalidUserException("No saved users");
+
+    if (m_CurrentUser == null)
+      getLastUser();
 
     m_Users = users;
-    broadcastUserCompleted();
-    return users;
+    List<MPProfileDrawerItem> profiles = new ArrayList<>();
+    MPProfileDrawerItem currentProfile = null;
+    for (User user : users) {
+      MPProfileDrawerItem profile = new MPProfileDrawerItem(user);
+      profiles.add(profile);
+      if ((long)user.getUserId() == (long)m_CurrentUser.getUserId())
+        currentProfile = profile;
+    }
+    m_UserProfiles = profiles;
+    m_CurrentUser = currentProfile.getUser();
+    broadcastUserCompleted(currentProfile);
+    return m_UserProfiles;
   }
 
   public void createNewUser(String emailAddress, String apiKey) {
     m_MpModel.requestUser(emailAddress, apiKey);
 
-    if (m_CurrentUser == null)
-      m_CurrentUser = new User();
-    else
-      clearCurrentUser();
+//    if (m_CurrentUser == null)
+      m_CurrentUser = null; //new User();
+//    else
+//      clearCurrentUser();
 
-    m_CurrentUser.setEmailAddr(emailAddress);
-    m_CurrentUser.setApiKey(apiKey);
+//    m_CurrentUser.setEmailAddr(emailAddress);
+//    m_CurrentUser.setApiKey(apiKey);
+    m_UserChanged = true;
   }
 
-  private void clearCurrentUser() {
-    m_CurrentUser.setEmailAddr("");
-    m_CurrentUser.setApiKey("");
-    m_CurrentUser.setUserName("");
-    m_CurrentUser.setUserId(null);
-    broadcastUserCompleted();
-  }
+//  private void clearCurrentUser() {
+//    m_CurrentUser.setEmailAddr("");
+//    m_CurrentUser.setApiKey("");
+//    m_CurrentUser.setUserName("");
+//    m_CurrentUser.setUserId(null);
+//    broadcastUserCompleted();
+//  }
 
   /*
   * Ticks Methods
@@ -156,8 +173,11 @@ public class DataCache extends Application
   }
 
   public void loadUserTicks() {
-    if (m_Ticks == null)
+    if (m_Ticks == null || m_UserChanged)
+    {
       fetchTicks();
+      m_UserChanged = false;
+    }
     else if (isCacheInvalid())
       fetchTicks();
     else if (m_Routes == null) {
@@ -209,8 +229,14 @@ public class DataCache extends Application
       }
       if (missingRoutes.size() > 0)
         fetchRoutes(missingRoutes.toArray(new Long[missingRoutes.size()]));
-      else
+      else {
         broadcastRoutesCompleted();
+        if (ticksWaitingOnRoutes) {
+          mapRoutes(m_Ticks, m_Routes);
+          ticksWaitingOnRoutes = false;
+          broadcastTicksCompleted();
+        }
+      }
     }
   }
 
@@ -290,20 +316,24 @@ public class DataCache extends Application
     if (user == null)
       return;
 
-    m_CurrentUser.setUserName(user.getUserName());
-    m_CurrentUser.setUserId(user.getUserId());
-    m_CurrentUser.setAvatarUrl(user.getAvatarUrl());
+//    m_CurrentUser.setUserName(user.getUserName());
+//    m_CurrentUser.setUserId(user.getUserId());
+//    m_CurrentUser.setAvatarUrl(user.getAvatarUrl());
+    m_CurrentUser = user;
 
     m_Db.insertUser(m_CurrentUser);
 
-    broadcastUserCompleted();
+    MPProfileDrawerItem profile = new MPProfileDrawerItem(user);
+    m_UserProfiles.add(profile);
+
+    broadcastUserCompleted(profile);
   }
 
   /*
   * Helper methods
   * */
   private Long[] getRouteIdArray(List<Tick> ticks) {
-    List<Long> routeIds = new ArrayList<>();
+    Set<Long> routeIds = new ArraySet<>();
     for (Tick tick : ticks) {
       routeIds.add(tick.getRouteId());
     }
@@ -324,9 +354,9 @@ public class DataCache extends Application
   /*
   * Publisher / Subscriber Methods
   * */
-  public UUID subscribe(DataCacheUserHandler handler) {
+  public UUID subscribe(DataCacheProfileHandler handler) {
     UUID uuid = UUID.randomUUID();
-    userHandlers.put(uuid, handler);
+    profileHandlers.put(uuid, handler);
     return uuid;
   }
 
@@ -342,9 +372,7 @@ public class DataCache extends Application
     return uuid;
   }
 
-  public boolean unsubscribeUserHandler(UUID uuid) {
-    return userHandlers.remove(uuid) != null;
-  }
+  public boolean unsubscribeProfileHandler(UUID uuid) { return profileHandlers.remove(uuid) != null; }
 
   public boolean unsubscribeTicksHandler(UUID uuid) {
     return ticksHandlers.remove(uuid) != null;
@@ -363,7 +391,7 @@ public class DataCache extends Application
     routeHandlers.forEach((k, v) -> v.onRoutesCached((m_Routes)));
   }
 
-  private void broadcastUserCompleted() {
-    userHandlers.forEach((k, v) -> v.onUserCached((m_CurrentUser)));
+  private void broadcastUserCompleted(MPProfileDrawerItem profile) {
+    profileHandlers.forEach((k, v) -> v.onProfileCached((profile)));
   }
 }

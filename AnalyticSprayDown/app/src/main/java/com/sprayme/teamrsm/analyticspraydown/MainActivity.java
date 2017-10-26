@@ -46,6 +46,7 @@ import com.mikepenz.materialdrawer.util.DrawerImageLoader;
 import com.mikepenz.materialdrawer.util.DrawerUIUtils;
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
+import com.sprayme.teamrsm.analyticspraydown.models.MPProfileDrawerItem;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
@@ -76,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
   static final int IMPORT_REQUEST = 3;
   private final int settingsPosition = 0;
   private final int importPosition = 1;
-  private static final int PROFILE_SETTING = 100000;
+  private static final int PROFILE_ADD = 100000;
 
   public static SharedPreferences mSharedPref;
   private TimeScale mTimeScale = TimeScale.Year;
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
   private static ConcurrentHashMap<RouteType, Pyramid> pyramids = new ConcurrentHashMap<>();
 
   private String mActivityTitle;
-  private UUID userCallbackUuid, ticksCallbackUuid;
+  private UUID profileCallbackUuid, ticksCallbackUuid;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -111,15 +112,10 @@ public class MainActivity extends AppCompatActivity {
 //        this.deleteDatabase("BetaSpew.db");
     db = BetaSpewDb.getInstance(this);
 
-//        mDrawerList = (ListView)findViewById(R.id.navList);
     mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
     mActivityTitle = getTitle().toString();
 
-//        addDrawerItems();
     setupDrawer();
-
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-//        getSupportActionBar().setHomeButtonEnabled(true);
 
     Button button = (Button) findViewById(R.id.viewDbButton);
 
@@ -168,15 +164,15 @@ public class MainActivity extends AppCompatActivity {
             mTimeScale = TimeScale.Lifetime;
             break;
         }
-        ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-          @Override
-          public void onTicksCached(List<Tick> ticks) {
-            if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-              ticksCallbackUuid = null;
-
-            onFinished(ticks);
-          }
-        });
+//        ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+//          @Override
+//          public void onTicksCached(List<Tick> ticks) {
+//            if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+//              ticksCallbackUuid = null;
+//
+//            onFinished(ticks);
+//          }
+//        });
         dataCache.loadUserTicks();
       }
 
@@ -226,35 +222,20 @@ public class MainActivity extends AppCompatActivity {
     mAccountHeader = new AccountHeaderBuilder()
             .withActivity(this)
             .withHeaderBackground(R.drawable.background_material)
-            .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
-              @Override
-              public boolean onProfileChanged(View view, IProfile profile, boolean currentProfile) {
-                return false;
-              }
-            })
             .addProfiles(
-                    new ProfileSettingDrawerItem().withName(R.string.add_user).withIcon(new IconicsDrawable(this, GoogleMaterial.Icon.gmd_add).actionBar().paddingDp(5).colorRes(R.color.material_drawer_primary_text)).withIdentifier(PROFILE_SETTING)
+                    new ProfileSettingDrawerItem().withName(R.string.add_user).withIcon(new IconicsDrawable(this, GoogleMaterial.Icon.gmd_add).actionBar().paddingDp(5).colorRes(R.color.material_drawer_primary_text)).withIdentifier(PROFILE_ADD)
 //                        new ProfileSettingDrawerItem().withName("Manage Account").withIcon(GoogleMaterial.Icon.gmd_settings).withIdentifier(100001)
             ).withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
               @Override
               public boolean onProfileChanged(View view, IProfile profile, boolean current) {
-                //sample usage of the onProfileChanged listener
-                //if the clicked item has the identifier 1 add a new profile ;)
-                if (profile instanceof IDrawerItem && profile.getIdentifier() == PROFILE_SETTING) {
-                  int count = 100 + mAccountHeader.getProfiles().size() + 1;
-                  IProfile newProfile = new ProfileDrawerItem().withNameShown(true).withName("Batman" + count).withEmail("batman" + count + "@gmail.com").withIcon(R.mipmap.ic_launcher).withIdentifier(count);
-                  if (mAccountHeader.getProfiles() != null) {
-                    //we know that there are 2 setting elements. set the new profile above them ;)
-                    mAccountHeader.addProfile(newProfile, mAccountHeader.getProfiles().size() - 2);
-                  } else {
-                    mAccountHeader.addProfiles(newProfile);
-                  }
-                }
+                if (current)
+                  return false;
 
-                //false if you have not consumed the event and it should close the drawer
-                return false;
+                return onSelectedProfileChanged(profile);
               }
             })
+            .withCloseDrawerOnProfileListClick(true)
+            .withOnlyMainProfileImageVisible(true)
             .build();
 
     Toolbar toolbar = findViewById(R.id.toolbar);
@@ -327,42 +308,6 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onPostCreate(Bundle savedInstanceState) {
     super.onPostCreate(savedInstanceState);
-    boolean canLaunchLogin = false;
-
-    try {
-      dataCache = DataCache.getInstance();
-      userCallbackUuid = dataCache.subscribe(new DataCache.DataCacheUserHandler() {
-        @Override
-        public void onUserCached(User user) {
-          updateUserElements(user);
-        }
-      });
-      dataCache.setDb(db);
-      currentUser = dataCache.getLastUser();
-      ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-        @Override
-        public void onTicksCached(List<Tick> ticks) {
-          if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-            ticksCallbackUuid = null;
-
-          onFinished(ticks);
-        }
-      });
-      dataCache.loadUserTicks();
-    } catch (InvalidUserException e) {
-            /* launch login, we have no known user */
-      canLaunchLogin = true;
-    }
-
-    dataCache.calculateOnsightLevel("YOSEMITE", "Sport");
-
-    if (canLaunchLogin) {
-      Intent loginIntent = new Intent(this, UserLoginActivity.class);
-      startActivityForResult(loginIntent, LOGIN_REQUEST);
-    }
-
-    // Sync the toggle state after onRestoreInstanceState has occurred.
-//        mDrawerToggle.syncState();
 
     Spinner spinner = (Spinner) findViewById(R.id.time_scale_spinner);
     spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -390,15 +335,15 @@ public class MainActivity extends AppCompatActivity {
             mTimeScale = TimeScale.Lifetime;
             break;
         }
-        ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-          @Override
-          public void onTicksCached(List<Tick> ticks) {
-            if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-              ticksCallbackUuid = null;
-
-            onFinished(ticks);
-          }
-        });
+//        ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+//          @Override
+//          public void onTicksCached(List<Tick> ticks) {
+//            if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+//              ticksCallbackUuid = null;
+//
+//            onFinished(ticks);
+//          }
+//        });
         dataCache.loadUserTicks();
       }
 
@@ -406,6 +351,68 @@ public class MainActivity extends AppCompatActivity {
       public void onNothingSelected(AdapterView<?> parent) {
       }
     });
+
+    boolean canLaunchLogin = false;
+
+    try {
+      dataCache = DataCache.getInstance();
+      dataCache.setDb(db);
+      ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+        @Override
+        public void onTicksCached(List<Tick> ticks) {
+          onFinished(ticks);
+        }
+      });
+      initUsers();
+      dataCache.loadUserTicks();
+    } catch (InvalidUserException e) {
+            /* launch login, we have no known user */
+      canLaunchLogin = true;
+    }
+
+    dataCache.calculateOnsightLevel("YOSEMITE", "Sport");
+
+    if (canLaunchLogin) {
+      Intent loginIntent = new Intent(this, UserLoginActivity.class);
+      startActivityForResult(loginIntent, LOGIN_REQUEST);
+    }
+  }
+
+  private void initUsers() throws InvalidUserException {
+    profileCallbackUuid = dataCache.subscribe(new DataCache.DataCacheProfileHandler() {
+      @Override
+      public void onProfileCached(MPProfileDrawerItem profile) {
+        if (profile == null)
+          return;
+
+        mAccountHeader.addProfile(profile, 0);
+        mAccountHeader.setActiveProfile(profile, true);
+      }
+    });
+    currentUser = dataCache.getCurrentUser() != null ? dataCache.getCurrentUser() : dataCache.getLastUser();
+    List<MPProfileDrawerItem> profiles = dataCache.getUserProfiles();
+    int count = 0;
+    for (MPProfileDrawerItem profile : profiles) {
+      int position = profile.getUser() == currentUser || count++ == 0 ? 0 : 1;
+      mAccountHeader.addProfile(profile, position);
+    }
+
+    mAccountHeader.setActiveProfile(0);
+
+  }
+
+  private boolean onSelectedProfileChanged(IProfile profile){
+    if (profile instanceof IDrawerItem && profile.getIdentifier() == PROFILE_ADD) {
+      Intent loginIntent = new Intent(this, UserLoginActivity.class);
+      startActivityForResult(loginIntent, LOGIN_REQUEST);
+      return true;
+    }
+
+    if (profile instanceof MPProfileDrawerItem){
+      onActiveUserChanged(((MPProfileDrawerItem)profile).getUser());
+      return true;
+    }
+    return false;
   }
 
   @Override
@@ -415,17 +422,6 @@ public class MainActivity extends AppCompatActivity {
       // Make sure the request was successful
       if (resultCode == RESULT_OK) {
         currentUser = dataCache.getCurrentUser();
-
-        ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-          @Override
-          public void onTicksCached(List<Tick> ticks) {
-            if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-              ticksCallbackUuid = null;
-
-            onFinished(ticks);
-          }
-        });
-        dataCache.loadUserTicks();
       }
     }
 
@@ -436,15 +432,15 @@ public class MainActivity extends AppCompatActivity {
     if (requestCode == IMPORT_REQUEST) {
       // Make sure the request was successful
       if (resultCode == RESULT_OK) {
-        ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-          @Override
-          public void onTicksCached(List<Tick> ticks) {
-            if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-              ticksCallbackUuid = null;
-
-            onFinished(ticks);
-          }
-        });
+//        ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
+//          @Override
+//          public void onTicksCached(List<Tick> ticks) {
+//            if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
+//              ticksCallbackUuid = null;
+//
+//            onFinished(ticks);
+//          }
+//        });
         dataCache.loadUserTicks();
       }
     }
@@ -586,21 +582,8 @@ public class MainActivity extends AppCompatActivity {
     return subActivityData;
   }
 
-  private void updateUserElements(User user) {
-    if (mAccountHeader.getProfiles().stream().anyMatch(p -> p.getEmail() != null &&
-            p.getEmail().toString().equals(user.getEmailAddr())))
-      return;
-
-    ProfileDrawerItem profile = new ProfileDrawerItem()
-            .withEmail(user.getEmailAddr())
-            .withName(user.getUserName());
-    if (user.getAvatarUrl() == null)
-      profile.withIcon(getResources().getDrawable(R.mipmap.ic_launcher));
-    else
-      profile.withIcon(user.getAvatarUrl());
-
-    mAccountHeader.addProfile(profile, 0);
-
-    // todo set user image
+  private void onActiveUserChanged(User user){
+    dataCache.setCurrentUser(user);
+    dataCache.loadUserTicks();
   }
 }

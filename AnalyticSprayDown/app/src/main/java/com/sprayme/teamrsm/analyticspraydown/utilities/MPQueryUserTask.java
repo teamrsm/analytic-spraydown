@@ -37,6 +37,8 @@ public class MPQueryUserTask extends AsyncTask<Void, Void, User> {
     try {
       mpQueryResults = MPQueryTaskHelper.getResponseFromHttpUrl(url);
       user = SprayarificParser.parseUserJson(mpQueryResults);
+      user.setEmailAddr(email);
+      user.setApiKey(key);
     } catch (IOException e) {
       e.printStackTrace();
     }

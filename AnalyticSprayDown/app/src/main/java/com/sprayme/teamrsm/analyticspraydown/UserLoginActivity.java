@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
 
+import com.sprayme.teamrsm.analyticspraydown.models.MPProfileDrawerItem;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 
@@ -34,10 +35,10 @@ public class UserLoginActivity extends AppCompatActivity {
   public void onLogin(View view) {
     EditText email = (EditText) findViewById(R.id.emailEntry);
     EditText apiKey = (EditText) findViewById(R.id.apiKeyEntry);
-    callbackUUID = dataCache.subscribe(new DataCache.DataCacheUserHandler() {
+    callbackUUID = dataCache.subscribe(new DataCache.DataCacheProfileHandler() {
       @Override
-      public void onUserCached(User user) {
-        if (dataCache.unsubscribeUserHandler(callbackUUID))
+      public void onProfileCached(MPProfileDrawerItem profile) {
+        if (dataCache.unsubscribeProfileHandler(callbackUUID))
           callbackUUID = null;
 
         Intent _result = new Intent();
