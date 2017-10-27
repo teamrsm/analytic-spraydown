@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
   private RecyclerView.LayoutManager mLayoutManager;
   private static ConcurrentHashMap<RouteType, Pyramid> pyramids = new ConcurrentHashMap<>();
 
+  private boolean m_FirstUserBeingAdded = false;
   private String mActivityTitle;
   private UUID profileCallbackUuid, ticksCallbackUuid;
 
@@ -337,6 +338,7 @@ public class MainActivity extends AppCompatActivity {
     } catch (InvalidUserException e) {
             /* launch login, we have no known user */
       canLaunchLogin = true;
+      m_FirstUserBeingAdded = true;
     }
 
     dataCache.calculateOnsightLevel("YOSEMITE", "Sport");
@@ -348,6 +350,20 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void initUsers() throws InvalidUserException {
+
+    // todo figure out timing of this
+    if (profileCallbackUuid == null)
+      profileCallbackUuid = dataCache.subscribe(new DataCache.DataCacheProfileHandler() {
+        @Override
+        public void onProfileCached(MPProfileDrawerItem profile) {
+          if (profile == null || m_FirstUserBeingAdded)
+            return;
+
+          mAccountHeader.addProfile(profile, 0);
+          mAccountHeader.setActiveProfile(profile, true);
+        }
+      });
+
     List<MPProfileDrawerItem> profiles = dataCache.getUserProfiles();
     currentUser = dataCache.getCurrentUser() != null ? dataCache.getCurrentUser() : dataCache.getLastUser();
     MPProfileDrawerItem currentProfile = null;
@@ -360,17 +376,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     mAccountHeader.setActiveProfile(currentProfile);
-
-    profileCallbackUuid = dataCache.subscribe(new DataCache.DataCacheProfileHandler() {
-      @Override
-      public void onProfileCached(MPProfileDrawerItem profile) {
-        if (profile == null)
-          return;
-
-        mAccountHeader.addProfile(profile, 0);
-        mAccountHeader.setActiveProfile(profile, true);
-      }
-    });
   }
 
   private boolean onSelectedProfileChanged(IProfile profile){
@@ -393,7 +398,12 @@ public class MainActivity extends AppCompatActivity {
     if (requestCode == LOGIN_REQUEST) {
       // Make sure the request was successful
       if (resultCode == RESULT_OK) {
-        currentUser = dataCache.getCurrentUser();
+        try {
+          initUsers();
+          dataCache.loadUserTicks();
+        }
+        catch (InvalidUserException e) {
+          Toast.makeText(this, "Init users failed after successfully adding a user", Toast.LENGTH_LONG).show();}
       }
     }
 

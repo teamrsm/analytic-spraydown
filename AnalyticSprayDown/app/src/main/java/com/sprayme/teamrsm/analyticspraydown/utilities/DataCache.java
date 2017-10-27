@@ -55,7 +55,7 @@ public class DataCache extends Application
   private User m_CurrentUser;
   private boolean m_UserChanged;
   private List<User> m_Users = null;
-  private List<MPProfileDrawerItem> m_UserProfiles;
+  private List<MPProfileDrawerItem> m_UserProfiles = new ArrayList<>();
   private List<Tick> m_Ticks = null;
   private List<Route> m_Routes = null;
   private static int m_InvalidCacheHours;
@@ -113,18 +113,22 @@ public class DataCache extends Application
 
   public User getLastUser() throws InvalidUserException {
     User lastUser = m_Db.getLastUser();
-    if (lastUser.getUserId() == null)
+    if (lastUser.getUserId() == null) {
+      m_UserProfiles = new ArrayList<>();
       throw new InvalidUserException("No Known last user");
+    }
 
     m_CurrentUser = lastUser;
-//    broadcastUserCompleted();
+
     return lastUser;
   }
 
   public List<MPProfileDrawerItem> getUserProfiles() throws InvalidUserException {
     List<User> users = m_Db.getUsers();
-    if (users == null || users.size() == 0)
+    if (users == null || users.size() == 0) {
+      m_UserProfiles = new ArrayList<>();
       throw new InvalidUserException("No saved users");
+    }
 
     if (m_CurrentUser == null)
       getLastUser();
@@ -156,14 +160,6 @@ public class DataCache extends Application
 //    m_CurrentUser.setApiKey(apiKey);
     m_UserChanged = true;
   }
-
-//  private void clearCurrentUser() {
-//    m_CurrentUser.setEmailAddr("");
-//    m_CurrentUser.setApiKey("");
-//    m_CurrentUser.setUserName("");
-//    m_CurrentUser.setUserId(null);
-//    broadcastUserCompleted();
-//  }
 
   /*
   * Ticks Methods
@@ -327,6 +323,7 @@ public class DataCache extends Application
     m_Db.insertUser(m_CurrentUser);
 
     MPProfileDrawerItem profile = new MPProfileDrawerItem(user);
+
     m_UserProfiles.add(profile);
 
     broadcastUserCompleted(profile);
