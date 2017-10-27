@@ -3,13 +3,10 @@ package com.sprayme.teamrsm.analyticspraydown;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,15 +15,12 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SnapHelper;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -36,11 +30,9 @@ import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
-import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileSettingDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
-import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader;
 import com.mikepenz.materialdrawer.util.DrawerImageLoader;
 import com.mikepenz.materialdrawer.util.DrawerUIUtils;
@@ -72,7 +64,8 @@ import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
 
-  static final int LOGIN_REQUEST = 1;
+  static final int LOGIN_FIRST_USER_REQUEST = 1;
+  static final int LOGIN_NEW_USER_REQUEST = 2;
   static final int SETTINGS_REQUEST = 2;
   static final int IMPORT_REQUEST = 3;
   private static final int PROFILE_ADD = 100000;
@@ -92,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
   private RecyclerView.LayoutManager mLayoutManager;
   private static ConcurrentHashMap<RouteType, Pyramid> pyramids = new ConcurrentHashMap<>();
 
-  private boolean m_FirstUserBeingAdded = false;
+  private boolean m_InitializingUsers = false;
   private String mActivityTitle;
   private UUID profileCallbackUuid, ticksCallbackUuid;
 
@@ -338,25 +331,24 @@ public class MainActivity extends AppCompatActivity {
     } catch (InvalidUserException e) {
             /* launch login, we have no known user */
       canLaunchLogin = true;
-      m_FirstUserBeingAdded = true;
     }
 
     dataCache.calculateOnsightLevel("YOSEMITE", "Sport");
 
     if (canLaunchLogin) {
       Intent loginIntent = new Intent(this, UserLoginActivity.class);
-      startActivityForResult(loginIntent, LOGIN_REQUEST);
+      startActivityForResult(loginIntent, LOGIN_FIRST_USER_REQUEST);
     }
   }
 
   private void initUsers() throws InvalidUserException {
-
+    m_InitializingUsers = true;
     // todo figure out timing of this
     if (profileCallbackUuid == null)
       profileCallbackUuid = dataCache.subscribe(new DataCache.DataCacheProfileHandler() {
         @Override
         public void onProfileCached(MPProfileDrawerItem profile) {
-          if (profile == null || m_FirstUserBeingAdded)
+          if (profile == null || m_InitializingUsers)
             return;
 
           mAccountHeader.addProfile(profile, 0);
@@ -376,12 +368,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     mAccountHeader.setActiveProfile(currentProfile);
+    m_InitializingUsers = false;
   }
 
   private boolean onSelectedProfileChanged(IProfile profile){
     if (profile instanceof IDrawerItem && profile.getIdentifier() == PROFILE_ADD) {
       Intent loginIntent = new Intent(this, UserLoginActivity.class);
-      startActivityForResult(loginIntent, LOGIN_REQUEST);
+      startActivityForResult(loginIntent, LOGIN_NEW_USER_REQUEST);
       return true;
     }
 
@@ -395,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     // Check which request we're responding to
-    if (requestCode == LOGIN_REQUEST) {
+    if (requestCode == LOGIN_FIRST_USER_REQUEST) {
       // Make sure the request was successful
       if (resultCode == RESULT_OK) {
         try {
@@ -404,6 +397,12 @@ public class MainActivity extends AppCompatActivity {
         }
         catch (InvalidUserException e) {
           Toast.makeText(this, "Init users failed after successfully adding a user", Toast.LENGTH_LONG).show();}
+      }
+    }
+    if (requestCode == LOGIN_NEW_USER_REQUEST) {
+      // Make sure the request was successful
+      if (resultCode == RESULT_OK) {
+        dataCache.loadUserTicks();
       }
     }
 
@@ -426,48 +425,13 @@ public class MainActivity extends AppCompatActivity {
     return true;
   }
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    int itemThatWasClickedId = item.getItemId();
-//        if (itemThatWasClickedId == R.id.build_pyramid) {
-//            ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-//                @Override
-//                public void onTicksCached(List<Tick> ticks) {
-//                    if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-//                        ticksCallbackUuid = null;
-//
-//                    onFinished(ticks);
-//                }
-//            });
-//            dataCache.loadUserTicks();
-//            return true;
-//        }
-
-    // Handle action bar item clicks here. The action bar will
-    // automatically handle clicks on the Home/Up button, so long
-    // as you specify a parent activity in AndroidManifest.xml.
-    int id = item.getItemId();
-
-    //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-
-    // Activate the navigation drawer toggle
-//        if (mDrawerToggle.onOptionsItemSelected(item)) {
-//            return true;
-//        }
-    return super.onOptionsItemSelected(item);
-  }
-
   public void onFinished(List<Tick> ticks) {
     Set<Route> routes = new HashSet<Route>();
     boolean ignoreTopropes = MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
     for (Tick tick : ticks) {
       if (tick.getRoute() == null)
         continue;
-//            if (tick.getNotes().contains("sprayarific.dontsprayme"))
-//                continue;
+
       // filter for ignore toprope setting
       if (ignoreTopropes && tick.getRoute().getType() != RouteType.Boulder) {
         TickType tickType = tick.getType();

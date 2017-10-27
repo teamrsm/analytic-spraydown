@@ -144,7 +144,7 @@ public class DataCache extends Application
     }
     m_UserProfiles = profiles;
     m_CurrentUser = currentProfile.getUser();
-    broadcastUserCompleted(currentProfile);
+//    broadcastUserCompleted(currentProfile);
     return m_UserProfiles;
   }
 
@@ -315,9 +315,6 @@ public class DataCache extends Application
     if (user == null)
       return;
 
-//    m_CurrentUser.setUserName(user.getUserName());
-//    m_CurrentUser.setUserId(user.getUserId());
-//    m_CurrentUser.setAvatarUrl(user.getAvatarUrl());
     m_CurrentUser = user;
 
     m_Db.insertUser(m_CurrentUser);
