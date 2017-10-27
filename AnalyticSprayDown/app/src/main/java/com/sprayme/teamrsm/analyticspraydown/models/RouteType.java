@@ -5,11 +5,11 @@ package com.sprayme.teamrsm.analyticspraydown.models;
  */
 
 public enum RouteType {
-    Sport,
-    Trad,
-    Boulder,
-    Ice,
-    Aid,
-    Mixed,
-    Unknown
+  Sport,
+  Trad,
+  Boulder,
+  Ice,
+  Aid,
+  Mixed,
+  Unknown
 }

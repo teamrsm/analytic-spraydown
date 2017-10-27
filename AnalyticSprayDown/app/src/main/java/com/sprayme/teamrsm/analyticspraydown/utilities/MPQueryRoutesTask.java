@@ -15,59 +15,58 @@ import java.util.List;
 
 public class MPQueryRoutesTask extends AsyncTask<Long[], Void, List<Route>> {
 
-    public interface AsyncResponse {
-        void processFinish(List<Route> ticks);
-    }
+  public interface AsyncResponse {
+    void processFinish(List<Route> ticks);
+  }
 
-    private final int MP_ROUTE_RETURN_LIMIT = 200;
+  private final int MP_ROUTE_RETURN_LIMIT = 200;
 
-    private String key;
-    private AsyncResponse delegate = null;
+  private String key;
+  private AsyncResponse delegate = null;
 
-    public MPQueryRoutesTask(String apiKey, AsyncResponse delegate) {
-        this.key = apiKey;
-        this.delegate = delegate;
-    }
+  public MPQueryRoutesTask(String apiKey, AsyncResponse delegate) {
+    this.key = apiKey;
+    this.delegate = delegate;
+  }
 
 
-    @Override
-    protected List<Route> doInBackground(Long[]... params) {
-        String mpQueryResults;
-        List<Route> returnRoutes = new ArrayList<>();
-        Long[] routesLeft = params[0];
+  @Override
+  protected List<Route> doInBackground(Long[]... params) {
+    String mpQueryResults;
+    List<Route> returnRoutes = new ArrayList<>();
+    Long[] routesLeft = params[0];
 
-        try {
-            while (routesLeft.length > 0) {
-                int count = routesLeft.length < MP_ROUTE_RETURN_LIMIT ? routesLeft.length : MP_ROUTE_RETURN_LIMIT;
-                Long[] routes = new Long[count];
-                for (int i=0; i<count; i++) {
-                    routes[i] = routesLeft[i];
-                }
-
-                if (routesLeft.length > MP_ROUTE_RETURN_LIMIT) {
-                    Long[] routesToCache = new Long[routesLeft.length - 200];
-                    for (int i = 200; i < routesLeft.length; i++) {
-                        routesToCache[i - 200] = routesLeft[i];
-                    }
-                    routesLeft = routesToCache;
-                }
-                else
-                    routesLeft = new Long[0];
-
-                URL executeUrl = MPQueryTaskHelper.buildRoutesUrl(key, routes);
-                mpQueryResults = MPQueryTaskHelper.getResponseFromHttpUrl(executeUrl);
-                List<Route> result = SprayarificParser.parseRoutesJson(mpQueryResults);
-                returnRoutes.addAll(result);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    try {
+      while (routesLeft.length > 0) {
+        int count = routesLeft.length < MP_ROUTE_RETURN_LIMIT ? routesLeft.length : MP_ROUTE_RETURN_LIMIT;
+        Long[] routes = new Long[count];
+        for (int i = 0; i < count; i++) {
+          routes[i] = routesLeft[i];
         }
 
-        return returnRoutes;
+        if (routesLeft.length > MP_ROUTE_RETURN_LIMIT) {
+          Long[] routesToCache = new Long[routesLeft.length - 200];
+          for (int i = 200; i < routesLeft.length; i++) {
+            routesToCache[i - 200] = routesLeft[i];
+          }
+          routesLeft = routesToCache;
+        } else
+          routesLeft = new Long[0];
+
+        URL executeUrl = MPQueryTaskHelper.buildRoutesUrl(key, routes);
+        mpQueryResults = MPQueryTaskHelper.getResponseFromHttpUrl(executeUrl);
+        List<Route> result = SprayarificParser.parseRoutesJson(mpQueryResults);
+        returnRoutes.addAll(result);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
     }
 
-    @Override
-    protected void onPostExecute(List<Route> routes) {
-        delegate.processFinish(routes);
-    }
+    return returnRoutes;
+  }
+
+  @Override
+  protected void onPostExecute(List<Route> routes) {
+    delegate.processFinish(routes);
+  }
 }

@@ -7,27 +7,27 @@ import java.util.List;
  */
 
 public class PyramidStep {
-    private int size;
-    private Grade grade;
-    private List<Route> routes;
+  private int size;
+  private Grade grade;
+  private List<Route> routes;
 
-    public PyramidStep(int size, Grade grade, List<Route> routes){
-        this.size = size;
-        this.grade = grade;
-        this.routes = routes;
-        // todo what do we do if we get a list of routes that aren't of the same grade?
-        // todo what to do if the route list is empty?
-    }
+  public PyramidStep(int size, Grade grade, List<Route> routes) {
+    this.size = size;
+    this.grade = grade;
+    this.routes = routes;
+    // todo what do we do if we get a list of routes that aren't of the same grade?
+    // todo what to do if the route list is empty?
+  }
 
-    public int getSize(){
-        return size;
-    }
+  public int getSize() {
+    return size;
+  }
 
-    public Route getAt(int i){
-        return routes.size() <= i ? null : routes.get(i);
-    }
+  public Route getAt(int i) {
+    return routes.size() <= i ? null : routes.get(i);
+  }
 
-    public Grade getGrade() {
-        return grade;
-    }
+  public Grade getGrade() {
+    return grade;
+  }
 }

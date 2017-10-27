@@ -9,83 +9,83 @@ import java.util.stream.Collectors;
  */
 
 public class Pyramid {
-    private int height;
-    private int stepChangeSize;
-    private PyramidStepType stepType;
-    private PyramidStep[] steps;
-    private RouteType routeType;
+  private int height;
+  private int stepChangeSize;
+  private PyramidStepType stepType;
+  private PyramidStep[] steps;
+  private RouteType routeType;
 
-    public Pyramid (List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, RouteType routeType){
-        this.height = height;
-        this.stepChangeSize = stepChangeSize;
-        this.stepType = stepType;
-        this.routeType = routeType;
+  public Pyramid(List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, RouteType routeType) {
+    this.height = height;
+    this.stepChangeSize = stepChangeSize;
+    this.stepType = stepType;
+    this.routeType = routeType;
 
-        Route hardestRoute = routes.stream().max(
-                (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
-        if (hardestRoute == null)
-            return; // todo do something useful here
+    Route hardestRoute = routes.stream().max(
+            (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
+    if (hardestRoute == null)
+      return; // todo do something useful here
 
-        Grade hardestGrade = hardestRoute.getGrade();
+    Grade hardestGrade = hardestRoute.getGrade();
 
-        // limit our height to the easiest grade of this type
+    // limit our height to the easiest grade of this type
 //        height = height >= hardestGrade.getGradeValue() ? height : hardestGrade.getGradeValue();
 
-        steps = buildPyramidSteps(routes, height, stepChangeSize, stepType, hardestGrade);
-    }
+    steps = buildPyramidSteps(routes, height, stepChangeSize, stepType, hardestGrade);
+  }
 
-    public Pyramid (List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, RouteType routeType, Grade goal){
-        this.height = height;
-        this.stepChangeSize = stepChangeSize;
-        this.stepType = stepType;
-        this.routeType = routeType;
+  public Pyramid(List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, RouteType routeType, Grade goal) {
+    this.height = height;
+    this.stepChangeSize = stepChangeSize;
+    this.stepType = stepType;
+    this.routeType = routeType;
 
-        Grade currentGrade = goal;
+    Grade currentGrade = goal;
 
-        // limit our height to the easiest grade of this type
+    // limit our height to the easiest grade of this type
 //        height = height >= currentGrade.getGradeValue() ? height : currentGrade.getGradeValue();
 
-        steps = buildPyramidSteps(routes, height, stepChangeSize, stepType, goal);
+    steps = buildPyramidSteps(routes, height, stepChangeSize, stepType, goal);
+  }
+
+  private PyramidStep[] buildPyramidSteps(List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, Grade startingGrade) {
+    PyramidStep[] steps = new PyramidStep[height];
+    Grade grade = startingGrade;
+    int size = 1;
+    for (int i = 0; i < height; i++) {
+      Grade currentGrade = grade;
+
+      List<Route> stepRoutes = routes.stream()
+              .filter((route) -> route.getGrade().compareTo(currentGrade) == 0)
+              .collect(Collectors.toList());
+
+      steps[i] = new PyramidStep(size, currentGrade, stepRoutes);
+      grade = grade.nextEasiest();
+
+      if (size == 1)
+        size = 2;
+      else if (stepType == PyramidStepType.Multiplicative)
+        size *= stepChangeSize;
+      else
+        size += stepChangeSize;
     }
 
-    private PyramidStep[] buildPyramidSteps(List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, Grade startingGrade) {
-        PyramidStep[] steps = new PyramidStep[height];
-        Grade grade = startingGrade;
-        int size = 1;
-        for (int i=0; i<height; i++) {
-            Grade currentGrade = grade;
+    return steps;
+  }
 
-            List<Route> stepRoutes = routes.stream()
-                    .filter((route) -> route.getGrade().compareTo(currentGrade) == 0)
-                    .collect(Collectors.toList());
+  public int getWidth() {
+    return steps != null ? steps[steps.length - 1].getSize() : 0;
+  }
 
-            steps[i] = new PyramidStep(size, currentGrade, stepRoutes);
-            grade = grade.nextEasiest();
+  public int getHeight() {
+    return height;
+  }
 
-            if (size == 1)
-                size = 2;
-            else if (stepType == PyramidStepType.Multiplicative)
-                size *= stepChangeSize;
-            else
-                size += stepChangeSize;
-        }
+  public PyramidStep[] getSteps() {
+    return steps;
+  }
 
-        return steps;
-    }
-
-    public int getWidth(){
-        return steps != null ? steps[steps.length-1].getSize() : 0;
-    }
-
-    public int getHeight(){
-        return height;
-    }
-
-    public PyramidStep[] getSteps(){
-        return steps;
-    }
-
-    public RouteType getRouteType() {
-        return routeType;
-    }
+  public RouteType getRouteType() {
+    return routeType;
+  }
 }

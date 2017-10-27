@@ -11,42 +11,36 @@ import java.util.List;
  */
 
 public class MPModel {
-    public interface MPModelListener {
-        // These methods are the different events and
-        // need to pass relevant arguments related to the event triggered
-        void onRoutesLoaded(List<Route> routes);
+  public interface MPModelListener {
+    // These methods are the different events and
+    // need to pass relevant arguments related to the event triggered
+    void onRoutesLoaded(List<Route> routes);
 
-        void onTicksLoaded(List<Tick> ticks);
+    void onTicksLoaded(List<Tick> ticks);
 
-        void onUserLoaded(User user);
-    }
+    void onUserLoaded(User user);
+  }
 
-    private MPModelListener listener;
+  private MPModelListener listener;
 
-    public MPModel(MPModelListener listener) {
-        this.listener = listener;
-    }
+  public MPModel(MPModelListener listener) {
+    this.listener = listener;
+  }
 
-    public void requestUser(String emailAddress, String apiKey) {
-        MPQueryUserTask mpQuery = new MPQueryUserTask(emailAddress, apiKey,
-                output -> {
-            listener.onUserLoaded(output);
-        });
-        mpQuery.execute();
-    }
+  public void requestUser(String emailAddress, String apiKey) {
+    MPQueryUserTask mpQuery = new MPQueryUserTask(emailAddress, apiKey,
+            output -> listener.onUserLoaded(output));
+    mpQuery.execute();
+  }
 
-    public void requestTicks(long userId, String apiKey) {
-        MPQueryTicksTask mpQuery = new MPQueryTicksTask(userId, apiKey, output -> {
-            listener.onTicksLoaded(output);
-        });
-        mpQuery.execute();
-    }
+  public void requestTicks(long userId, String apiKey) {
+    MPQueryTicksTask mpQuery = new MPQueryTicksTask(userId, apiKey, output -> listener.onTicksLoaded(output));
+    mpQuery.execute();
+  }
 
-    public void requestRoutes(String apiKey, Long[] routeIds) {
+  public void requestRoutes(String apiKey, Long[] routeIds) {
 
-        MPQueryRoutesTask mpQuery = new MPQueryRoutesTask(apiKey, output -> {
-            listener.onRoutesLoaded(output);
-        });
-        mpQuery.execute(routeIds);
-    }
+    MPQueryRoutesTask mpQuery = new MPQueryRoutesTask(apiKey, output -> listener.onRoutesLoaded(output));
+    mpQuery.execute(routeIds);
+  }
 }

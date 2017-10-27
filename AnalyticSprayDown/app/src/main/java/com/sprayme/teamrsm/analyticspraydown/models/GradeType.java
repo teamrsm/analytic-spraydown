@@ -5,11 +5,11 @@ package com.sprayme.teamrsm.analyticspraydown.models;
  */
 
 public enum GradeType {
-    RouteYosemite,
-    RouteEuropean,
-    BoulderHueco,
-    BoulderFont,
-    Aid,
-    Ice,
-    Other
+  RouteYosemite,
+  RouteEuropean,
+  BoulderHueco,
+  BoulderFont,
+  Aid,
+  Ice,
+  Other
 }

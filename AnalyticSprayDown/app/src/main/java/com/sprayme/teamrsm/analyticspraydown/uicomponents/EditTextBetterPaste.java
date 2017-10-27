@@ -20,40 +20,41 @@ import java.util.Arrays;
  */
 
 public class EditTextBetterPaste extends EditText {
-    private final Context context;
+  private final Context context;
 
-    /*
-        Just the constructors to create a new EditText...
-     */
-    public EditTextBetterPaste(Context context) {
-        super(context);
-        this.context = context;
+  /*
+      Just the constructors to create a new EditText...
+   */
+  public EditTextBetterPaste(Context context) {
+    super(context);
+    this.context = context;
+  }
+
+  public EditTextBetterPaste(Context context, AttributeSet attrs) {
+    super(context, attrs);
+    this.context = context;
+  }
+
+  public EditTextBetterPaste(Context context, AttributeSet attrs, int defStyle) {
+    super(context, attrs, defStyle);
+    this.context = context;
+  }
+
+  static final int ID_PASTE = android.R.id.paste;
+  static final int ID_PASTE_AS_PLAIN_TEXT = android.R.id.pasteAsPlainText;
+
+  @Override
+  public boolean onTextContextMenuItem(int id) {
+    String text = this.getText().toString();
+    int min = 0;
+    int max = text.length();
+    if (isFocused()) {
+      final int selStart = getSelectionStart();
+      final int selEnd = getSelectionEnd();
+      min = Math.max(0, Math.min(selStart, selEnd));
+      max = Math.max(0, Math.max(selStart, selEnd));
     }
-
-    public EditTextBetterPaste(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        this.context = context;
-    }
-
-    public EditTextBetterPaste(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        this.context = context;
-    }
-    static final int ID_PASTE = android.R.id.paste;
-    static final int ID_PASTE_AS_PLAIN_TEXT = android.R.id.pasteAsPlainText;
-
-    @Override
-    public boolean onTextContextMenuItem(int id) {
-        String text = this.getText().toString();
-        int min = 0;
-        int max = text.length();
-        if (isFocused()) {
-            final int selStart = getSelectionStart();
-            final int selEnd = getSelectionEnd();
-            min = Math.max(0, Math.min(selStart, selEnd));
-            max = Math.max(0, Math.max(selStart, selEnd));
-        }
-        switch (id) {
+    switch (id) {
 //            case ID_PASTE:
 //                genericInvokMethod(this, "paste", 3, min, max, false);
 ////                paste(min, max, false /* withFormatting */);
@@ -62,41 +63,41 @@ public class EditTextBetterPaste extends EditText {
 //                genericInvokMethod(this, "paste", 3, min, max, false);
 ////                paste(min, max, false /* withFormatting */);
 //                return true;
-            default:
-                return super.onTextContextMenuItem(id);
-        }
+      default:
+        return super.onTextContextMenuItem(id);
+    }
+  }
+
+  private static Object genericInvokMethod(Object obj, String methodName,
+                                           int paramCount, Object... params) {
+    Method method;
+    Object requiredObj = null;
+    Object[] parameters = new Object[paramCount];
+    Class<?>[] classArray = new Class<?>[paramCount];
+    for (int i = 0; i < paramCount; i++) {
+      parameters[i] = params[i];
+      classArray[i] = params[i].getClass();
+    }
+    try {
+      System.out.println((obj.getClass().getSuperclass().getSuperclass().toString()));
+      method = obj.getClass().getSuperclass().getSuperclass().getMethod(methodName, classArray);
+      method.setAccessible(true);
+      requiredObj = method.invoke(obj, params);
+    } catch (NoSuchMethodException e) {
+      e.printStackTrace();
+    } catch (IllegalArgumentException e) {
+      e.printStackTrace();
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    } catch (InvocationTargetException e) {
+      e.printStackTrace();
     }
 
-    private static Object genericInvokMethod(Object obj, String methodName,
-                                            int paramCount, Object... params) {
-        Method method;
-        Object requiredObj = null;
-        Object[] parameters = new Object[paramCount];
-        Class<?>[] classArray = new Class<?>[paramCount];
-        for (int i = 0; i < paramCount; i++) {
-            parameters[i] = params[i];
-            classArray[i] = params[i].getClass();
-        }
-        try {
-            System.out.println((obj.getClass().getSuperclass().getSuperclass().toString()));
-            method = obj.getClass().getSuperclass().getSuperclass().getMethod(methodName, classArray);
-            method.setAccessible(true);
-            requiredObj = method.invoke(obj, params);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-
-        return requiredObj;
-    }
-        /**
-         * Paste clipboard content between min and max positions.
-         */
+    return requiredObj;
+  }
+  /**
+   * Paste clipboard content between min and max positions.
+   */
 //    private void paste(int min, int max, boolean withFormatting) {
 //        CharSequence s = this.getContentDescription();
 //        ClipboardManager clipboard =
