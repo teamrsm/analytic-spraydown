@@ -46,6 +46,8 @@ public class SprayarificStructures {
         case Boulder:
           hardestGrade = new Grade("V4", GradeType.BoulderHueco);
           break;
+        case Ice:
+          hardestGrade = new Grade("WI3", GradeType.Ice);
         default:
           break;
       }
