@@ -10,6 +10,7 @@ public class SettingsActivity extends AppCompatActivity {
   public static final String KEY_PREF_USE_ONLY_LEADS = "only_use_leads_preference";
   public static final String KEY_PREF_ALWAYS_BUILD_OPTIMISTIC = "always_optimistic_preference";
   public static final String KEY_PREF_IGNORE_DUPLICATES = "ignore_duplicates_preference";
+  public static final String KEY_PREF_SHOW_ROUTE_PYRAMID = "build_route_pyramid_preference";
   public static final String KEY_PREF_SHOW_SPORT_PYRAMID = "build_sport_pyramid_preference";
   public static final String KEY_PREF_SHOW_TRAD_PYRAMID = "build_trad_pyramid_preference";
   public static final String KEY_PREF_SHOW_BOULDER_PYRAMID = "build_boulder_pyramid_preference";

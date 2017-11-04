@@ -9,6 +9,8 @@
   <string name="only_use_leads_preference_summary">Leave out topropes and follows.</string>
   <string name="ignore_duplicates_preference">Ignore duplicate ticks</string>
   <string name="ignore_duplicates_preference_summary">Only include ticks for the same climb once.</string>
+  <string name="build_route_pyramid_preference">Include route pyramid</string>
+  <string name="build_route_pyramid_preference_summary">Merged sport and trad, such heresy!</string>
   <string name="build_sport_pyramid_preference">Include sport pyramid</string>
   <string name="build_sport_pyramid_preference_summary">You put what in the crack?</string>
   <string name="build_trad_pyramid_preference">Include trad pyramid</string>

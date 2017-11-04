@@ -24,7 +24,11 @@ public class SprayarificStructures {
     if (MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_IGNORE_DUPLICATES, true)) {
       filteredRoutes = routes.stream()
               .filter((route) -> Objects.nonNull(route))
-              .filter((route) -> route.getType() == type)
+              .filter((route) -> {
+        if (type == RouteType.Route)
+          return route.getType() == RouteType.Sport || route.getType() == RouteType.Trad;
+        return route.getType() == type;
+              })
               .collect(Collectors.toList());
     }
 

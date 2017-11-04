@@ -18,7 +18,6 @@
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pyramid_settings_category">
-    <!-- MP api currently doesn't return tick type so we can't use this setting to filter on -->
     <android.support.v7.preference.SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="only_use_leads_preference"
@@ -34,6 +33,11 @@
         android:key="always_optimistic_preference"
         android:summary="@string/always_optimistic_preference_summary"
         android:title="@string/always_optimistic_preference" />
+    <android.support.v7.preference.SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="build_route_pyramid_preference"
+        android:summary="@string/build_route_pyramid_preference_summary"
+        android:title="@string/build_route_pyramid_preference" />
     <android.support.v7.preference.SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="build_sport_pyramid_preference"

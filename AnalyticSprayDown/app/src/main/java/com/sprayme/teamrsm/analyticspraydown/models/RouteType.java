@@ -5,6 +5,7 @@ package com.sprayme.teamrsm.analyticspraydown.models;
  */
 
 public enum RouteType {
+  Route,
   Sport,
   Trad,
   Boulder,

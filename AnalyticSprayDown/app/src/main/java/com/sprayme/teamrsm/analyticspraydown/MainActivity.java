@@ -404,7 +404,7 @@ public class MainActivity extends AppCompatActivity {
     if (requestCode == IMPORT_REQUEST) {
       // Make sure the request was successful
       if (resultCode == RESULT_OK) {
-        triggerCacheUpdate();
+        triggerCacheUpdate(true);
       }
     }
   }
@@ -502,6 +502,10 @@ public class MainActivity extends AppCompatActivity {
     int stepSize = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_SIZE, "2"));
     String stepTypeStr = mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_TYPE, "Additive");
     PyramidStepType stepType = PyramidStepType.valueOf(stepTypeStr);
+    pyramids.clear();
+    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_ROUTE_PYRAMID, false))
+      pyramids.put(RouteType.Route, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Route, height, stepSize, stepType));
+
     if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_SPORT_PYRAMID, true))
       pyramids.put(RouteType.Sport, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, height, stepSize, stepType));
 
@@ -525,6 +529,8 @@ public class MainActivity extends AppCompatActivity {
   public static List<Pyramid> getData() {
     List<Pyramid> subActivityData = new ArrayList<>();
 
+    if (pyramids.containsKey(RouteType.Route))
+      subActivityData.add(pyramids.get(RouteType.Route));
     if (pyramids.containsKey(RouteType.Sport))
       subActivityData.add(pyramids.get(RouteType.Sport));
     if (pyramids.containsKey(RouteType.Trad))
@@ -562,6 +568,8 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void hideProgress(){
+    if (mSpinnerFragment == null)
+      return;
     getFragmentManager().beginTransaction().remove(mSpinnerFragment).commit();
     mSpinnerFragment = null;
   }
