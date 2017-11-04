@@ -49,7 +49,6 @@
           android:layout_height="wrap_content"
           android:text="View DB" />
 
-
     </LinearLayout>
 
   </FrameLayout>

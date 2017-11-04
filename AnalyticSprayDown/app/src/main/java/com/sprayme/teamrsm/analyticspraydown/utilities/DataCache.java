@@ -218,7 +218,9 @@ public class DataCache extends Application
     else {
       HashSet<Long> routesHash = new HashSet<>();
       ArrayList<Long> missingRoutes = new ArrayList<>();
-      m_Routes.forEach(route -> routesHash.add(route.getId()));
+      for (Route route : m_Routes) {
+        routesHash.add(route.getId());
+      }
       for (Long id : routeIds) {
         if (!routesHash.contains(id))
           missingRoutes.add(id);
@@ -332,7 +334,9 @@ public class DataCache extends Application
   private Long[] getRouteIdArray(List<Tick> ticks) {
     Set<Long> routeIds = new ArraySet<>();
     for (Tick tick : ticks) {
-      routeIds.add(tick.getRouteId());
+      Long id = tick.getRouteId();
+      if (id != null)
+        routeIds.add(id);
     }
     return routeIds.toArray(new Long[routeIds.size()]);
   }
@@ -381,14 +385,20 @@ public class DataCache extends Application
 
   private void broadcastTicksCompleted() {
     if (ticksHandlers != null && !ticksHandlers.isEmpty())
-      ticksHandlers.forEach((k, v) -> v.onTicksCached((m_Ticks)));
+    for(Map.Entry<UUID, DataCacheTicksHandler> entry : ticksHandlers.entrySet()) {
+      entry.getValue().onTicksCached(m_Ticks);
+    }
   }
 
   private void broadcastRoutesCompleted() {
-    routeHandlers.forEach((k, v) -> v.onRoutesCached((m_Routes)));
+    for(Map.Entry<UUID, DataCacheRoutesHandler> entry : routeHandlers.entrySet()) {
+      entry.getValue().onRoutesCached(m_Routes);
+    }
   }
 
   private void broadcastUserCompleted(MPProfileDrawerItem profile) {
-    profileHandlers.forEach((k, v) -> v.onProfileCached((profile)));
+    for(Map.Entry<UUID, DataCacheProfileHandler> entry : profileHandlers.entrySet()) {
+      entry.getValue().onProfileCached(profile);
+    }
   }
 }

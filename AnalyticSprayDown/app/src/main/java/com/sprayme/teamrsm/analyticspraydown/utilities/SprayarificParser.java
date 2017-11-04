@@ -51,7 +51,7 @@ public class SprayarificParser {
       JSONArray arr = obj.getJSONArray("ticks");
       for (int i = 0; i < arr.length(); i++) {
         Long routeId = arr.getJSONObject(i).optLong("routeId", 0);
-        if (routeId == 0)
+        if (routeId == 0 || routeId == null)
           continue;
         String dateStr = arr.getJSONObject(i).getString("date");
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);

@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
@@ -14,7 +15,6 @@ import android.support.v7.widget.PagerSnapHelper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SnapHelper;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -48,6 +48,7 @@ import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.TimeScale;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
+import com.sprayme.teamrsm.analyticspraydown.uicomponents.SpinnerFragment;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 import com.sprayme.teamrsm.analyticspraydown.utilities.SprayarificStructures;
@@ -82,10 +83,12 @@ public class MainActivity extends AppCompatActivity {
   private AccountHeader mAccountHeader;
   private RecyclerView mRecyclerView;
   private RecyclerAdapter mRecyclerAdapter;
-  private RecyclerView.LayoutManager mLayoutManager;
+  private Fragment mSpinnerFragment;
   private static ConcurrentHashMap<RouteType, Pyramid> pyramids = new ConcurrentHashMap<>();
 
   private boolean m_InitializingUsers = false;
+  private boolean showProgressOnResume = false;
+  private boolean requestingNewUser = false;
   private String mActivityTitle;
   private UUID profileCallbackUuid, ticksCallbackUuid;
 
@@ -100,6 +103,8 @@ public class MainActivity extends AppCompatActivity {
     mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
     mActivityTitle = getTitle().toString();
 
+    mSpinnerFragment = new SpinnerFragment();
+
     setupDrawer();
 
     Button button = (Button) findViewById(R.id.viewDbButton);
@@ -113,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
     mRecyclerView.setAdapter(mRecyclerAdapter);
 
     //Layout manager for the Recycler View
-    mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+    RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
     mRecyclerView.setLayoutManager(mLayoutManager);
 
     SnapHelper snapHelper = new PagerSnapHelper();
@@ -149,16 +154,8 @@ public class MainActivity extends AppCompatActivity {
             mTimeScale = TimeScale.Lifetime;
             break;
         }
-//        ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-//          @Override
-//          public void onTicksCached(List<Tick> ticks) {
-//            if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-//              ticksCallbackUuid = null;
-//
-//            onFinished(ticks);
-//          }
-//        });
-        dataCache.loadUserTicks();
+
+        triggerCacheUpdate();
       }
 
       @Override
@@ -298,16 +295,8 @@ public class MainActivity extends AppCompatActivity {
             mTimeScale = TimeScale.Lifetime;
             break;
         }
-//        ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-//          @Override
-//          public void onTicksCached(List<Tick> ticks) {
-//            if (dataCache.unsubscribeTicksHandler(ticksCallbackUuid))
-//              ticksCallbackUuid = null;
-//
-//            onFinished(ticks);
-//          }
-//        });
-        dataCache.loadUserTicks();
+
+        triggerCacheUpdate();
       }
 
       @Override
@@ -327,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
         }
       });
       initUsers();
-      dataCache.loadUserTicks();
+      triggerCacheUpdate();
     } catch (InvalidUserException e) {
             /* launch login, we have no known user */
       canLaunchLogin = true;
@@ -375,6 +364,7 @@ public class MainActivity extends AppCompatActivity {
     if (profile instanceof IDrawerItem && profile.getIdentifier() == PROFILE_ADD) {
       Intent loginIntent = new Intent(this, UserLoginActivity.class);
       startActivityForResult(loginIntent, LOGIN_NEW_USER_REQUEST);
+      requestingNewUser = true;
       return true;
     }
 
@@ -393,7 +383,7 @@ public class MainActivity extends AppCompatActivity {
       if (resultCode == RESULT_OK) {
         try {
           initUsers();
-          dataCache.loadUserTicks();
+          triggerCacheUpdate();
         }
         catch (InvalidUserException e) {
           Toast.makeText(this, "Init users failed after successfully adding a user", Toast.LENGTH_LONG).show();}
@@ -402,7 +392,8 @@ public class MainActivity extends AppCompatActivity {
     if (requestCode == LOGIN_NEW_USER_REQUEST) {
       // Make sure the request was successful
       if (resultCode == RESULT_OK) {
-        dataCache.loadUserTicks();
+        requestingNewUser = false;
+        triggerCacheUpdate(true);
       }
     }
 
@@ -413,16 +404,49 @@ public class MainActivity extends AppCompatActivity {
     if (requestCode == IMPORT_REQUEST) {
       // Make sure the request was successful
       if (resultCode == RESULT_OK) {
-        dataCache.loadUserTicks();
+        triggerCacheUpdate();
       }
     }
   }
 
   @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    // Inflate the menu; this adds items to the action bar if it is present.
-    getMenuInflater().inflate(R.menu.main_menu, menu);
-    return true;
+  public void onSaveInstanceState(Bundle savedInstanceState) {
+    // Always call the superclass so it can save the view hierarchy state
+    super.onSaveInstanceState(savedInstanceState);
+  }
+  @Override
+  public void onRestoreInstanceState(Bundle savedInstanceState) {
+    // Always call the superclass so it can restore the view hierarchy
+    super.onRestoreInstanceState(savedInstanceState);
+  }
+
+  @Override
+  public void onStart(){
+    super.onStart();
+    if (showProgressOnResume){
+      showProgressOnResume = false;
+      showProgress();
+    }
+  }
+
+  @Override
+  public void onStop(){
+
+    super.onStop();
+  }
+
+  @Override
+  public void onPause(){
+    super.onPause();
+  }
+
+  @Override
+  public void onResume(){
+    super.onResume();
+    if (showProgressOnResume){
+      showProgressOnResume = false;
+      showProgress();
+    }
   }
 
   public void onFinished(List<Tick> ticks) {
@@ -494,6 +518,8 @@ public class MainActivity extends AppCompatActivity {
       pyramids.put(RouteType.Aid, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Aid, height, stepSize, stepType));
 
     mRecyclerAdapter.update(getData());
+
+    hideProgress();
   }
 
   public static List<Pyramid> getData() {
@@ -515,6 +541,28 @@ public class MainActivity extends AppCompatActivity {
 
   private void onActiveUserChanged(User user){
     dataCache.setCurrentUser(user);
+    if (!requestingNewUser)
+      triggerCacheUpdate();
+  }
+
+  private void triggerCacheUpdate(){
+    triggerCacheUpdate(false);
+  }
+  private void triggerCacheUpdate(boolean delayProgress){
+    if (!delayProgress)
+      showProgress();
+    else
+      showProgressOnResume = true;
     dataCache.loadUserTicks();
+  }
+
+  private void showProgress(){
+    mSpinnerFragment = new SpinnerFragment();
+    getFragmentManager().beginTransaction().add(R.id.drawer_container, mSpinnerFragment).commit();
+  }
+
+  private void hideProgress(){
+    getFragmentManager().beginTransaction().remove(mSpinnerFragment).commit();
+    mSpinnerFragment = null;
   }
 }

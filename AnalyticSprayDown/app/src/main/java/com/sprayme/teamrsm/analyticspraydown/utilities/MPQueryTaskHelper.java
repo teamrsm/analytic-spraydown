@@ -57,12 +57,13 @@ public class MPQueryTaskHelper {
   * for routes given an array of routeIds.
   * */
   public static URL buildRoutesUrl(String key, Long[] routeIds) {
-    String idString = null;
+    String idString = "";
 
     for (Long id : routeIds) {
-      idString += id + ",";
+      if (id != null)
+        idString += id + ",";
     }
-    if (idString != null && idString.length() > 0) {
+    if (idString.length() > 0) {
       idString = idString.substring(0, idString.length() - 1);
     }
 
