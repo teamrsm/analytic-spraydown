@@ -92,12 +92,12 @@ public class DataCache extends Application
     cal.add(Calendar.HOUR_OF_DAY, m_InvalidCacheHours);
     Date cacheInvalidationDate = cal.getTime();
 
-    if (lastAccessDate.getTime() < cacheInvalidationDate.getTime())
-      return false;
-    else
-      return true;
-  }
+    System.out.println(System.currentTimeMillis());
+    System.out.println(cacheInvalidationDate.getTime());
+    System.out.println(System.currentTimeMillis() > cacheInvalidationDate.getTime());
 
+    return System.currentTimeMillis() > cacheInvalidationDate.getTime();
+  }
   /*
    * User Methods
    * */
