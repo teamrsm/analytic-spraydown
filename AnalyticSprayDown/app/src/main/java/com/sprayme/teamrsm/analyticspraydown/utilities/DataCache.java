@@ -261,9 +261,9 @@ public class DataCache extends Application
     }
   }
 
-    /*
-    * Stats Methods
-    * */
+  /*
+  * Stats Methods
+  * */
 
   /*
   * Returns the gradeId and percentage value of the grade with the maximum onsight percentage.

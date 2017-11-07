@@ -1,8 +1,9 @@
 package com.sprayme.teamrsm.analyticspraydown.models;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import java8.util.stream.Collectors;
+import java8.util.stream.StreamSupport;
 
 /**
  * Created by climbak on 10/5/17.
@@ -21,7 +22,7 @@ public class Pyramid {
     this.stepType = stepType;
     this.routeType = routeType;
 
-    Route hardestRoute = routes.stream().max(
+    Route hardestRoute = StreamSupport.stream(routes).max(
             (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
     if (hardestRoute == null)
       return; // todo do something useful here
@@ -55,7 +56,7 @@ public class Pyramid {
     for (int i = 0; i < height; i++) {
       Grade currentGrade = grade;
 
-      List<Route> stepRoutes = routes.stream()
+      List<Route> stepRoutes = StreamSupport.stream(routes)
               .filter((route) -> route.getGrade().compareTo(currentGrade) == 0)
               .collect(Collectors.toList());
 

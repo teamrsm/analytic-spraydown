@@ -10,8 +10,9 @@ import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+
+import java8.util.stream.Collectors;
+import java8.util.stream.StreamSupport;
 
 /**
  * Created by climbak on 10/12/17.
@@ -22,19 +23,19 @@ public class SprayarificStructures {
   public static Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier) {
     List<Route> filteredRoutes = routes;
     if (MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_IGNORE_DUPLICATES, true)) {
-      filteredRoutes = routes.stream()
-              .filter((route) -> Objects.nonNull(route))
+      filteredRoutes = StreamSupport.stream(routes)
+              .filter((route) -> route != null)
               .filter((route) -> {
-        if (type == RouteType.Route)
-          return route.getType() == RouteType.Sport || route.getType() == RouteType.Trad;
-        return route.getType() == type;
+                if (type == RouteType.Route)
+                  return route.getType() == RouteType.Sport || route.getType() == RouteType.Trad;
+                return route.getType() == type;
               })
               .collect(Collectors.toList());
     }
 
-    Route hardestRoute = filteredRoutes.stream().max(
+    Route hardestRoute = StreamSupport.stream(filteredRoutes).max(
             (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
-    long hardestCount = filteredRoutes.stream().filter((route) -> route.getGrade().compareTo(hardestRoute.getGrade()) == 0).count();
+    long hardestCount = StreamSupport.stream(filteredRoutes).filter((route) -> route.getGrade().compareTo(hardestRoute.getGrade()) == 0).count();
 
     Grade hardestGrade = hardestRoute != null ? hardestRoute.getGrade() : null;
     if (hardestGrade == null)
@@ -60,7 +61,7 @@ public class SprayarificStructures {
   }
 
   public static Pyramid buildPyramid(List<Route> routes, RouteType type, int height, int stepChangeSize, PyramidStepType stepModifier, Grade goal) {
-    List<Route> filteredRoutes = routes.stream()
+    List<Route> filteredRoutes = StreamSupport.stream(routes)
             .filter((route) -> route.getType() == type)
             .collect(Collectors.toList());
 

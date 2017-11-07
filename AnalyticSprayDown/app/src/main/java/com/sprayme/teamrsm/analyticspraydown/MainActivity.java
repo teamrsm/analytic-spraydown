@@ -61,7 +61,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+
+import java8.util.stream.Collectors;
+import java8.util.stream.StreamSupport;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -97,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main_page);
 
-//        this.deleteDatabase("BetaSpew.db");
+//    this.deleteDatabase("BetaSpew.db");
     db = BetaSpewDb.getInstance(this);
 
     mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -431,7 +433,6 @@ public class MainActivity extends AppCompatActivity {
 
   @Override
   public void onStop(){
-
     super.onStop();
   }
 
@@ -450,80 +451,84 @@ public class MainActivity extends AppCompatActivity {
   }
 
   public void onFinished(List<Tick> ticks) {
-    Set<Route> routes = new HashSet<Route>();
-    boolean ignoreTopropes = MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
-    for (Tick tick : ticks) {
-      if (tick.getRoute() == null)
-        continue;
-
-      // filter for ignore toprope setting
-      if (ignoreTopropes && tick.getRoute().getType() != RouteType.Boulder) {
-        TickType tickType = tick.getType();
-        boolean skip = tickType == TickType.Fell;
-        skip |= tickType == TickType.Toprope;
-        skip |= tickType == TickType.Unknown;
-        if (skip)
+    try {
+      Set<Route> routes = new HashSet<Route>();
+      boolean ignoreTopropes = MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
+      for (Tick tick : ticks) {
+        if (tick.getRoute() == null)
           continue;
-      }
 
-      // filter for the selected time scale
-      if (mTimeScale != TimeScale.Lifetime) {
-        Date date = new Date();
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
-        switch (mTimeScale) {
-          case Month:
-            cal.add(Calendar.MONTH, -1);
-            break;
-          case ThreeMonth:
-            cal.add(Calendar.MONTH, -3);
-            break;
-          case SixMonth:
-            cal.add(Calendar.MONTH, -6);
-            break;
-          case Year:
-            cal.add(Calendar.YEAR, -1);
-            break;
-          default:
-            break;
+        // filter for ignore toprope setting
+        if (ignoreTopropes && tick.getRoute().getType() != RouteType.Boulder) {
+          TickType tickType = tick.getType();
+          boolean skip = tickType == TickType.Fell;
+          skip |= tickType == TickType.Toprope;
+          skip |= tickType == TickType.Unknown;
+          if (skip)
+            continue;
         }
-        date = cal.getTime();
-        if (date.getTime() > tick.getDate().getTime())
-          continue;
+
+        // filter for the selected time scale
+        if (mTimeScale != TimeScale.Lifetime) {
+          Date date = new Date();
+          Calendar cal = Calendar.getInstance();
+          cal.setTime(date);
+          switch (mTimeScale) {
+            case Month:
+              cal.add(Calendar.MONTH, -1);
+              break;
+            case ThreeMonth:
+              cal.add(Calendar.MONTH, -3);
+              break;
+            case SixMonth:
+              cal.add(Calendar.MONTH, -6);
+              break;
+            case Year:
+              cal.add(Calendar.YEAR, -1);
+              break;
+            default:
+              break;
+          }
+          date = cal.getTime();
+          if (date.getTime() > tick.getDate().getTime())
+            continue;
+        }
+
+        routes.add(tick.getRoute());
       }
+      if (routes.size() == 0)
+        return;
 
-      routes.add(tick.getRoute());
+      // todo refactor these Collectors.toList() calls to comply with api level 22
+      int height = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_HEIGHT, "5"));
+      int stepSize = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_SIZE, "2"));
+      String stepTypeStr = mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_TYPE, "Additive");
+      PyramidStepType stepType = PyramidStepType.valueOf(stepTypeStr);
+      pyramids.clear();
+      ArrayList<Route> routeList = new ArrayList<>(routes);
+      if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_ROUTE_PYRAMID, false))
+        pyramids.put(RouteType.Route, SprayarificStructures.buildPyramid(routeList, RouteType.Route, height, stepSize, stepType));
+
+      if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_SPORT_PYRAMID, true))
+        pyramids.put(RouteType.Sport, SprayarificStructures.buildPyramid(routeList, RouteType.Sport, height, stepSize, stepType));
+
+      if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_TRAD_PYRAMID, true))
+        pyramids.put(RouteType.Trad, SprayarificStructures.buildPyramid(routeList, RouteType.Trad, height, stepSize, stepType));
+
+      if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_BOULDER_PYRAMID, true))
+        pyramids.put(RouteType.Boulder, SprayarificStructures.buildPyramid(routeList, RouteType.Boulder, height, stepSize, stepType));
+
+      if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_ICE_PYRAMID, false))
+        pyramids.put(RouteType.Ice, SprayarificStructures.buildPyramid(routeList, RouteType.Ice, height, stepSize, stepType));
+
+      if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_AID_PYRAMID, false))
+        pyramids.put(RouteType.Aid, SprayarificStructures.buildPyramid(routeList, RouteType.Aid, height, stepSize, stepType));
+
+      mRecyclerAdapter.update(getData());
     }
-    if (routes.size() == 0)
-      return;
-
-    // todo refactor these Collectors.toList() calls to comply with api level 22
-    int height = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_HEIGHT, "5"));
-    int stepSize = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_SIZE, "2"));
-    String stepTypeStr = mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_TYPE, "Additive");
-    PyramidStepType stepType = PyramidStepType.valueOf(stepTypeStr);
-    pyramids.clear();
-    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_ROUTE_PYRAMID, false))
-      pyramids.put(RouteType.Route, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Route, height, stepSize, stepType));
-
-    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_SPORT_PYRAMID, true))
-      pyramids.put(RouteType.Sport, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, height, stepSize, stepType));
-
-    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_TRAD_PYRAMID, true))
-      pyramids.put(RouteType.Trad, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Trad, height, stepSize, stepType));
-
-    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_BOULDER_PYRAMID, true))
-      pyramids.put(RouteType.Boulder, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Boulder, height, stepSize, stepType));
-
-    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_ICE_PYRAMID, false))
-      pyramids.put(RouteType.Ice, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Ice, height, stepSize, stepType));
-
-    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_AID_PYRAMID, false))
-      pyramids.put(RouteType.Aid, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Aid, height, stepSize, stepType));
-
-    mRecyclerAdapter.update(getData());
-
-    hideProgress();
+    finally {
+      hideProgress();
+    }
   }
 
   public static List<Pyramid> getData() {
