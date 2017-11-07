@@ -11,6 +11,7 @@ import com.sprayme.teamrsm.analyticspraydown.models.Grade;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
 import com.sprayme.teamrsm.analyticspraydown.models.MPProfileDrawerItem;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
+import com.sprayme.teamrsm.analyticspraydown.models.Statistic;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 
@@ -282,6 +283,14 @@ public class DataCache extends Application
     }
 
     return maxEntry;
+  }
+
+  public List<Statistic> getStats(){
+    List<Statistic> stats = new ArrayList<>();
+
+
+
+    return stats;
   }
 
   /*

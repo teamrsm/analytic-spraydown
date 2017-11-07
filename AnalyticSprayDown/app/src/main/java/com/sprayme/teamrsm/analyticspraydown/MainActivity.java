@@ -496,10 +496,7 @@ public class MainActivity extends AppCompatActivity {
 
         routes.add(tick.getRoute());
       }
-      if (routes.size() == 0)
-        return;
 
-      // todo refactor these Collectors.toList() calls to comply with api level 22
       int height = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_HEIGHT, "5"));
       int stepSize = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_SIZE, "2"));
       String stepTypeStr = mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_TYPE, "Additive");
