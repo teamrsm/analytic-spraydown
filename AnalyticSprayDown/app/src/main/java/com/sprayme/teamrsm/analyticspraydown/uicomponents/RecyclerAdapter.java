@@ -49,6 +49,8 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.Activi
   }
 
   public void update(List<Pyramid> pyramids) {
+    if (activityData == null)
+      return;
     activityData.clear();
     for (Pyramid pyramid : pyramids) {
       activityData.add(pyramid);

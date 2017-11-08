@@ -27,7 +27,7 @@ public class GradeManager {
     index = gradeStr.indexOf("+");
     if (index > 0)
       gradeStr = gradeStr.substring(0, index);
-    
+
     // todo come up with a better way to remove danger ratings
     gradeStr = gradeStr.replace("PG13", "").replace("R", "").replace("X", "");
 

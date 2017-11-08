@@ -1,6 +1,8 @@
 package com.sprayme.teamrsm.analyticspraydown.utilities;
 
 import android.app.Application;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.support.v4.util.ArraySet;
 
 import com.sprayme.teamrsm.analyticspraydown.MainActivity;
@@ -58,6 +60,7 @@ public class DataCache extends Application
   private List<User> m_Users = null;
   private List<MPProfileDrawerItem> m_UserProfiles = new ArrayList<>();
   private List<Tick> m_Ticks = null;
+  private MutableLiveData<List<Tick>> mTicks = new MutableLiveData<>();
   private List<Route> m_Routes = null;
   private static int m_InvalidCacheHours;
 
@@ -70,8 +73,9 @@ public class DataCache extends Application
   }
 
   public static synchronized DataCache getInstance() {
-    if (instance == null)
+    if (instance == null) {
       instance = new DataCache();
+    }
 
     return instance;
   }
@@ -190,6 +194,7 @@ public class DataCache extends Application
       m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
     } else {
       m_Ticks = m_Db.getTicks(m_CurrentUser.getUserId());
+      mTicks.setValue(m_Ticks);
 
       if (m_Ticks.size() == 0) {
         m_MpModel.requestTicks(m_CurrentUser.getUserId(), m_CurrentUser.getApiKey());
@@ -235,6 +240,7 @@ public class DataCache extends Application
         if (ticksWaitingOnRoutes) {
           mapRoutes(m_Ticks, m_Routes);
           ticksWaitingOnRoutes = false;
+          mTicks.setValue(m_Ticks);
           broadcastTicksCompleted();
         }
       }
@@ -256,6 +262,7 @@ public class DataCache extends Application
         if (ticksWaitingOnRoutes) {
           mapRoutes(m_Ticks, m_Routes);
           ticksWaitingOnRoutes = false;
+          mTicks.setValue(m_Ticks);
           broadcastTicksCompleted();
         }
       }
@@ -304,6 +311,7 @@ public class DataCache extends Application
     if (ticksWaitingOnRoutes) {
       mapRoutes(m_Ticks, m_Routes);
       ticksWaitingOnRoutes = false;
+      mTicks.setValue(m_Ticks);
       broadcastTicksCompleted();
     }
   }
@@ -409,5 +417,9 @@ public class DataCache extends Application
     for(Map.Entry<UUID, DataCacheProfileHandler> entry : profileHandlers.entrySet()) {
       entry.getValue().onProfileCached(profile);
     }
+  }
+
+  public LiveData<List<Tick>> getTicksLiveData(){
+    return mTicks;
   }
 }
