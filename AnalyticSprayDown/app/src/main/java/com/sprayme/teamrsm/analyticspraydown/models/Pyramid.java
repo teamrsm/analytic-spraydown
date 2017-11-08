@@ -54,6 +54,8 @@ public class Pyramid {
     Grade grade = startingGrade;
     int size = 1;
     for (int i = 0; i < height; i++) {
+      if (grade == null)
+        break;
       Grade currentGrade = grade;
 
       List<Route> stepRoutes = StreamSupport.stream(routes)

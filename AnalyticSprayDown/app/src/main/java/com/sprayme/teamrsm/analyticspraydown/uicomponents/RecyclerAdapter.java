@@ -45,16 +45,11 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.Activi
 
   @Override
   public int getItemCount() {
-    return activityData.size();
+    return activityData != null ? activityData.size() : 0;
   }
 
   public void update(List<Pyramid> pyramids) {
-    if (activityData == null)
-      return;
-    activityData.clear();
-    for (Pyramid pyramid : pyramids) {
-      activityData.add(pyramid);
-    }
+    activityData = pyramids;
     notifyDataSetChanged();
 
   }
