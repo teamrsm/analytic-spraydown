@@ -61,6 +61,8 @@ public class StatsViewModel extends AndroidViewModel {
 
   private void updatePyramids(List<Tick> ticks){
     try {
+      if (ticks == null)
+        return;
       Set<Route> routes = new HashSet<Route>();
       if (mSharedPref == null)
         mSharedPref = PreferenceManager.getDefaultSharedPreferences(getApplication().getApplicationContext());

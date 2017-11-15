@@ -40,6 +40,7 @@ public class SprayarificStructures {
     Grade hardestGrade = hardestRoute != null ? hardestRoute.getGrade() : null;
     if (hardestGrade == null)
       switch (type) {
+        case Route:
         case Sport:
         case Trad:
           hardestGrade = new Grade("5.10a", GradeType.RouteYosemite);
