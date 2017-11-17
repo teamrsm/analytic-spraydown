@@ -1,12 +1,14 @@
 package com.sprayme.teamrsm.analyticspraydown;
 
+import android.app.Fragment;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
@@ -40,28 +42,16 @@ import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
 import com.sprayme.teamrsm.analyticspraydown.models.MPProfileDrawerItem;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
-import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
-import com.sprayme.teamrsm.analyticspraydown.models.Route;
-import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
-import com.sprayme.teamrsm.analyticspraydown.models.Tick;
-import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.TimeScale;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.SpinnerFragment;
+import com.sprayme.teamrsm.analyticspraydown.uicomponents.viewmodels.StatsViewModel;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
-import com.sprayme.teamrsm.analyticspraydown.utilities.SprayarificStructures;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -84,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
   private RecyclerView mRecyclerView;
   private RecyclerAdapter mRecyclerAdapter;
   private Fragment mSpinnerFragment;
-  private static ConcurrentHashMap<RouteType, Pyramid> pyramids = new ConcurrentHashMap<>();
+  private StatsViewModel mStatsViewModel;
 
   private boolean m_InitializingUsers = false;
   private boolean showProgressOnResume = false;
@@ -97,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main_page);
 
-//        this.deleteDatabase("BetaSpew.db");
+//    this.deleteDatabase("BetaSpew.db");
     db = BetaSpewDb.getInstance(this);
 
     mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -114,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
     mRecyclerView.setHasFixedSize(true);
     mRecyclerView.setHorizontalScrollBarEnabled(false);
 
-    mRecyclerAdapter = new RecyclerAdapter(this, getData());
+    mRecyclerAdapter = new RecyclerAdapter(this, null);
     mRecyclerView.setAdapter(mRecyclerAdapter);
 
     //Layout manager for the Recycler View
@@ -154,8 +144,7 @@ public class MainActivity extends AppCompatActivity {
             mTimeScale = TimeScale.Lifetime;
             break;
         }
-
-        triggerCacheUpdate();
+        mStatsViewModel.setTimeScale(mTimeScale);
       }
 
       @Override
@@ -265,60 +254,29 @@ public class MainActivity extends AppCompatActivity {
     });
   }
 
+  private void subscribeViewModels(){
+    final Observer<List<Pyramid>> pyramidObserver = pyramids -> {
+      mRecyclerAdapter.update(pyramids);
+    };
+
+    mStatsViewModel.getPyramids().observe(this, pyramidObserver);
+  }
+
   @Override
   protected void onPostCreate(Bundle savedInstanceState) {
     super.onPostCreate(savedInstanceState);
-
-    Spinner spinner = (Spinner) findViewById(R.id.time_scale_spinner);
-    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-      @Override
-      public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        if (position == mTimeScaleSpinnerPos)
-          return;
-        else
-          mTimeScaleSpinnerPos = position;
-
-        switch (position) {
-          case 0:
-            mTimeScale = TimeScale.Month;
-            break;
-          case 1:
-            mTimeScale = TimeScale.ThreeMonth;
-            break;
-          case 2:
-            mTimeScale = TimeScale.SixMonth;
-            break;
-          case 3:
-            mTimeScale = TimeScale.Year;
-            break;
-          case 4:
-            mTimeScale = TimeScale.Lifetime;
-            break;
-        }
-
-        triggerCacheUpdate();
-      }
-
-      @Override
-      public void onNothingSelected(AdapterView<?> parent) {
-      }
-    });
 
     boolean canLaunchLogin = false;
 
     try {
       dataCache = DataCache.getInstance();
       dataCache.setDb(db);
-      ticksCallbackUuid = dataCache.subscribe(new DataCache.DataCacheTicksHandler() {
-        @Override
-        public void onTicksCached(List<Tick> ticks) {
-          onFinished(ticks);
-        }
-      });
+      mStatsViewModel = ViewModelProviders.of(this).get(StatsViewModel.class);
+      subscribeViewModels();
       initUsers();
       triggerCacheUpdate();
     } catch (InvalidUserException e) {
-            /* launch login, we have no known user */
+      /* launch login, we have no known user */
       canLaunchLogin = true;
     }
 
@@ -423,15 +381,14 @@ public class MainActivity extends AppCompatActivity {
   @Override
   public void onStart(){
     super.onStart();
-    if (showProgressOnResume){
-      showProgressOnResume = false;
-      showProgress();
-    }
+//    if (showProgressOnResume){
+//      showProgressOnResume = false;
+//      showProgress();
+//    }
   }
 
   @Override
   public void onStop(){
-
     super.onStop();
   }
 
@@ -443,106 +400,10 @@ public class MainActivity extends AppCompatActivity {
   @Override
   public void onResume(){
     super.onResume();
-    if (showProgressOnResume){
-      showProgressOnResume = false;
-      showProgress();
-    }
-  }
-
-  public void onFinished(List<Tick> ticks) {
-    Set<Route> routes = new HashSet<Route>();
-    boolean ignoreTopropes = MainActivity.mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
-    for (Tick tick : ticks) {
-      if (tick.getRoute() == null)
-        continue;
-
-      // filter for ignore toprope setting
-      if (ignoreTopropes && tick.getRoute().getType() != RouteType.Boulder) {
-        TickType tickType = tick.getType();
-        boolean skip = tickType == TickType.Fell;
-        skip |= tickType == TickType.Toprope;
-        skip |= tickType == TickType.Unknown;
-        if (skip)
-          continue;
-      }
-
-      // filter for the selected time scale
-      if (mTimeScale != TimeScale.Lifetime) {
-        Date date = new Date();
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
-        switch (mTimeScale) {
-          case Month:
-            cal.add(Calendar.MONTH, -1);
-            break;
-          case ThreeMonth:
-            cal.add(Calendar.MONTH, -3);
-            break;
-          case SixMonth:
-            cal.add(Calendar.MONTH, -6);
-            break;
-          case Year:
-            cal.add(Calendar.YEAR, -1);
-            break;
-          default:
-            break;
-        }
-        date = cal.getTime();
-        if (date.getTime() > tick.getDate().getTime())
-          continue;
-      }
-
-      routes.add(tick.getRoute());
-    }
-    if (routes.size() == 0)
-      return;
-
-    // todo refactor these Collectors.toList() calls to comply with api level 22
-    int height = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_HEIGHT, "5"));
-    int stepSize = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_SIZE, "2"));
-    String stepTypeStr = mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_TYPE, "Additive");
-    PyramidStepType stepType = PyramidStepType.valueOf(stepTypeStr);
-    pyramids.clear();
-    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_ROUTE_PYRAMID, false))
-      pyramids.put(RouteType.Route, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Route, height, stepSize, stepType));
-
-    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_SPORT_PYRAMID, true))
-      pyramids.put(RouteType.Sport, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Sport, height, stepSize, stepType));
-
-    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_TRAD_PYRAMID, true))
-      pyramids.put(RouteType.Trad, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Trad, height, stepSize, stepType));
-
-    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_BOULDER_PYRAMID, true))
-      pyramids.put(RouteType.Boulder, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Boulder, height, stepSize, stepType));
-
-    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_ICE_PYRAMID, false))
-      pyramids.put(RouteType.Ice, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Ice, height, stepSize, stepType));
-
-    if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_AID_PYRAMID, false))
-      pyramids.put(RouteType.Aid, SprayarificStructures.buildPyramid(routes.stream().collect(Collectors.toList()), RouteType.Aid, height, stepSize, stepType));
-
-    mRecyclerAdapter.update(getData());
-
-    hideProgress();
-  }
-
-  public static List<Pyramid> getData() {
-    List<Pyramid> subActivityData = new ArrayList<>();
-
-    if (pyramids.containsKey(RouteType.Route))
-      subActivityData.add(pyramids.get(RouteType.Route));
-    if (pyramids.containsKey(RouteType.Sport))
-      subActivityData.add(pyramids.get(RouteType.Sport));
-    if (pyramids.containsKey(RouteType.Trad))
-      subActivityData.add(pyramids.get(RouteType.Trad));
-    if (pyramids.containsKey(RouteType.Boulder))
-      subActivityData.add(pyramids.get(RouteType.Boulder));
-    if (pyramids.containsKey(RouteType.Ice))
-      subActivityData.add(pyramids.get(RouteType.Ice));
-    if (pyramids.containsKey(RouteType.Aid))
-      subActivityData.add(pyramids.get(RouteType.Aid));
-
-    return subActivityData;
+//    if (showProgressOnResume){
+//      showProgressOnResume = false;
+//      showProgress();
+//    }
   }
 
   private void onActiveUserChanged(User user){
@@ -555,9 +416,9 @@ public class MainActivity extends AppCompatActivity {
     triggerCacheUpdate(false);
   }
   private void triggerCacheUpdate(boolean delayProgress){
-    if (!delayProgress)
-      showProgress();
-    else
+//    if (!delayProgress)
+//      showProgress();
+//    else
       showProgressOnResume = true;
     dataCache.loadUserTicks();
   }

@@ -44,6 +44,13 @@ dependencies {
     compile('com.mikepenz:materialdrawer:5.9.5@aar') {
         transitive = true
     }
+    compile 'net.sourceforge.streamsupport:streamsupport:1.5.2'
+    compile 'net.sourceforge.streamsupport:streamsupport-cfuture:1.5.2'
+    compile 'net.sourceforge.streamsupport:streamsupport-atomic:1.5.2'
+    compile 'net.sourceforge.streamsupport:streamsupport-flow:1.5.2'
+    compile 'net.sourceforge.streamsupport:streamsupport-literal:1.5.2'
 
     testCompile 'junit:junit:4.12'
+
+    implementation "android.arch.lifecycle:extensions:1.0.0"
 }

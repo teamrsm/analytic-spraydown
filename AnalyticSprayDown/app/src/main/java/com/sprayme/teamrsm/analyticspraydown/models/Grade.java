@@ -65,7 +65,9 @@ public class Grade {
   }
 
   public Grade nextEasiest() {
-    // todo protect from min values and support euro grades
+    // todo protect from min values and support euro grades better than this
+    if (gradeValue <= 1)
+      return null;
     if (type != GradeType.BoulderHueco)
       return new Grade(gradeValue - 1, type);
     else {

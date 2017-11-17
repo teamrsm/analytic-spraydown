@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-  tools:context="com.sprayme.teamrsm.analyticspraydown.MainActivity">
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
 
   <!-- The first child in the layout is for the main Activity UI-->
   <LinearLayout
@@ -32,6 +32,11 @@
         android:layout_marginTop="20dp"
         android:entries="@array/time_scale_spinner_entries"
         android:drawSelectorOnTop="true" />
+
+    <ListView
+        android:id="@+id/statsListView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
     <Button
         android:id="@+id/viewDbButton"
