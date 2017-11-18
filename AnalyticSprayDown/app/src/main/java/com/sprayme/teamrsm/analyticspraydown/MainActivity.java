@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
   static final int SETTINGS_REQUEST = 2;
   static final int IMPORT_REQUEST = 3;
   private static final int PROFILE_ADD = 100000;
+  private static final int PROFILE_MANAGE = 100001;
 
   public static SharedPreferences mSharedPref;
   private TimeScale mTimeScale = TimeScale.Year;
@@ -70,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
   private Drawer mDrawer;
   private AccountHeader mAccountHeader;
   private ProfileSettingDrawerItem mAddNewUserItem;
+  private ProfileSettingDrawerItem mManageUsersItem;
   private RecyclerView mRecyclerView;
   private RecyclerAdapter mRecyclerAdapter;
   private Fragment mSpinnerFragment;
@@ -166,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
     Context context = this;
 
     mAddNewUserItem = new ProfileSettingDrawerItem().withName(R.string.add_user).withIcon(new IconicsDrawable(this, GoogleMaterial.Icon.gmd_add).actionBar().paddingDp(5).colorRes(R.color.material_drawer_primary_text)).withIdentifier(PROFILE_ADD);
-//                        new ProfileSettingDrawerItem().withName("Manage Account").withIcon(GoogleMaterial.Icon.gmd_settings).withIdentifier(100001)
+    mManageUsersItem = new ProfileSettingDrawerItem().withName(R.string.manage_users).withIcon(new IconicsDrawable(this, GoogleMaterial.Icon.gmd_settings).actionBar().paddingDp(5).colorRes(R.color.material_drawer_primary_text)).withIdentifier(PROFILE_MANAGE);
 
     // Create the AccountHeader
     mAccountHeader = new AccountHeaderBuilder()
@@ -264,7 +266,8 @@ public class MainActivity extends AppCompatActivity {
       for (MPProfileDrawerItem profile : users) {
         mAccountHeader.addProfile(profile, count++);
       }
-      mAccountHeader.addProfile(mAddNewUserItem, count);
+      mAccountHeader.addProfile(mAddNewUserItem, count++);
+//      mAccountHeader.addProfile(mManageUsersItem, count);
     };
     mUsersViewModel.getUsers().observe(this, usersObserver);
 
@@ -306,6 +309,10 @@ public class MainActivity extends AppCompatActivity {
       Intent loginIntent = new Intent(this, UserLoginActivity.class);
       startActivityForResult(loginIntent, LOGIN_NEW_USER_REQUEST);
       requestingNewUser = true;
+      return true;
+    }
+    if (profile instanceof IDrawerItem && profile.getIdentifier() == PROFILE_MANAGE) {
+      // todo support user management
       return true;
     }
 
