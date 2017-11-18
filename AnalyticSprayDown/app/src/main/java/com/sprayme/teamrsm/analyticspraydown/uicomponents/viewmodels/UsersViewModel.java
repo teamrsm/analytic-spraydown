@@ -16,15 +16,14 @@ public class UsersViewModel extends ViewModel {
 
   private MutableLiveData<List<MPProfileDrawerItem>> mUsers = new MutableLiveData<>();
   private MutableLiveData<MPProfileDrawerItem> mCurrentUser = new MutableLiveData<>();
-  private DataCache mDataCache = null;
 
   public UsersViewModel(){
     super();
-    mDataCache = DataCache.getInstance();
-    mDataCache.getUsersLiveData().observeForever(users -> {
+    DataCache dc = DataCache.getInstance();
+    dc.getUsersLiveData().observeForever(users -> {
       mUsers.setValue(users);
     });
-    mDataCache.getCurrentUserLiveData().observeForever(user -> {
+    dc.getCurrentUserLiveData().observeForever(user -> {
       mCurrentUser.setValue(user);
     });
   }

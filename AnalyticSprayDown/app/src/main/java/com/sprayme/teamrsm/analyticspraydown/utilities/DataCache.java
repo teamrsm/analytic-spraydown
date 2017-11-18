@@ -63,6 +63,7 @@ public class DataCache extends Application
   private List<Tick> m_Ticks = null;
   private MutableLiveData<List<Tick>> mTicks = new MutableLiveData<>();
   private List<Route> m_Routes = null;
+  private MutableLiveData<Boolean> mIsBusy = new MutableLiveData<>();
   private static int m_InvalidCacheHours;
 
   private boolean ticksWaitingOnRoutes = false;
@@ -158,6 +159,7 @@ public class DataCache extends Application
   }
 
   public void createNewUser(String emailAddress, String apiKey) {
+    mIsBusy.setValue(true);
     m_MpModel.requestUser(emailAddress, apiKey);
     m_CurrentUser = null;
     m_UserChanged = true;
@@ -171,6 +173,7 @@ public class DataCache extends Application
   }
 
   public void loadUserTicks() {
+    mIsBusy.setValue(true);
     if (m_Ticks == null || m_UserChanged)
     {
       fetchTicks();
@@ -182,8 +185,10 @@ public class DataCache extends Application
       Long[] routeIds = getRouteIdArray(m_Ticks);
       ticksWaitingOnRoutes = true;
       loadRoutes(routeIds);
-    } else
+    } else {
       broadcastTicksCompleted();
+      mIsBusy.setValue(false);
+    }
   }
 
   private void fetchTicks() {
@@ -214,6 +219,7 @@ public class DataCache extends Application
   * Routes Methods
   * */
   public void loadRoutes(Long[] routeIds) {
+    mIsBusy.setValue(true);
     if (m_Routes == null)
       fetchRoutes(routeIds);
     else if (isCacheInvalid())
@@ -239,6 +245,7 @@ public class DataCache extends Application
           ticksWaitingOnRoutes = false;
           mTicks.setValue(m_Ticks);
           broadcastTicksCompleted();
+          mIsBusy.setValue(false);
         }
       }
     }
@@ -261,6 +268,7 @@ public class DataCache extends Application
           ticksWaitingOnRoutes = false;
           mTicks.setValue(m_Ticks);
           broadcastTicksCompleted();
+          mIsBusy.setValue(false);
         }
       }
     }
@@ -321,6 +329,7 @@ public class DataCache extends Application
       ticksWaitingOnRoutes = false;
       mTicks.setValue(m_Ticks);
       broadcastTicksCompleted();
+      mIsBusy.setValue(false);
     }
   }
 
@@ -353,6 +362,7 @@ public class DataCache extends Application
     mCurrentUser.setValue(profile);
 
     broadcastUserCompleted(profile);
+    mIsBusy.setValue(false);
   }
 
   /*
@@ -439,5 +449,9 @@ public class DataCache extends Application
 
   public LiveData<MPProfileDrawerItem> getCurrentUserLiveData(){
     return mCurrentUser;
+  }
+
+  public LiveData<Boolean> getIsBusyLiveData(){
+    return mIsBusy;
   }
 }

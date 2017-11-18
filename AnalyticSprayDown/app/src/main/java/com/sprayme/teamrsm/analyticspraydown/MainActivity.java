@@ -46,6 +46,7 @@ import com.sprayme.teamrsm.analyticspraydown.models.TimeScale;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.SpinnerFragment;
+import com.sprayme.teamrsm.analyticspraydown.uicomponents.viewmodels.ProgressViewModel;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.viewmodels.StatsViewModel;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.viewmodels.UsersViewModel;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
@@ -77,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
   private Fragment mSpinnerFragment;
   private UsersViewModel mUsersViewModel;
   private StatsViewModel mStatsViewModel;
+  private ProgressViewModel mProgressViewModel;
 
   private boolean showProgressOnResume = false;
   private boolean requestingNewUser = false;
@@ -275,6 +277,14 @@ public class MainActivity extends AppCompatActivity {
       mAccountHeader.setActiveProfile(profile, false);
     };
     mUsersViewModel.getCurrentUser().observe(this, currentProfileObserver);
+
+    final Observer<Boolean> progressObserver = isBusy -> {
+      if (isBusy)
+        showProgress();
+      else
+        hideProgress();
+    };
+    mProgressViewModel.getIsBusy().observe(this, progressObserver);
   }
 
   @Override
@@ -288,6 +298,7 @@ public class MainActivity extends AppCompatActivity {
       dataCache.setDb(db);
       mStatsViewModel = ViewModelProviders.of(this).get(StatsViewModel.class);
       mUsersViewModel = ViewModelProviders.of(this).get(UsersViewModel.class);
+      mProgressViewModel = ViewModelProviders.of(this).get(ProgressViewModel.class);
       subscribeViewModels();
       dataCache.loadUsers();
       triggerCacheUpdate();
@@ -369,29 +380,19 @@ public class MainActivity extends AppCompatActivity {
   @Override
   public void onStart(){
     super.onStart();
-//    if (showProgressOnResume){
-//      showProgressOnResume = false;
-//      showProgress();
-//    }
-  }
-
-  @Override
-  public void onStop(){
-    super.onStop();
-  }
-
-  @Override
-  public void onPause(){
-    super.onPause();
+    if (mProgressViewModel != null && mProgressViewModel.getIsBusy().getValue())
+      showProgress();
+    else
+      hideProgress();
   }
 
   @Override
   public void onResume(){
     super.onResume();
-//    if (showProgressOnResume){
-//      showProgressOnResume = false;
-//      showProgress();
-//    }
+    if (mProgressViewModel != null && mProgressViewModel.getIsBusy().getValue())
+      showProgress();
+    else
+      hideProgress();
   }
 
   private void triggerCacheUpdate(){
@@ -406,6 +407,8 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void showProgress(){
+    if (mSpinnerFragment != null)
+      return;
     mSpinnerFragment = new SpinnerFragment();
     getFragmentManager().beginTransaction().add(R.id.drawer_container, mSpinnerFragment).commit();
   }
