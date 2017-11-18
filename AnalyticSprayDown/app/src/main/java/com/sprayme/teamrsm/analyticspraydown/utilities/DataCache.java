@@ -276,13 +276,14 @@ public class DataCache extends Application
   /*
   * Returns the gradeId and percentage value of the grade with the maximum onsight percentage.
   * */
-  public Map.Entry<Long, Float> calculateOnsightLevel(String ratingType, String routeType) {
+  public Map.Entry<Long, Float> calculateOnsightLevel(String routeType) {
     if (m_CurrentUser == null)
       return null;
 
     HashMap<Long, Float> osPercentages = m_Db.getOnsightPercentages(m_CurrentUser.getUserId(),
-            ratingType, routeType);
+            routeType);
 
+    /* ToDo: This is really stupid logic. */
     Map.Entry<Long, Float> maxEntry = null;
     for (Map.Entry<Long, Float> entry : osPercentages.entrySet()) {
       if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0)
@@ -290,6 +291,16 @@ public class DataCache extends Application
     }
 
     return maxEntry;
+  }
+
+  /*
+  * Returns all onsights
+  * */
+  public List<Route> getOnsights() {
+    if (m_CurrentUser == null)
+      return null;
+
+    return m_Db.getOnsights(m_CurrentUser.getUserId());
   }
 
   public List<Statistic> getStats(){

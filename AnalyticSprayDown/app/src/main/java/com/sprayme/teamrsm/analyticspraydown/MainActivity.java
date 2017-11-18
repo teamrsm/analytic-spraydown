@@ -271,16 +271,15 @@ public class MainActivity extends AppCompatActivity {
     try {
       dataCache = DataCache.getInstance();
       dataCache.setDb(db);
+      initUsers();
       mStatsViewModel = ViewModelProviders.of(this).get(StatsViewModel.class);
       subscribeViewModels();
-      initUsers();
+
       triggerCacheUpdate();
     } catch (InvalidUserException e) {
       /* launch login, we have no known user */
       canLaunchLogin = true;
     }
-
-    dataCache.calculateOnsightLevel("YOSEMITE", "Sport");
 
     if (canLaunchLogin) {
       Intent loginIntent = new Intent(this, UserLoginActivity.class);
