@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.sprayme.teamrsm.analyticspraydown.models.Grade;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.TickType;
@@ -371,11 +372,13 @@ public class BetaSpewDb extends SQLiteOpenHelper {
     return routes;
   }
 
-  public HashMap<Long, Float> getOnsightPercentages(long userId, String ratingType, String routeType) {
+  /******** Statistic Queries *********/
+
+  public HashMap<Long, Float> getOnsightPercentages(long userId, String routeType) {
     HashMap<Long, Float> onsightPercentages = new HashMap<>();
 
     SQLiteDatabase db = getReadableDatabase();
-    Cursor cursor = db.rawQuery(SqlGen.makeOnsightPercentage(userId, ratingType, routeType), null);
+    Cursor cursor = db.rawQuery(SqlGen.makeOnsightPercentage(userId, routeType), null);
 
     try {
       while (cursor.moveToNext()) {
@@ -392,6 +395,39 @@ public class BetaSpewDb extends SQLiteOpenHelper {
 
     return onsightPercentages;
   }
+
+  public List<Route> getOnsights(long userId) {
+    List<Route> onsights = new ArrayList<>();
+
+    Cursor cursor = null;
+    try {
+      SQLiteDatabase db = getReadableDatabase();
+      cursor = db.rawQuery(SqlGen.makeGetOnsights(userId), null);
+
+      while (cursor.moveToNext()) {
+        Long routeId = cursor.getLong(cursor.getColumnIndex(ROUTE_ID));
+        String routeName = cursor.getString(cursor.getColumnIndex(ROUTE_NAME));
+        String routeType = cursor.getString(cursor.getColumnIndex(ROUTE_TYPE));
+        String rating = cursor.getString(cursor.getColumnIndex(RATING));
+        Float stars = cursor.getFloat(cursor.getColumnIndex(STARS));
+        int pitches = cursor.getInt(cursor.getColumnIndex(PITCHES));
+        String routeUrl = cursor.getString(cursor.getColumnIndex(ROUTE_URL));
+        int gradeId = cursor.getInt(cursor.getColumnIndex(GRADE_ID));
+
+        onsights.add(new Route(routeId, routeName, routeType, rating, stars, pitches,
+                routeUrl, gradeId));
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      cursor.close();
+    }
+
+    return onsights;
+  }
+
+
+
 
   /******* this function is a helper for AndroidDatabaseManager.java ********/
   public ArrayList<Cursor> getData(String Query) {

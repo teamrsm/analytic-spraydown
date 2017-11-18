@@ -18,6 +18,32 @@ public class Route {
     this.id = id;
     this.name = name;
 
+    GradeType gradetype = mapGradeType(type);
+
+    // todo map the grade string to the grade value
+    this.gradeStr = difficulty;
+    this.grade = new Grade(gradeStr, gradetype);
+    this.stars = stars;
+    this.pitches = pitches;
+    this.url = url;
+  }
+
+  public Route(Long id, String name, String type, String difficulty, Float stars, Integer pitches,
+               String url, int gradeVal) {
+    this.id = id;
+    this.name = name;
+
+    GradeType gradetype = mapGradeType(type);
+
+    // todo map the grade string to the grade value
+    this.gradeStr = difficulty;
+    this.grade = new Grade(gradeVal, gradetype);
+    this.stars = stars;
+    this.pitches = pitches;
+    this.url = url;
+  }
+
+  private GradeType mapGradeType(String type) {
     GradeType gradetype;
     if (type.equalsIgnoreCase("Sport")) {
       this.type = RouteType.Sport;
@@ -42,12 +68,7 @@ public class Route {
       gradetype = GradeType.Other;
     }
 
-    // todo map the grade string to the grade value
-    this.gradeStr = difficulty;
-    this.grade = new Grade(gradeStr, gradetype);
-    this.stars = stars;
-    this.pitches = pitches;
-    this.url = url;
+    return gradetype;
   }
 
   public Long getId() {

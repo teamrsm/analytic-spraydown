@@ -296,8 +296,6 @@ public class MainActivity extends AppCompatActivity {
       canLaunchLogin = true;
     }
 
-    dataCache.calculateOnsightLevel("YOSEMITE", "Sport");
-
     if (canLaunchLogin) {
       Intent loginIntent = new Intent(this, UserLoginActivity.class);
       startActivityForResult(loginIntent, LOGIN_FIRST_USER_REQUEST);

@@ -43,7 +43,11 @@ public class StatsViewModel extends AndroidViewModel {
     mDataCache = DataCache.getInstance();
     mDataCache.getTicksLiveData().observeForever(ticks -> {
       updatePyramids(ticks);
+      mDataCache.calculateOnsightLevel("Sport");
+      mDataCache.getOnsights();
     });
+
+
   }
 
   public MutableLiveData<List<Pyramid>> getPyramids() {
