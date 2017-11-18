@@ -51,7 +51,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.Activi
   public void update(List<Pyramid> pyramids) {
     activityData = pyramids;
     notifyDataSetChanged();
-
   }
 
   class ActivityViewHolder extends RecyclerView.ViewHolder {

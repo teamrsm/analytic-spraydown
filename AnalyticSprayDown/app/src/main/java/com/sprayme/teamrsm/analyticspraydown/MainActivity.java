@@ -47,11 +47,11 @@ import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.SpinnerFragment;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.viewmodels.StatsViewModel;
+import com.sprayme.teamrsm.analyticspraydown.uicomponents.viewmodels.UsersViewModel;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 
 import java.util.List;
-import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -63,24 +63,22 @@ public class MainActivity extends AppCompatActivity {
 
   public static SharedPreferences mSharedPref;
   private TimeScale mTimeScale = TimeScale.Year;
-  private int mTimeScaleSpinnerPos = 3;
 
   private DataCache dataCache = null;
   private BetaSpewDb db = null;
-  private User currentUser = null;
   private DrawerLayout mDrawerLayout;
   private Drawer mDrawer;
   private AccountHeader mAccountHeader;
+  private ProfileSettingDrawerItem mAddNewUserItem;
   private RecyclerView mRecyclerView;
   private RecyclerAdapter mRecyclerAdapter;
   private Fragment mSpinnerFragment;
+  private UsersViewModel mUsersViewModel;
   private StatsViewModel mStatsViewModel;
 
-  private boolean m_InitializingUsers = false;
   private boolean showProgressOnResume = false;
   private boolean requestingNewUser = false;
   private String mActivityTitle;
-  private UUID profileCallbackUuid, ticksCallbackUuid;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -167,14 +165,14 @@ public class MainActivity extends AppCompatActivity {
 
     Context context = this;
 
+    mAddNewUserItem = new ProfileSettingDrawerItem().withName(R.string.add_user).withIcon(new IconicsDrawable(this, GoogleMaterial.Icon.gmd_add).actionBar().paddingDp(5).colorRes(R.color.material_drawer_primary_text)).withIdentifier(PROFILE_ADD);
+//                        new ProfileSettingDrawerItem().withName("Manage Account").withIcon(GoogleMaterial.Icon.gmd_settings).withIdentifier(100001)
+
     // Create the AccountHeader
     mAccountHeader = new AccountHeaderBuilder()
             .withActivity(this)
             .withHeaderBackground(R.drawable.background_material)
-            .addProfiles(
-                    new ProfileSettingDrawerItem().withName(R.string.add_user).withIcon(new IconicsDrawable(this, GoogleMaterial.Icon.gmd_add).actionBar().paddingDp(5).colorRes(R.color.material_drawer_primary_text)).withIdentifier(PROFILE_ADD)
-//                        new ProfileSettingDrawerItem().withName("Manage Account").withIcon(GoogleMaterial.Icon.gmd_settings).withIdentifier(100001)
-            ).withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
+            .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
               @Override
               public boolean onProfileChanged(View view, IProfile profile, boolean current) {
                 if (current)
@@ -258,8 +256,22 @@ public class MainActivity extends AppCompatActivity {
     final Observer<List<Pyramid>> pyramidObserver = pyramids -> {
       mRecyclerAdapter.update(pyramids);
     };
-
     mStatsViewModel.getPyramids().observe(this, pyramidObserver);
+
+    final Observer<List<MPProfileDrawerItem>> usersObserver = users -> {
+      mAccountHeader.clear();
+      int count = 0;
+      for (MPProfileDrawerItem profile : users) {
+        mAccountHeader.addProfile(profile, count++);
+      }
+      mAccountHeader.addProfile(mAddNewUserItem, count);
+    };
+    mUsersViewModel.getUsers().observe(this, usersObserver);
+
+    final Observer<MPProfileDrawerItem> currentProfileObserver = profile -> {
+      mAccountHeader.setActiveProfile(profile, false);
+    };
+    mUsersViewModel.getCurrentUser().observe(this, currentProfileObserver);
   }
 
   @Override
@@ -272,8 +284,9 @@ public class MainActivity extends AppCompatActivity {
       dataCache = DataCache.getInstance();
       dataCache.setDb(db);
       mStatsViewModel = ViewModelProviders.of(this).get(StatsViewModel.class);
+      mUsersViewModel = ViewModelProviders.of(this).get(UsersViewModel.class);
       subscribeViewModels();
-      initUsers();
+      dataCache.loadUsers();
       triggerCacheUpdate();
     } catch (InvalidUserException e) {
       /* launch login, we have no known user */
@@ -288,36 +301,6 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  private void initUsers() throws InvalidUserException {
-    m_InitializingUsers = true;
-    // todo figure out timing of this
-    if (profileCallbackUuid == null)
-      profileCallbackUuid = dataCache.subscribe(new DataCache.DataCacheProfileHandler() {
-        @Override
-        public void onProfileCached(MPProfileDrawerItem profile) {
-          if (profile == null || m_InitializingUsers)
-            return;
-
-          mAccountHeader.addProfile(profile, 0);
-          mAccountHeader.setActiveProfile(profile, true);
-        }
-      });
-
-    List<MPProfileDrawerItem> profiles = dataCache.getUserProfiles();
-    currentUser = dataCache.getCurrentUser() != null ? dataCache.getCurrentUser() : dataCache.getLastUser();
-    MPProfileDrawerItem currentProfile = null;
-    int count = 0;
-    for (MPProfileDrawerItem profile : profiles) {
-      int position = profile.getUser() == currentUser || count++ == 0 ? 0 : 1;
-      if (position == 0)
-        currentProfile = profile;
-      mAccountHeader.addProfile(profile, position);
-    }
-
-    mAccountHeader.setActiveProfile(currentProfile);
-    m_InitializingUsers = false;
-  }
-
   private boolean onSelectedProfileChanged(IProfile profile){
     if (profile instanceof IDrawerItem && profile.getIdentifier() == PROFILE_ADD) {
       Intent loginIntent = new Intent(this, UserLoginActivity.class);
@@ -327,7 +310,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     if (profile instanceof MPProfileDrawerItem){
-      onActiveUserChanged(((MPProfileDrawerItem)profile).getUser());
+      dataCache.setCurrentUser(((MPProfileDrawerItem)profile).getUser());
       return true;
     }
     return false;
@@ -340,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
       // Make sure the request was successful
       if (resultCode == RESULT_OK) {
         try {
-          initUsers();
+          dataCache.loadUsers();
           triggerCacheUpdate();
         }
         catch (InvalidUserException e) {
@@ -404,12 +387,6 @@ public class MainActivity extends AppCompatActivity {
 //      showProgressOnResume = false;
 //      showProgress();
 //    }
-  }
-
-  private void onActiveUserChanged(User user){
-    dataCache.setCurrentUser(user);
-    if (!requestingNewUser)
-      triggerCacheUpdate();
   }
 
   private void triggerCacheUpdate(){
