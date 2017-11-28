@@ -98,6 +98,12 @@ public class SprayamidView extends View {
             case Redpoint: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickRedpoint)); break;
             case Onsight: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickOnsight)); break;
             case Flash: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickFlash)); break;
+            case Toprope:
+            case Follow: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickToprope)); break;
+            case Fell: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickFell)); break;
+            case Unknown: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickUnknown)); break;
+            case Solo: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickSolo)); break;
+            case Pinkpoint: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickPinkpoint)); break;
           }
         }
         rect.draw(canvas);
