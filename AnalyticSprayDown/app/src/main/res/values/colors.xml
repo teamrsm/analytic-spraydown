@@ -4,4 +4,7 @@
   <color name="colorPrimaryDark">#303F9F</color>
   <color name="colorAccent">#FF4081</color>
   <color name="progressBackgroundLight">#BBFFFFFF</color>
+  <color name="pyramidTickOnsight">#3b83f7</color>
+  <color name="pyramidTickFlash">#b8d337</color>
+  <color name="pyramidTickRedpoint">#d82d1a</color>
 </resources>
