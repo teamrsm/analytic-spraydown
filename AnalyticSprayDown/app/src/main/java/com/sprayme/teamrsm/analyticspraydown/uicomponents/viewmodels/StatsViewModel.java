@@ -2,6 +2,7 @@ package com.sprayme.teamrsm.analyticspraydown.uicomponents.viewmodels;
 
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
+import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -34,6 +35,7 @@ public class StatsViewModel extends AndroidViewModel {
   private MutableLiveData<List<Pyramid>> mPyramids = new MutableLiveData<>();
   private TimeScale mTimeScale = TimeScale.Year;
   private MutableLiveData<List<Statistic>> mStatistics = new MutableLiveData<>();
+  private MutableLiveData<Boolean> mIsBusy = new MutableLiveData<>();
 
   private DataCache mDataCache = null;
   private SharedPreferences mSharedPref;
@@ -47,6 +49,11 @@ public class StatsViewModel extends AndroidViewModel {
       mDataCache.getOnsights();
     });
 
+    LiveData<Boolean> ld = mDataCache.getIsBusyLiveData();
+    mIsBusy.setValue(ld.getValue());
+    ld.observeForever(isBusy -> {
+      mIsBusy.setValue(isBusy);
+    });
 
   }
 
@@ -56,6 +63,10 @@ public class StatsViewModel extends AndroidViewModel {
 
   public MutableLiveData<List<Statistic>> getStatistics() {
     return mStatistics;
+  }
+
+  public MutableLiveData<Boolean> getIsBusy(){
+    return mIsBusy;
   }
 
   public void setTimeScale(TimeScale timeScale){

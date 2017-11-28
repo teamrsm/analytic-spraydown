@@ -2,14 +2,20 @@ package com.sprayme.teamrsm.analyticspraydown.uicomponents;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Region;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 import com.sprayme.teamrsm.analyticspraydown.models.PyramidStep;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by climbak on 10/8/17.
@@ -17,6 +23,7 @@ import com.sprayme.teamrsm.analyticspraydown.models.PyramidStep;
 
 public class SprayamidView extends View {
   private Pyramid pyramid;
+  private List<PyramidRegion> clickRegions = new ArrayList<>();
 
   public SprayamidView(Context context) {
     super(context);
@@ -29,6 +36,8 @@ public class SprayamidView extends View {
   protected void onDraw(Canvas canvas) {
     if (pyramid == null || pyramid.getSteps() == null)
       return;
+
+    clickRegions.clear();
 
     // calculate pyramid drawing parameters
     int canvasHeight = canvas.getHeight();
@@ -43,6 +52,27 @@ public class SprayamidView extends View {
     int gradeLabelSize = (int) (vStepSize * 0.5);
 
     drawPyramid(canvas, centerX, centerY, vSteps, vStepSize, hStepSize, gradeLabelSize);
+  }
+
+  @Override
+  public boolean onTouchEvent(MotionEvent event)
+  {
+    switch(event.getAction())
+    {
+      case MotionEvent.ACTION_DOWN: {
+        for (PyramidRegion region : clickRegions) {
+          if (region.contains((int)event.getX(), (int)event.getY()))
+            if (region.getRoute() != null)
+              Toast.makeText(getContext(), region.getRoute().getName(), Toast.LENGTH_SHORT).show();
+        }
+      }
+    }
+    return true;
+  }
+
+  @Override
+  public boolean performClick(){
+    return false;
   }
 
   private void drawPyramid(Canvas canvas, int centerX, int centerY, int vStepCount, int vStepSize, int hStepSize, int labelSize) {
@@ -61,6 +91,7 @@ public class SprayamidView extends View {
         if (steps[i].getAt(j) != null)
           rect.getPaint().setColor(0xff74AC23);
         rect.draw(canvas);
+        clickRegions.add(new PyramidRegion(x, y, x + width, y + height, steps[i].getAt(j)));
       }
 
       // draw text labels
