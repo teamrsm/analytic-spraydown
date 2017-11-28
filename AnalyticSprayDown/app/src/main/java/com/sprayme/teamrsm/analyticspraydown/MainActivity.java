@@ -38,20 +38,19 @@ import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader;
 import com.mikepenz.materialdrawer.util.DrawerImageLoader;
 import com.mikepenz.materialdrawer.util.DrawerUIUtils;
+import com.rw.loadingdialog.LoadingView;
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
 import com.sprayme.teamrsm.analyticspraydown.models.MPProfileDrawerItem;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 import com.sprayme.teamrsm.analyticspraydown.models.TimeScale;
-import com.sprayme.teamrsm.analyticspraydown.models.User;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
-import com.sprayme.teamrsm.analyticspraydown.uicomponents.SpinnerFragment;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.viewmodels.StatsViewModel;
+import com.sprayme.teamrsm.analyticspraydown.uicomponents.viewmodels.UsersViewModel;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
 import com.sprayme.teamrsm.analyticspraydown.utilities.DataCache;
 
 import java.util.List;
-import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -60,27 +59,27 @@ public class MainActivity extends AppCompatActivity {
   static final int SETTINGS_REQUEST = 2;
   static final int IMPORT_REQUEST = 3;
   private static final int PROFILE_ADD = 100000;
+  private static final int PROFILE_MANAGE = 100001;
 
   public static SharedPreferences mSharedPref;
   private TimeScale mTimeScale = TimeScale.Year;
-  private int mTimeScaleSpinnerPos = 3;
 
   private DataCache dataCache = null;
   private BetaSpewDb db = null;
-  private User currentUser = null;
   private DrawerLayout mDrawerLayout;
   private Drawer mDrawer;
   private AccountHeader mAccountHeader;
+  private ProfileSettingDrawerItem mAddNewUserItem;
+  private ProfileSettingDrawerItem mManageUsersItem;
   private RecyclerView mRecyclerView;
   private RecyclerAdapter mRecyclerAdapter;
-  private Fragment mSpinnerFragment;
+  private LoadingView mLoadingView;
+  private UsersViewModel mUsersViewModel;
   private StatsViewModel mStatsViewModel;
 
-  private boolean m_InitializingUsers = false;
   private boolean showProgressOnResume = false;
   private boolean requestingNewUser = false;
   private String mActivityTitle;
-  private UUID profileCallbackUuid, ticksCallbackUuid;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -92,8 +91,6 @@ public class MainActivity extends AppCompatActivity {
 
     mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
     mActivityTitle = getTitle().toString();
-
-    mSpinnerFragment = new SpinnerFragment();
 
     setupDrawer();
 
@@ -152,6 +149,18 @@ public class MainActivity extends AppCompatActivity {
       }
     });
 
+    // set the loading spinner
+    mLoadingView = new LoadingView.Builder(this)
+            .setProgressColorResource(R.color.md_red_700)
+            .setBackgroundColorRes(R.color.progressBackgroundLight)
+            .setProgressStyle(LoadingView.ProgressStyle.CYCLIC)
+            .setCustomMargins(0, 0, 0, 0)
+            .attachTo(this);
+
+    mStatsViewModel = ViewModelProviders.of(this).get(StatsViewModel.class);
+    mUsersViewModel = ViewModelProviders.of(this).get(UsersViewModel.class);
+    subscribeViewModels();
+
     /** for debugging the db **/
     Context context = this;
     button.setOnClickListener(new View.OnClickListener() {
@@ -167,14 +176,14 @@ public class MainActivity extends AppCompatActivity {
 
     Context context = this;
 
+    mAddNewUserItem = new ProfileSettingDrawerItem().withName(R.string.add_user).withIcon(new IconicsDrawable(this, GoogleMaterial.Icon.gmd_add).actionBar().paddingDp(5).colorRes(R.color.material_drawer_primary_text)).withIdentifier(PROFILE_ADD);
+    mManageUsersItem = new ProfileSettingDrawerItem().withName(R.string.manage_users).withIcon(new IconicsDrawable(this, GoogleMaterial.Icon.gmd_settings).actionBar().paddingDp(5).colorRes(R.color.material_drawer_primary_text)).withIdentifier(PROFILE_MANAGE);
+
     // Create the AccountHeader
     mAccountHeader = new AccountHeaderBuilder()
             .withActivity(this)
             .withHeaderBackground(R.drawable.background_material)
-            .addProfiles(
-                    new ProfileSettingDrawerItem().withName(R.string.add_user).withIcon(new IconicsDrawable(this, GoogleMaterial.Icon.gmd_add).actionBar().paddingDp(5).colorRes(R.color.material_drawer_primary_text)).withIdentifier(PROFILE_ADD)
-//                        new ProfileSettingDrawerItem().withName("Manage Account").withIcon(GoogleMaterial.Icon.gmd_settings).withIdentifier(100001)
-            ).withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
+            .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
               @Override
               public boolean onProfileChanged(View view, IProfile profile, boolean current) {
                 if (current)
@@ -258,8 +267,31 @@ public class MainActivity extends AppCompatActivity {
     final Observer<List<Pyramid>> pyramidObserver = pyramids -> {
       mRecyclerAdapter.update(pyramids);
     };
-
     mStatsViewModel.getPyramids().observe(this, pyramidObserver);
+
+    final Observer<Boolean> progressObserver = isBusy -> {
+      if (isBusy != null && isBusy)
+        showProgress();
+      else
+        hideProgress();
+    };
+    mStatsViewModel.getIsBusy().observe(this, progressObserver);
+
+    final Observer<List<MPProfileDrawerItem>> usersObserver = users -> {
+      mAccountHeader.clear();
+      int count = 0;
+      for (MPProfileDrawerItem profile : users) {
+        mAccountHeader.addProfile(profile, count++);
+      }
+      mAccountHeader.addProfile(mAddNewUserItem, count++);
+//      mAccountHeader.addProfile(mManageUsersItem, count);
+    };
+    mUsersViewModel.getUsers().observe(this, usersObserver);
+
+    final Observer<MPProfileDrawerItem> currentProfileObserver = profile -> {
+      mAccountHeader.setActiveProfile(profile, false);
+    };
+    mUsersViewModel.getCurrentUser().observe(this, currentProfileObserver);
   }
 
   @Override
@@ -270,12 +302,11 @@ public class MainActivity extends AppCompatActivity {
 
     try {
       dataCache = DataCache.getInstance();
-      dataCache.setDb(db);
-      initUsers();
-      mStatsViewModel = ViewModelProviders.of(this).get(StatsViewModel.class);
-      subscribeViewModels();
-
-      triggerCacheUpdate();
+      if (savedInstanceState == null) {
+        dataCache.setDb(db);
+        dataCache.loadUsers();
+        triggerCacheUpdate();
+      }
     } catch (InvalidUserException e) {
       /* launch login, we have no known user */
       canLaunchLogin = true;
@@ -287,36 +318,6 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  private void initUsers() throws InvalidUserException {
-    m_InitializingUsers = true;
-    // todo figure out timing of this
-    if (profileCallbackUuid == null)
-      profileCallbackUuid = dataCache.subscribe(new DataCache.DataCacheProfileHandler() {
-        @Override
-        public void onProfileCached(MPProfileDrawerItem profile) {
-          if (profile == null || m_InitializingUsers)
-            return;
-
-          mAccountHeader.addProfile(profile, 0);
-          mAccountHeader.setActiveProfile(profile, true);
-        }
-      });
-
-    List<MPProfileDrawerItem> profiles = dataCache.getUserProfiles();
-    currentUser = dataCache.getCurrentUser() != null ? dataCache.getCurrentUser() : dataCache.getLastUser();
-    MPProfileDrawerItem currentProfile = null;
-    int count = 0;
-    for (MPProfileDrawerItem profile : profiles) {
-      int position = profile.getUser() == currentUser || count++ == 0 ? 0 : 1;
-      if (position == 0)
-        currentProfile = profile;
-      mAccountHeader.addProfile(profile, position);
-    }
-
-    mAccountHeader.setActiveProfile(currentProfile);
-    m_InitializingUsers = false;
-  }
-
   private boolean onSelectedProfileChanged(IProfile profile){
     if (profile instanceof IDrawerItem && profile.getIdentifier() == PROFILE_ADD) {
       Intent loginIntent = new Intent(this, UserLoginActivity.class);
@@ -324,9 +325,13 @@ public class MainActivity extends AppCompatActivity {
       requestingNewUser = true;
       return true;
     }
+    if (profile instanceof IDrawerItem && profile.getIdentifier() == PROFILE_MANAGE) {
+      // todo support user management
+      return true;
+    }
 
     if (profile instanceof MPProfileDrawerItem){
-      onActiveUserChanged(((MPProfileDrawerItem)profile).getUser());
+      dataCache.setCurrentUser(((MPProfileDrawerItem)profile).getUser());
       return true;
     }
     return false;
@@ -339,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
       // Make sure the request was successful
       if (resultCode == RESULT_OK) {
         try {
-          initUsers();
+          dataCache.loadUsers();
           triggerCacheUpdate();
         }
         catch (InvalidUserException e) {
@@ -380,35 +385,21 @@ public class MainActivity extends AppCompatActivity {
   @Override
   public void onStart(){
     super.onStart();
-//    if (showProgressOnResume){
-//      showProgressOnResume = false;
-//      showProgress();
-//    }
-  }
-
-  @Override
-  public void onStop(){
-    super.onStop();
-  }
-
-  @Override
-  public void onPause(){
-    super.onPause();
+    boolean showSpinner = mStatsViewModel != null && mStatsViewModel.getIsBusy() != null && mStatsViewModel.getIsBusy().getValue() != null && mStatsViewModel.getIsBusy().getValue();
+    if (showSpinner)
+      showProgress();
+    else
+      hideProgress();
   }
 
   @Override
   public void onResume(){
     super.onResume();
-//    if (showProgressOnResume){
-//      showProgressOnResume = false;
-//      showProgress();
-//    }
-  }
-
-  private void onActiveUserChanged(User user){
-    dataCache.setCurrentUser(user);
-    if (!requestingNewUser)
-      triggerCacheUpdate();
+    boolean showSpinner = mStatsViewModel != null && mStatsViewModel.getIsBusy() != null && mStatsViewModel.getIsBusy().getValue() != null && mStatsViewModel.getIsBusy().getValue();
+    if (showSpinner)
+      showProgress();
+    else
+      hideProgress();
   }
 
   private void triggerCacheUpdate(){
@@ -423,14 +414,10 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void showProgress(){
-    mSpinnerFragment = new SpinnerFragment();
-    getFragmentManager().beginTransaction().add(R.id.drawer_container, mSpinnerFragment).commit();
+    mLoadingView.show();
   }
 
   private void hideProgress(){
-    if (mSpinnerFragment == null)
-      return;
-    getFragmentManager().beginTransaction().remove(mSpinnerFragment).commit();
-    mSpinnerFragment = null;
+    mLoadingView.hide();
   }
 }

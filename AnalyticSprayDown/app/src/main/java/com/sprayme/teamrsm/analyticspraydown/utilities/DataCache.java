@@ -56,12 +56,14 @@ public class DataCache extends Application
   private BetaSpewDb m_Db = null;
   private MPModel m_MpModel = null;
   private User m_CurrentUser;
+  private MutableLiveData<MPProfileDrawerItem> mCurrentUser = new MutableLiveData<>();
   private boolean m_UserChanged;
-  private List<User> m_Users = null;
   private List<MPProfileDrawerItem> m_UserProfiles = new ArrayList<>();
+  private MutableLiveData<List<MPProfileDrawerItem>> mUserProfiles = new MutableLiveData<>();
   private List<Tick> m_Ticks = null;
   private MutableLiveData<List<Tick>> mTicks = new MutableLiveData<>();
   private List<Route> m_Routes = null;
+  private MutableLiveData<Boolean> mIsBusy = new MutableLiveData<>();
   private static int m_InvalidCacheHours;
 
   private boolean ticksWaitingOnRoutes = false;
@@ -112,11 +114,17 @@ public class DataCache extends Application
 
   public void setCurrentUser(User user) {
     m_CurrentUser = user;
+    for (MPProfileDrawerItem profile : mUserProfiles.getValue()) {
+      if (profile.getUser() == m_CurrentUser) {
+        mCurrentUser.setValue(profile);
+        break;
+      }
+    }
     m_UserChanged = true;
-    //todo: update ticks
+    loadUserTicks();
   }
 
-  public User getLastUser() throws InvalidUserException {
+  public void loadLastUser() throws InvalidUserException {
     User lastUser = m_Db.getLastUser();
     if (lastUser.getUserId() == null) {
       m_UserProfiles = new ArrayList<>();
@@ -124,11 +132,9 @@ public class DataCache extends Application
     }
 
     m_CurrentUser = lastUser;
-
-    return lastUser;
   }
 
-  public List<MPProfileDrawerItem> getUserProfiles() throws InvalidUserException {
+  public void loadUsers() throws InvalidUserException {
     List<User> users = m_Db.getUsers();
     if (users == null || users.size() == 0) {
       m_UserProfiles = new ArrayList<>();
@@ -136,9 +142,8 @@ public class DataCache extends Application
     }
 
     if (m_CurrentUser == null)
-      getLastUser();
+      loadLastUser();
 
-    m_Users = users;
     List<MPProfileDrawerItem> profiles = new ArrayList<>();
     MPProfileDrawerItem currentProfile = null;
     for (User user : users) {
@@ -148,21 +153,15 @@ public class DataCache extends Application
         currentProfile = profile;
     }
     m_UserProfiles = profiles;
+    mUserProfiles.setValue(profiles);
     m_CurrentUser = currentProfile.getUser();
-//    broadcastUserCompleted(currentProfile);
-    return m_UserProfiles;
+    mCurrentUser.setValue(currentProfile);
   }
 
   public void createNewUser(String emailAddress, String apiKey) {
+    mIsBusy.setValue(true);
     m_MpModel.requestUser(emailAddress, apiKey);
-
-//    if (m_CurrentUser == null)
-      m_CurrentUser = null; //new User();
-//    else
-//      clearCurrentUser();
-
-//    m_CurrentUser.setEmailAddr(emailAddress);
-//    m_CurrentUser.setApiKey(apiKey);
+    m_CurrentUser = null;
     m_UserChanged = true;
   }
 
@@ -174,6 +173,7 @@ public class DataCache extends Application
   }
 
   public void loadUserTicks() {
+    mIsBusy.setValue(true);
     if (m_Ticks == null || m_UserChanged)
     {
       fetchTicks();
@@ -185,8 +185,10 @@ public class DataCache extends Application
       Long[] routeIds = getRouteIdArray(m_Ticks);
       ticksWaitingOnRoutes = true;
       loadRoutes(routeIds);
-    } else
+    } else {
       broadcastTicksCompleted();
+      mIsBusy.setValue(false);
+    }
   }
 
   private void fetchTicks() {
@@ -217,6 +219,7 @@ public class DataCache extends Application
   * Routes Methods
   * */
   public void loadRoutes(Long[] routeIds) {
+    mIsBusy.setValue(true);
     if (m_Routes == null)
       fetchRoutes(routeIds);
     else if (isCacheInvalid())
@@ -242,6 +245,7 @@ public class DataCache extends Application
           ticksWaitingOnRoutes = false;
           mTicks.setValue(m_Ticks);
           broadcastTicksCompleted();
+          mIsBusy.setValue(false);
         }
       }
     }
@@ -264,6 +268,7 @@ public class DataCache extends Application
           ticksWaitingOnRoutes = false;
           mTicks.setValue(m_Ticks);
           broadcastTicksCompleted();
+          mIsBusy.setValue(false);
         }
       }
     }
@@ -324,6 +329,7 @@ public class DataCache extends Application
       ticksWaitingOnRoutes = false;
       mTicks.setValue(m_Ticks);
       broadcastTicksCompleted();
+      mIsBusy.setValue(false);
     }
   }
 
@@ -352,8 +358,11 @@ public class DataCache extends Application
     MPProfileDrawerItem profile = new MPProfileDrawerItem(user);
 
     m_UserProfiles.add(profile);
+    mUserProfiles.setValue(m_UserProfiles);
+    mCurrentUser.setValue(profile);
 
     broadcastUserCompleted(profile);
+    mIsBusy.setValue(false);
   }
 
   /*
@@ -432,5 +441,17 @@ public class DataCache extends Application
 
   public LiveData<List<Tick>> getTicksLiveData(){
     return mTicks;
+  }
+
+  public LiveData<List<MPProfileDrawerItem>> getUsersLiveData(){
+    return mUserProfiles;
+  }
+
+  public LiveData<MPProfileDrawerItem> getCurrentUserLiveData(){
+    return mCurrentUser;
+  }
+
+  public LiveData<Boolean> getIsBusyLiveData(){
+    return mIsBusy;
   }
 }
