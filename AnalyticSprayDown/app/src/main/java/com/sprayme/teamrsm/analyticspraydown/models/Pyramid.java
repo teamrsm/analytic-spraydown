@@ -16,40 +16,40 @@ public class Pyramid {
   private PyramidStep[] steps;
   private RouteType routeType;
 
-  public Pyramid(List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, RouteType routeType) {
+  public Pyramid(List<Tick> ticks, int height, int stepChangeSize, PyramidStepType stepType, RouteType routeType) {
     this.height = height;
     this.stepChangeSize = stepChangeSize;
     this.stepType = stepType;
     this.routeType = routeType;
 
-    Route hardestRoute = StreamSupport.stream(routes).max(
-            (route1, route2) -> route1.getGrade().compareTo(route2.getGrade())).orElse(null);
-    if (hardestRoute == null)
+    Tick hardestTick = StreamSupport.stream(ticks).max(
+            (tick1, tick2) -> tick1.getRoute().getGrade().compareTo(tick2.getRoute().getGrade())).orElse(null);
+    if (hardestTick == null)
       return; // todo do something useful here
 
-    Grade hardestGrade = hardestRoute.getGrade();
+    Grade hardestGrade = hardestTick.getRoute().getGrade();
 
     // limit our height to the easiest grade of this type
 //        height = height >= hardestGrade.getGradeValue() ? height : hardestGrade.getGradeValue();
 
-    steps = buildPyramidSteps(routes, height, stepChangeSize, stepType, hardestGrade);
+    steps = buildPyramidSteps(ticks, height, stepChangeSize, stepType, hardestGrade);
   }
 
-  public Pyramid(List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, RouteType routeType, Grade goal) {
+  public Pyramid(List<Tick> ticks, int height, int stepChangeSize, PyramidStepType stepType, RouteType routeType, Grade goal) {
     this.height = height;
     this.stepChangeSize = stepChangeSize;
     this.stepType = stepType;
     this.routeType = routeType;
 
-    Grade currentGrade = goal;
+//    Grade currentGrade = goal;
 
     // limit our height to the easiest grade of this type
 //        height = height >= currentGrade.getGradeValue() ? height : currentGrade.getGradeValue();
 
-    steps = buildPyramidSteps(routes, height, stepChangeSize, stepType, goal);
+    steps = buildPyramidSteps(ticks, height, stepChangeSize, stepType, goal);
   }
 
-  private PyramidStep[] buildPyramidSteps(List<Route> routes, int height, int stepChangeSize, PyramidStepType stepType, Grade startingGrade) {
+  private PyramidStep[] buildPyramidSteps(List<Tick> ticks, int height, int stepChangeSize, PyramidStepType stepType, Grade startingGrade) {
     PyramidStep[] steps = new PyramidStep[height];
     Grade grade = startingGrade;
     int size = 1;
@@ -58,11 +58,11 @@ public class Pyramid {
         break;
       Grade currentGrade = grade;
 
-      List<Route> stepRoutes = StreamSupport.stream(routes)
-              .filter((route) -> route.getGrade().compareTo(currentGrade) == 0)
+      List<Tick> stepTicks = StreamSupport.stream(ticks)
+              .filter((tick) -> tick.getRoute().getGrade().compareTo(currentGrade) == 0)
               .collect(Collectors.toList());
 
-      steps[i] = new PyramidStep(size, currentGrade, stepRoutes);
+      steps[i] = new PyramidStep(size, currentGrade, stepTicks);
       grade = grade.nextEasiest();
 
       if (size == 1)

@@ -11,8 +11,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import com.sprayme.teamrsm.analyticspraydown.R;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 import com.sprayme.teamrsm.analyticspraydown.models.PyramidStep;
+import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,9 +63,11 @@ public class SprayamidView extends View {
     {
       case MotionEvent.ACTION_DOWN: {
         for (PyramidRegion region : clickRegions) {
-          if (region.contains((int)event.getX(), (int)event.getY()))
-            if (region.getRoute() != null)
-              Toast.makeText(getContext(), region.getRoute().getName(), Toast.LENGTH_SHORT).show();
+          if (region.contains((int)event.getX(), (int)event.getY())) {
+            Tick tick = region.getTick();
+            if (tick != null && tick.getRoute() != null)
+              Toast.makeText(getContext(), region.getTick().getRoute().getName(), Toast.LENGTH_SHORT).show();
+          }
         }
       }
     }
@@ -88,8 +92,20 @@ public class SprayamidView extends View {
         int height = vStepSize - 4;
         ShapeDrawable rect = new ShapeDrawable(new RectShape());
         rect.setBounds(x, y, x + width, y + height);
-        if (steps[i].getAt(j) != null)
-          rect.getPaint().setColor(0xff74AC23);
+        Tick tick = steps[i].getAt(j);
+        if (steps[i].getAt(j) != null) {
+          switch (tick.getType()) {
+            case Redpoint: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickRedpoint)); break;
+            case Onsight: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickOnsight)); break;
+            case Flash: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickFlash)); break;
+            case Toprope:
+            case Follow: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickToprope)); break;
+            case Fell: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickFell)); break;
+            case Unknown: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickUnknown)); break;
+            case Solo: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickSolo)); break;
+            case Pinkpoint: rect.getPaint().setColor(getResources().getColor(R.color.pyramidTickPinkpoint)); break;
+          }
+        }
         rect.draw(canvas);
         clickRegions.add(new PyramidRegion(x, y, x + width, y + height, steps[i].getAt(j)));
       }

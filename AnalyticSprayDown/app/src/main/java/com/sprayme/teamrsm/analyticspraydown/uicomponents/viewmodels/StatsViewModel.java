@@ -78,7 +78,8 @@ public class StatsViewModel extends AndroidViewModel {
     try {
       if (ticks == null)
         return;
-      Set<Route> routes = new HashSet<Route>();
+      Set<Route> routes = new HashSet<>();
+      List<Tick> includedTicks = new ArrayList<>();
       if (mSharedPref == null)
         mSharedPref = PreferenceManager.getDefaultSharedPreferences(getApplication().getApplicationContext());
       boolean ignoreTopropes = mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
@@ -122,7 +123,8 @@ public class StatsViewModel extends AndroidViewModel {
             continue;
         }
 
-        routes.add(tick.getRoute());
+        if (routes.add(tick.getRoute()))
+          includedTicks.add(tick);
       }
 
       int height = Integer.valueOf(mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_HEIGHT, "5"));
@@ -130,24 +132,23 @@ public class StatsViewModel extends AndroidViewModel {
       String stepTypeStr = mSharedPref.getString(SettingsActivity.KEY_PREF_PYRAMID_STEP_MODIFIER_TYPE, "Additive");
       PyramidStepType stepType = PyramidStepType.valueOf(stepTypeStr);
       List<Pyramid> pyramids = new ArrayList<>();
-      ArrayList<Route> routeList = new ArrayList<>(routes);
       if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_ROUTE_PYRAMID, false))
-        pyramids.add(SprayarificStructures.buildPyramid(routeList, RouteType.Route, height, stepSize, stepType));
+        pyramids.add(SprayarificStructures.buildPyramid(includedTicks, RouteType.Route, height, stepSize, stepType));
 
       if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_SPORT_PYRAMID, true))
-        pyramids.add(SprayarificStructures.buildPyramid(routeList, RouteType.Sport, height, stepSize, stepType));
+        pyramids.add(SprayarificStructures.buildPyramid(includedTicks, RouteType.Sport, height, stepSize, stepType));
 
       if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_TRAD_PYRAMID, true))
-        pyramids.add(SprayarificStructures.buildPyramid(routeList, RouteType.Trad, height, stepSize, stepType));
+        pyramids.add(SprayarificStructures.buildPyramid(includedTicks, RouteType.Trad, height, stepSize, stepType));
 
       if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_BOULDER_PYRAMID, true))
-        pyramids.add(SprayarificStructures.buildPyramid(routeList, RouteType.Boulder, height, stepSize, stepType));
+        pyramids.add(SprayarificStructures.buildPyramid(includedTicks, RouteType.Boulder, height, stepSize, stepType));
 
       if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_ICE_PYRAMID, false))
-        pyramids.add(SprayarificStructures.buildPyramid(routeList, RouteType.Ice, height, stepSize, stepType));
+        pyramids.add(SprayarificStructures.buildPyramid(includedTicks, RouteType.Ice, height, stepSize, stepType));
 
       if (mSharedPref.getBoolean(SettingsActivity.KEY_PREF_SHOW_AID_PYRAMID, false))
-        pyramids.add(SprayarificStructures.buildPyramid(routeList, RouteType.Aid, height, stepSize, stepType));
+        pyramids.add(SprayarificStructures.buildPyramid(includedTicks, RouteType.Aid, height, stepSize, stepType));
 
       mPyramids.setValue(pyramids);
     }

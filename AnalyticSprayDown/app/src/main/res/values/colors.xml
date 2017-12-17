@@ -4,4 +4,15 @@
   <color name="colorPrimaryDark">#303F9F</color>
   <color name="colorAccent">#FF4081</color>
   <color name="progressBackgroundLight">#BBFFFFFF</color>
+  <color name="pyramidTickOnsight">#5b6fd8</color>
+  <!--<color name="pyramidTickOnsight">#3b83f7</color>-->
+  <color name="pyramidTickFlash">#a2ba2a</color>
+  <!--<color name="pyramidTickFlash">#b8d337</color>-->
+  <color name="pyramidTickRedpoint">#bc3121</color>
+  <!--<color name="pyramidTickRedpoint">#d82d1a</color>-->
+  <color name="pyramidTickFell">#848484</color>
+  <color name="pyramidTickToprope">#33b26a</color>
+  <color name="pyramidTickUnknown">#eab448</color>
+  <color name="pyramidTickSolo">#8f58ce</color>
+  <color name="pyramidTickPinkpoint">#d15778</color>
 </resources>

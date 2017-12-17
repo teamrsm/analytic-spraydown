@@ -45,6 +45,8 @@ public class Route {
 
   private GradeType mapGradeType(String type) {
     GradeType gradetype;
+    // todo don't do this hack and support mixed types
+    type = type.split(",")[0];
     if (type.equalsIgnoreCase("Sport")) {
       this.type = RouteType.Sport;
       gradetype = GradeType.RouteYosemite;
