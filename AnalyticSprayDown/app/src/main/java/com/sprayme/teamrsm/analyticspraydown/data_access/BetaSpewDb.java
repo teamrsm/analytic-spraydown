@@ -9,7 +9,11 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.sprayme.teamrsm.analyticspraydown.models.Grade;
+import com.sprayme.teamrsm.analyticspraydown.models.GradeType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
+import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
+import com.sprayme.teamrsm.analyticspraydown.models.Statistic;
+import com.sprayme.teamrsm.analyticspraydown.models.StatisticType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
@@ -22,6 +26,7 @@ import java.util.List;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.API_KEY;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.AVATAR_URL;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.EMAIL_ADDR;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.GRADE_COLUMN;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.GRADE_ID;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.LAST_ACCESS;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.NOTES;
@@ -36,6 +41,7 @@ import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROUTE_URL
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.ROW_NUM;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.STARS;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICKS_TABLE_NAME;
+import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICK_COUNT;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICK_DATE;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.TICK_TYPE;
 import static com.sprayme.teamrsm.analyticspraydown.data_access.SqlGen.USERS_TABLE_NAME;
@@ -374,18 +380,21 @@ public class BetaSpewDb extends SQLiteOpenHelper {
 
   /******** Statistic Queries *********/
 
-  public HashMap<Long, Float> getOnsightPercentages(long userId, String routeType) {
-    HashMap<Long, Float> onsightPercentages = new HashMap<>();
+  public List<Statistic> getOnsightPercentages(long userId,
+                                                    RouteType routeType,
+                                                    GradeType gradeType) {
+    List<Statistic> onsightPercentages = new ArrayList<>();
 
     SQLiteDatabase db = getReadableDatabase();
-    Cursor cursor = db.rawQuery(SqlGen.makeOnsightPercentage(userId, routeType), null);
+    Cursor cursor = db.rawQuery(
+            SqlGen.makeOnsightPercentage(userId, routeType, gradeType), null);
 
     try {
       while (cursor.moveToNext()) {
-        Long gradeId = cursor.getLong(cursor.getColumnIndex(GRADE_ID));
+        String grade = cursor.getString(cursor.getColumnIndex(GRADE_COLUMN));
         Float onsightPercentage = cursor.getFloat(cursor.getColumnIndex(ONSIGHT_PERCENTAGE));
 
-        onsightPercentages.put(gradeId, onsightPercentage);
+        onsightPercentages.add(new Statistic(grade, onsightPercentage, StatisticType.Percentage));
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -396,13 +405,13 @@ public class BetaSpewDb extends SQLiteOpenHelper {
     return onsightPercentages;
   }
 
-  public List<Route> getOnsights(long userId) {
+  public List<Route> getOnsights(long userId, GradeType gradeType) {
     List<Route> onsights = new ArrayList<>();
 
     Cursor cursor = null;
     try {
       SQLiteDatabase db = getReadableDatabase();
-      cursor = db.rawQuery(SqlGen.makeGetOnsights(userId), null);
+      cursor = db.rawQuery(SqlGen.makeGetOnsights(userId, gradeType), null);
 
       while (cursor.moveToNext()) {
         Long routeId = cursor.getLong(cursor.getColumnIndex(ROUTE_ID));
@@ -426,7 +435,32 @@ public class BetaSpewDb extends SQLiteOpenHelper {
     return onsights;
   }
 
+  public List<Statistic> getTickDistribution(long userId,
+                                             RouteType routeType,
+                                             GradeType gradeType,
+                                             TickType tickType) {
+    List<Statistic> tickDistribution = new ArrayList<>();
 
+    Cursor cursor = null;
+    try {
+      SQLiteDatabase db = getReadableDatabase();
+      cursor = db.rawQuery(SqlGen.makeGetTickDistribution(
+              userId, routeType, gradeType, tickType), null);
+
+      while (cursor.moveToNext()) {
+        String grade = cursor.getString(cursor.getColumnIndex(GRADE_COLUMN));
+        int tickCount = cursor.getInt(cursor.getColumnIndex(TICK_COUNT));
+
+        tickDistribution.add(new Statistic(grade, tickCount, StatisticType.Count));
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      cursor.close();
+    }
+
+    return tickDistribution;
+  }
 
 
   /******* this function is a helper for AndroidDatabaseManager.java ********/
