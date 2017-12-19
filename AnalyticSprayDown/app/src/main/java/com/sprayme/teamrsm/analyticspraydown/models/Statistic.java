@@ -26,6 +26,7 @@ public class Statistic {
       case Count: return String.format(Locale.getDefault(), "%d", value);
       case Ratio: return String.format(Locale.getDefault(), "%.3f", value);
       case Percentage: return String.format(Locale.getDefault(), "%.1f%%", value);
+      case String: return value.toString();
       default: return null;
     }
   }

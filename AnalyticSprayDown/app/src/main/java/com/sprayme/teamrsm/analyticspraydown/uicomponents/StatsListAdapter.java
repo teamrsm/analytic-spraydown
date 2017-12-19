@@ -10,33 +10,68 @@ import android.widget.TextView;
 import com.sprayme.teamrsm.analyticspraydown.R;
 import com.sprayme.teamrsm.analyticspraydown.models.Statistic;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * Created by climbak on 11/4/17.
  */
 
 public class StatsListAdapter extends ArrayAdapter {
   private final Activity context;
-  private final Statistic[] statArray;
+  private final List<Statistic> stats;
 
-  public StatsListAdapter(Activity context, Statistic[] stats){
-    super(context, R.layout.stats_list_item , stats);
+  public StatsListAdapter(Activity context, List<Statistic> stats){
+    super(context, R.layout.stats_list_item , stats != null ? stats : new ArrayList<>());
     this.context = context;
-    this.statArray = stats;
+    this.stats = stats != null ? stats : new ArrayList<>();
   }
 
   public View getView(int position, View view, ViewGroup parent) {
-    LayoutInflater inflater=context.getLayoutInflater();
-    View rowView=inflater.inflate(R.layout.stats_list_item, null,true);
+    if (stats.isEmpty())
+      return null;
 
-    //this code gets references to objects in the listview_row.xml file
-    TextView nameTextField = (TextView) rowView.findViewById(R.id.statName);
-    TextView valueTextField = (TextView) rowView.findViewById(R.id.statValue);
+    View rowView = view;
+    // reuse views
+    if (rowView == null) {
+      LayoutInflater inflater = context.getLayoutInflater();
+      rowView = inflater.inflate(R.layout.stats_list_item, null);
+//    rowView = inflater.inflate(R.layout.stats_list_item, null,true);
+      // configure view holder
+      ViewHolder viewHolder = new ViewHolder();
+      viewHolder.name = (TextView) rowView.findViewById(R.id.statName);
+      viewHolder.value = (TextView) rowView.findViewById(R.id.statValue);
+      rowView.setTag(viewHolder);
+    }
 
-    //this code sets the values of the objects to values from the arrays
-    nameTextField.setText(statArray[position].getName());
-    valueTextField.setText(statArray[position].getValueString());
+    // fill data
+    ViewHolder holder = (ViewHolder) rowView.getTag();
+    holder.name.setText(stats.get(position).getName());
+    holder.value.setText(stats.get(position).getValueString());
 
     return rowView;
 
-  };
+  }
+
+  public @Override void clear(){
+    super.clear();
+    stats.clear();
+  }
+
+  public @Override void add(Object object){
+    super.add(object);
+    stats.add((Statistic)object);
+  }
+
+  public @Override void addAll(Collection collection){
+    super.addAll(collection);
+    for(Object item : collection.toArray())
+      stats.add((Statistic) item);
+  }
+
+  class ViewHolder {
+    public TextView name;
+    public TextView value;
+  }
 }

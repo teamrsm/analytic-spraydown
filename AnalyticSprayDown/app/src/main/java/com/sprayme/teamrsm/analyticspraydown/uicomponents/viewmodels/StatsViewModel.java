@@ -8,11 +8,14 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import com.sprayme.teamrsm.analyticspraydown.SettingsActivity;
+import com.sprayme.teamrsm.analyticspraydown.models.Grade;
+import com.sprayme.teamrsm.analyticspraydown.models.GradeType;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
 import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Statistic;
+import com.sprayme.teamrsm.analyticspraydown.models.StatisticType;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
 import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.TimeScale;
@@ -22,6 +25,7 @@ import com.sprayme.teamrsm.analyticspraydown.utilities.SprayarificStructures;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -151,8 +155,137 @@ public class StatsViewModel extends AndroidViewModel {
         pyramids.add(SprayarificStructures.buildPyramid(includedTicks, RouteType.Aid, height, stepSize, stepType));
 
       mPyramids.setValue(pyramids);
+      updateStats(ticks);
     }
     finally {
+    }
+  }
+
+  private void updateStats(List<Tick> ticks){
+    try {
+      if (ticks == null)
+        return;
+      Set<Route> routes = new HashSet<>();
+      List<Tick> includedTicks = new ArrayList<>();
+      if (mSharedPref == null)
+        mSharedPref = PreferenceManager.getDefaultSharedPreferences(getApplication().getApplicationContext());
+      boolean ignoreTopropes = mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
+      for (Tick tick : ticks) {
+        if (tick.getRoute() == null)
+          continue;
+
+        if (tick.getRoute().getType() != RouteType.Sport)
+          continue;
+
+        // filter for ignore toprope setting
+        if (ignoreTopropes && tick.getRoute().getType() != RouteType.Boulder) {
+          TickType tickType = tick.getType();
+          boolean skip = tickType == TickType.Fell;
+          skip |= tickType == TickType.Toprope;
+          skip |= tickType == TickType.Unknown;
+          if (skip)
+            continue;
+        }
+
+        // filter for the selected time scale
+        if (mTimeScale != TimeScale.Lifetime) {
+          Date date = new Date();
+          Calendar cal = Calendar.getInstance();
+          cal.setTime(date);
+          switch (mTimeScale) {
+            case Month:
+              cal.add(Calendar.MONTH, -1);
+              break;
+            case ThreeMonth:
+              cal.add(Calendar.MONTH, -3);
+              break;
+            case SixMonth:
+              cal.add(Calendar.MONTH, -6);
+              break;
+            case Year:
+              cal.add(Calendar.YEAR, -1);
+              break;
+            default:
+              break;
+          }
+          date = cal.getTime();
+          if (date.getTime() > tick.getDate().getTime())
+            continue;
+        }
+
+        if (routes.add(tick.getRoute()))
+          includedTicks.add(tick);
+      }
+
+      if (includedTicks.isEmpty())
+       return;
+
+      HashMap<Grade, Integer> onsights = new HashMap<>();
+      HashMap<Grade, Integer> sends = new HashMap<>();
+      for (Tick tick : includedTicks){
+        Grade grade = tick.getRoute().getGrade();
+        if (!onsights.containsKey(grade))
+          onsights.put(grade, 0);
+        if (!sends.containsKey(grade))
+          sends.put(grade, 0);
+
+        Integer onsightCount = onsights.get(grade);
+        Integer sendCount = sends.get(grade);
+        sendCount++;
+        sends.put(grade, sendCount);
+        if (tick.getType() == TickType.Onsight) {
+          onsightCount++;
+          onsights.put(grade, onsightCount);
+        }
+      }
+
+      Grade maxOnsight = null, maxSend = null;
+      int onsightCount = 0, sendCount = 0, onsightsTotalValue = 0, sendsTotalValue = 0;
+      for(Grade grade : onsights.keySet()){
+        if (onsights.get(grade) == 0)
+          continue;
+        if (maxOnsight == null)
+          maxOnsight = grade;
+        else if (grade.compareTo(maxOnsight) > 0)
+          maxOnsight = grade;
+
+        onsightCount += onsights.get(grade);
+        onsightsTotalValue += onsights.get(grade) * grade.getGradeValue();
+      }
+
+      for(Grade grade : sends.keySet()){
+        if (maxSend == null)
+          maxSend = grade;
+        else if (grade.compareTo(maxSend) > 0)
+          maxSend = grade;
+
+        sendCount += sends.get(grade);
+        sendsTotalValue += sends.get(grade) * grade.getGradeValue();
+      }
+
+      int avgOnsight = onsightCount > 0 ? onsightsTotalValue / onsightCount : -1;
+      int avgSend = sendsTotalValue / sendCount;
+
+      List<Statistic> stats = new ArrayList<>();
+
+      Statistic bestOnsight = new Statistic("Best Onsight", maxOnsight, StatisticType.String);
+      Statistic numOnsights = new Statistic("Number of Onsights", onsightCount, StatisticType.Count);
+      Statistic averageOnsight = new Statistic("Average Onsight", new Grade(avgOnsight, GradeType.RouteYosemite), StatisticType.String);
+
+      Statistic bestSend = new Statistic("Best Send", maxSend, StatisticType.String);
+      Statistic numSends = new Statistic("Number of Sends", sendCount, StatisticType.Count);
+      Statistic averageSend = new Statistic("Average Send", new Grade(avgSend, GradeType.RouteYosemite), StatisticType.String);
+
+      stats.add(bestOnsight);
+      stats.add(numOnsights);
+      stats.add(averageOnsight);
+      stats.add(bestSend);
+      stats.add(numSends);
+      stats.add(averageSend);
+
+      mStatistics.setValue(stats);
+
+    } finally {
     }
   }
 }
