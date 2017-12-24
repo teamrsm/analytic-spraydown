@@ -1,5 +1,9 @@
 package com.sprayme.teamrsm.analyticspraydown.data_access;
 
+import com.sprayme.teamrsm.analyticspraydown.models.GradeType;
+import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
+import com.sprayme.teamrsm.analyticspraydown.models.TickType;
+
 import java.util.List;
 
 /**
@@ -127,6 +131,8 @@ class SqlGen {
   /*-********************* STATS ***************************/
   static final String ONSIGHT_PERCENTAGE = "OnsightPercentage";
   static final String REDPOINT_PERCENTAGE = "RedpointPercentage";
+  static final String GRADE_COLUMN = "GRADE";
+  static final String TICK_COUNT = "TICK_COUNT";
     /*-*******************************************************/
 
   public static String makeGetLastUser() {
@@ -191,22 +197,30 @@ class SqlGen {
     return builder.toString();
   }
 
-  public static String makeOnsightPercentage(long userId, String routeType) {
+  public static String makeOnsightPercentage(long userId,
+                                             RouteType routeType,
+                                             GradeType gradeType) {
     String osPerc = new StringBuilder()
             .append("SELECT ")
             .append(GRADE_ID).append(",")
+            .append(gradeFromGradeType(gradeType)).append(" AS ").append(GRADE_COLUMN).append(",")
             .append("(OnsightCount / CAST(TotalCount AS REAL)) * 100 AS ")
             .append(ONSIGHT_PERCENTAGE).append(",")
             .append("(RedpointCount / CAST(TotalCount AS REAL)) * 100 AS ")
             .append(REDPOINT_PERCENTAGE)
             .append(" FROM (")
-            .append(makeTickTypeCounts(userId, routeType))
-            .append(") cnts ").toString();
+            .append(makeTickTypeCounts(userId, routeType, gradeType))
+            .append(") cnts")
+            .append(" JOIN ")
+            .append(GRADEMAP_TABLE_NAME).append(" gm ")
+            .append(" ON ").append("gm.").append(GRADE_ID).append(" = ")
+                           .append("cnts.").append(GRADE_ID)
+            .toString();
 
     return osPerc;
   }
 
-  public static String makeTickTypeCounts(long userId, String routeType) {
+  public static String makeTickTypeCounts(long userId, RouteType routeType, GradeType gradeType) {
     String tickTypes = new StringBuilder()
             .append("SELECT ").append(GRADE_ID).append(", ")
             .append("SUM(CASE WHEN TICK_TYPE = 'Onsight' THEN 1 ELSE 0 END) AS OnsightCount,")
@@ -221,14 +235,14 @@ class SqlGen {
             .append("SUM(CASE WHEN TICK_TYPE = NULL THEN 1 ELSE 0 END) AS NullCount,")
             .append("Count(*) AS TotalCount")
             .append(" FROM (")
-            .append(makeMapRoutesToGrades(userId, routeType))
+            .append(makeMapRoutesToGrades(userId, routeType, gradeType))
             .append(") tks ")
             .append("GROUP BY ").append(GRADE_ID).toString();
 
     return tickTypes;
   }
 
-  public static String makeMapRoutesToGrades(long userId, String routeType) {
+  public static String makeMapRoutesToGrades(long userId, RouteType routeType, GradeType gradeType) {
     String mapRtoG = new StringBuilder()
             .append("SELECT ")
             .append(RATING).append(",")
@@ -237,17 +251,17 @@ class SqlGen {
             .append(" FROM ")
             .append(TICKS_TABLE_NAME).append(" t ")
             .append("JOIN ")
-            .append(makeRouteToGradeMapFromClause())
+            .append(makeRouteToGradeMapFromClause(gradeType))
             .append(" WHERE ")
             .append("t.").append(USER_ID).append(" = ").append(userId)
-            .append(" AND ").append("r.").append(ROUTE_TYPE).append(" = '")
-            .append(routeType).append("'")
+            .append(" AND ").append("r.").append(ROUTE_TYPE).append(" = ")
+              .append("'").append(routeType.toString()).append("'")
             .toString();
 
     return mapRtoG;
   }
 
-  public static String makeGetOnsights(long userId) {
+  public static String makeGetOnsights(long userId, GradeType gradeType) {
     String onsightQuery = new StringBuilder()
             .append("SELECT ")
             .append("t.").append(ROUTE_ID).append(",")
@@ -261,13 +275,63 @@ class SqlGen {
             .append(" FROM ")
             .append(TICKS_TABLE_NAME).append(" t ")
             .append("JOIN ")
-            .append(makeRouteToGradeMapFromClause())
+            .append(makeRouteToGradeMapFromClause(gradeType))
             .append(" WHERE ")
             .append("t.").append(TICK_TYPE).append(" = ").append("'Onsight'")
             .append(" AND ").append("t.").append(USER_ID).append(" = ").append(userId)
             .toString();
 
     return onsightQuery;
+  }
+
+  public static String makeGetTickDistribution(long userId,
+                                               RouteType routeType,
+                                               GradeType gradeType,
+                                               TickType tickType) {
+    String distributionQuery = new StringBuilder()
+            .append("SELECT ")
+            .append("gm.").append(GRADE_ID).append(",")
+            .append("gm.").append(gradeFromGradeType(gradeType))
+              .append(" AS ").append(GRADE_COLUMN).append(",")
+            .append("t.").append(TICK_TYPE).append(",")
+            .append("COUNT(*) AS ").append(TICK_COUNT)
+            .append(" FROM ")
+            .append(TICKS_TABLE_NAME).append(" t ")
+            .append("JOIN ")
+            .append(makeRouteToGradeMapFromClause(gradeType))
+            .append(" WHERE ")
+            .append("t.").append(USER_ID).append(" = ").append(userId).append(" AND ")
+            .append("r.").append(ROUTE_TYPE).append(" = ")
+              .append("'").append(routeType.toString()).append("'").append(" AND ")
+            .append("t.").append(TICK_TYPE).append(" = ")
+              .append("'").append(tickType.toString()).append("'")
+            .append(" GROUP BY ")
+            .append("gm.").append(GRADE_ID).append(",")
+            .append("t.").append(TICK_TYPE)
+            .append(" ORDER BY ")
+            .append("gm.").append(GRADE_ID).append(" asc ")
+            .toString();
+
+    return distributionQuery;
+  }
+
+  private static String gradeFromGradeType(GradeType gradeType) {
+    switch (gradeType) {
+      case RouteYosemite:
+        return YOSEMITE_GRADE;
+      case RouteEuropean:
+        return EURO_GRADE;
+      case BoulderFont:
+        return FONT_GRADE;
+      case BoulderHueco:
+        return HUECO_GRADE;
+      case Ice:
+        return WATERICE_GRADE;
+      case Aid:
+        return YOSEMITE_GRADE;
+      default:
+        return YOSEMITE_GRADE;
+    }
   }
 
   public static String makeRouteToGradeMapFromClause() {
@@ -287,6 +351,19 @@ class SqlGen {
             .append("gm.").append(FONT_GRADE)
             .append(" OR ").append("r.").append(RATING).append(" = ")
             .append("gm.").append(WATERICE_GRADE).toString();
+  }
+
+  public static String makeRouteToGradeMapFromClause(GradeType gradeType) {
+    String fromClause = new StringBuilder()
+            .append(ROUTES_TABLE_NAME).append(" r ")
+            .append("ON ").append("r.").append(ROUTE_ID).append(" = ")
+            .append("t.").append(ROUTE_ID)
+            .append(" JOIN ")
+            .append(GRADEMAP_TABLE_NAME).append(" gm ")
+            .append(" ON ").append("r.").append(RATING).append(" = ")
+            .append("gm.").append(gradeFromGradeType(gradeType)).toString();
+
+    return fromClause;
   }
 
   private static String buildInList(Long[] inLongs) {

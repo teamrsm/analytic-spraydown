@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import com.sprayme.teamrsm.analyticspraydown.SettingsActivity;
+import com.sprayme.teamrsm.analyticspraydown.models.GradeType;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
 import com.sprayme.teamrsm.analyticspraydown.models.PyramidStepType;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
@@ -45,8 +46,14 @@ public class StatsViewModel extends AndroidViewModel {
     mDataCache = DataCache.getInstance();
     mDataCache.getTicksLiveData().observeForever(ticks -> {
       updatePyramids(ticks);
-      mDataCache.calculateOnsightLevel("Sport");
-      mDataCache.getOnsights();
+
+      /* ToDo: For Statistics, we need a notion of the currently active pyramid,
+       * so we can update statistics appropriately.
+       * Or alternately, load all stats and swizzle them as needed. */
+
+      mDataCache.calculateOnsightLevel(RouteType.Sport, GradeType.RouteYosemite);
+      mDataCache.getOnsights(GradeType.RouteYosemite);
+      mDataCache.getTickDistribution(RouteType.Sport, GradeType.RouteYosemite, TickType.Redpoint);
     });
 
     LiveData<Boolean> ld = mDataCache.getIsBusyLiveData();
