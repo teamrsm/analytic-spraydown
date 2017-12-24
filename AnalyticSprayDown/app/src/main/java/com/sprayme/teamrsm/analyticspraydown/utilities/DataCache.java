@@ -10,11 +10,14 @@ import com.sprayme.teamrsm.analyticspraydown.SettingsActivity;
 import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
 import com.sprayme.teamrsm.analyticspraydown.models.Grade;
+import com.sprayme.teamrsm.analyticspraydown.models.GradeType;
 import com.sprayme.teamrsm.analyticspraydown.models.MPModel;
 import com.sprayme.teamrsm.analyticspraydown.models.MPProfileDrawerItem;
 import com.sprayme.teamrsm.analyticspraydown.models.Route;
+import com.sprayme.teamrsm.analyticspraydown.models.RouteType;
 import com.sprayme.teamrsm.analyticspraydown.models.Statistic;
 import com.sprayme.teamrsm.analyticspraydown.models.Tick;
+import com.sprayme.teamrsm.analyticspraydown.models.TickType;
 import com.sprayme.teamrsm.analyticspraydown.models.User;
 
 import java.util.ArrayList;
@@ -281,31 +284,40 @@ public class DataCache extends Application
   /*
   * Returns the gradeId and percentage value of the grade with the maximum onsight percentage.
   * */
-  public Map.Entry<Long, Float> calculateOnsightLevel(String routeType) {
+  public Statistic calculateOnsightLevel(RouteType routeType, GradeType gradeType) {
     if (m_CurrentUser == null)
       return null;
 
-    HashMap<Long, Float> osPercentages = m_Db.getOnsightPercentages(m_CurrentUser.getUserId(),
-            routeType);
+    List<Statistic> osPercentages = m_Db.getOnsightPercentages(m_CurrentUser.getUserId(),
+                                                               routeType,
+                                                               gradeType);
 
     /* ToDo: This is really stupid logic. */
-    Map.Entry<Long, Float> maxEntry = null;
-    for (Map.Entry<Long, Float> entry : osPercentages.entrySet()) {
-      if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0)
-        maxEntry = entry;
+    Statistic maxStat = null;
+    for (Statistic stat : osPercentages) {
+      if (maxStat == null || stat.compareTo(maxStat) > 0){
+        maxStat = stat;
+      }
     }
 
-    return maxEntry;
+    return maxStat;
   }
 
   /*
   * Returns all onsights
   * */
-  public List<Route> getOnsights() {
+  public List<Route> getOnsights(GradeType gradeType) {
     if (m_CurrentUser == null)
       return null;
 
-    return m_Db.getOnsights(m_CurrentUser.getUserId());
+    return m_Db.getOnsights(m_CurrentUser.getUserId(), gradeType);
+  }
+
+  public List<Statistic> getTickDistribution(RouteType routeType, GradeType gradeType, TickType tickType) {
+    if (m_CurrentUser == null)
+      return null;
+
+    return m_Db.getTickDistribution(m_CurrentUser.getUserId(), routeType, gradeType, tickType);
   }
 
   public List<Statistic> getStats(){
