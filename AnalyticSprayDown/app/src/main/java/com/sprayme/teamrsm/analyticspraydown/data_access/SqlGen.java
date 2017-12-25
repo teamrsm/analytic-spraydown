@@ -202,7 +202,7 @@ class SqlGen {
                                              GradeType gradeType) {
     String osPerc = new StringBuilder()
             .append("SELECT ")
-            .append(GRADE_ID).append(",")
+            .append("gm.").append(GRADE_ID).append(",")
             .append(gradeFromGradeType(gradeType)).append(" AS ").append(GRADE_COLUMN).append(",")
             .append("(OnsightCount / CAST(TotalCount AS REAL)) * 100 AS ")
             .append(ONSIGHT_PERCENTAGE).append(",")
