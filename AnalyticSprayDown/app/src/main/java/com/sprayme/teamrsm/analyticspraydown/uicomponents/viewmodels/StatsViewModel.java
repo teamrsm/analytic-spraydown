@@ -274,7 +274,7 @@ public class StatsViewModel extends AndroidViewModel {
 
       List<Statistic> stats = new ArrayList<>();
 
-      Statistic bestOnsight = new Statistic("Best Onsight", maxOnsight, StatisticType.String);
+      Statistic bestOnsight = /*mDataCache.calculateOnsightLevel(RouteType.Route, GradeType.RouteYosemite);*/ new Statistic("Best Onsight", maxOnsight, StatisticType.String);
       Statistic numOnsights = new Statistic("Number of Onsights", onsightCount, StatisticType.Count);
       Statistic averageOnsight = new Statistic("Average Onsight", new Grade(avgOnsight, GradeType.RouteYosemite), StatisticType.String);
 

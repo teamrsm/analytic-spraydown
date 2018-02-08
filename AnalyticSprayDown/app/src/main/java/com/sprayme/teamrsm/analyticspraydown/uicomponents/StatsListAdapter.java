@@ -47,8 +47,9 @@ public class StatsListAdapter extends ArrayAdapter {
 
     // fill data
     ViewHolder holder = (ViewHolder) rowView.getTag();
-    holder.name.setText(stats.get(position).getName());
-    holder.value.setText(stats.get(position).getValueString());
+    Statistic thisStat = stats.get(position);
+    holder.name.setText(thisStat.getName());
+    holder.value.setText(thisStat.getValueString());
 
     return rowView;
 
