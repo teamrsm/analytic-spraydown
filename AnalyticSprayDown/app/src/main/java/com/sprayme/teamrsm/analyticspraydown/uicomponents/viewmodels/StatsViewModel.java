@@ -176,6 +176,9 @@ public class StatsViewModel extends AndroidViewModel {
       if (mSharedPref == null)
         mSharedPref = PreferenceManager.getDefaultSharedPreferences(getApplication().getApplicationContext());
       boolean ignoreTopropes = mSharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_ONLY_LEADS, true);
+      int sendCount = 0;
+      HashMap<Grade, Integer> sends = new HashMap<>();
+      HashMap<Grade, Integer> onsights = new HashMap<>();
       for (Tick tick : ticks) {
         if (tick.getRoute() == null)
           continue;
@@ -219,34 +222,34 @@ public class StatsViewModel extends AndroidViewModel {
             continue;
         }
 
+        sendCount++;
         if (routes.add(tick.getRoute()))
           includedTicks.add(tick);
-      }
 
-      if (includedTicks.isEmpty())
-       return;
-
-      HashMap<Grade, Integer> onsights = new HashMap<>();
-      HashMap<Grade, Integer> sends = new HashMap<>();
-      for (Tick tick : includedTicks){
         Grade grade = tick.getRoute().getGrade();
-        if (!onsights.containsKey(grade))
-          onsights.put(grade, 0);
         if (!sends.containsKey(grade))
           sends.put(grade, 0);
 
-        Integer onsightCount = onsights.get(grade);
-        Integer sendCount = sends.get(grade);
-        sendCount++;
-        sends.put(grade, sendCount);
+        Integer currentSendCount = sends.get(grade);
+        currentSendCount++;
+        sends.put(grade, currentSendCount);
+
+        if (!onsights.containsKey(grade))
+        onsights.put(grade, 0);
+
         if (tick.getType() == TickType.Onsight) {
+          Integer onsightCount = onsights.get(grade);
           onsightCount++;
           onsights.put(grade, onsightCount);
         }
       }
 
+      if (includedTicks.isEmpty())
+       return;
+
       Grade maxOnsight = null, maxSend = null;
-      int onsightCount = 0, sendCount = 0, onsightsTotalValue = 0, sendsTotalValue = 0;
+      int distinctSendCount = includedTicks.size();
+      int onsightCount = 0, onsightsTotalValue = 0, sendsTotalValue = 0;
       for(Grade grade : onsights.keySet()){
         if (onsights.get(grade) == 0)
           continue;
@@ -265,7 +268,6 @@ public class StatsViewModel extends AndroidViewModel {
         else if (grade.compareTo(maxSend) > 0)
           maxSend = grade;
 
-        sendCount += sends.get(grade);
         sendsTotalValue += sends.get(grade) * grade.getGradeValue();
       }
 
@@ -274,12 +276,13 @@ public class StatsViewModel extends AndroidViewModel {
 
       List<Statistic> stats = new ArrayList<>();
 
-      Statistic bestOnsight = /*mDataCache.calculateOnsightLevel(RouteType.Route, GradeType.RouteYosemite);*/ new Statistic("Best Onsight", maxOnsight, StatisticType.String);
+      Statistic bestOnsight = new Statistic("Best Onsight", maxOnsight, StatisticType.String);
       Statistic numOnsights = new Statistic("Number of Onsights", onsightCount, StatisticType.Count);
       Statistic averageOnsight = new Statistic("Average Onsight", new Grade(avgOnsight, GradeType.RouteYosemite), StatisticType.String);
 
       Statistic bestSend = new Statistic("Best Send", maxSend, StatisticType.String);
       Statistic numSends = new Statistic("Number of Sends", sendCount, StatisticType.Count);
+      Statistic numDistinct = new Statistic("Number of Distinct Sends", distinctSendCount, StatisticType.Count);
       Statistic averageSend = new Statistic("Average Send", new Grade(avgSend, GradeType.RouteYosemite), StatisticType.String);
 
       stats.add(bestOnsight);
@@ -287,6 +290,7 @@ public class StatsViewModel extends AndroidViewModel {
       stats.add(averageOnsight);
       stats.add(bestSend);
       stats.add(numSends);
+      stats.add(numDistinct);
       stats.add(averageSend);
 
       mStatistics.setValue(stats);
