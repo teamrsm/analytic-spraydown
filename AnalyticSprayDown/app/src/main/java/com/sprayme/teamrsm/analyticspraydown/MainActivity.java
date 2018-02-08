@@ -22,6 +22,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -43,8 +44,10 @@ import com.sprayme.teamrsm.analyticspraydown.data_access.BetaSpewDb;
 import com.sprayme.teamrsm.analyticspraydown.data_access.InvalidUserException;
 import com.sprayme.teamrsm.analyticspraydown.models.MPProfileDrawerItem;
 import com.sprayme.teamrsm.analyticspraydown.models.Pyramid;
+import com.sprayme.teamrsm.analyticspraydown.models.Statistic;
 import com.sprayme.teamrsm.analyticspraydown.models.TimeScale;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.RecyclerAdapter;
+import com.sprayme.teamrsm.analyticspraydown.uicomponents.StatsListAdapter;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.viewmodels.StatsViewModel;
 import com.sprayme.teamrsm.analyticspraydown.uicomponents.viewmodels.UsersViewModel;
 import com.sprayme.teamrsm.analyticspraydown.utilities.AndroidDatabaseManager;
@@ -73,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
   private ProfileSettingDrawerItem mManageUsersItem;
   private RecyclerView mRecyclerView;
   private RecyclerAdapter mRecyclerAdapter;
+  private StatsListAdapter mStatsAdapter;
   private LoadingView mLoadingView;
   private UsersViewModel mUsersViewModel;
   private StatsViewModel mStatsViewModel;
@@ -103,6 +107,11 @@ public class MainActivity extends AppCompatActivity {
 
     mRecyclerAdapter = new RecyclerAdapter(this, null);
     mRecyclerView.setAdapter(mRecyclerAdapter);
+
+    // stats adapter
+    mStatsAdapter = new StatsListAdapter(this, null);
+    ListView statsView = (ListView) findViewById(R.id.stats_list_view);
+    statsView.setAdapter(mStatsAdapter);
 
     //Layout manager for the Recycler View
     RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
@@ -268,6 +277,13 @@ public class MainActivity extends AppCompatActivity {
       mRecyclerAdapter.update(pyramids);
     };
     mStatsViewModel.getPyramids().observe(this, pyramidObserver);
+
+    final Observer<List<Statistic>> statsObserver = stats -> {
+      mStatsAdapter.clear();
+      if (stats != null)
+        mStatsAdapter.addAll(stats);
+    };
+    mStatsViewModel.getStatistics().observe(this, statsObserver);
 
     final Observer<Boolean> progressObserver = isBusy -> {
       if (isBusy != null && isBusy)

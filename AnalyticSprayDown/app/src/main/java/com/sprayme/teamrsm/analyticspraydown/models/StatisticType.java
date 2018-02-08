@@ -7,5 +7,6 @@ package com.sprayme.teamrsm.analyticspraydown.models;
 public enum StatisticType {
   Count,
   Ratio,
-  Percentage
+  Percentage,
+  String
 }
